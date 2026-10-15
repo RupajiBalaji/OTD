@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTD - AI Fashion Companion | Download App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0C0C0E;
+      --card-bg: #141418;
+      --card-border: #24242C;
+      --gold: #D4AF37;
+      --gold-light: #F3E5AB;
+      --gold-dark: #AA820A;
+      --text: #F5F5F7;
+      --text-muted: #8E8E93;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 20px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #FFFFFF 0%, var(--gold-light) 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .tagline {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+    .download-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 36px 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      margin-bottom: 32px;
+    }
+    .app-icon {
+      width: 90px;
+      height: 90px;
+      background: linear-gradient(135deg, #24242C, #18181E);
+      border: 2px solid var(--gold);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 10px 25px rgba(212, 175, 55, 0.25);
+    }
+    .app-icon span {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .app-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .app-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+    .btn-download {
+      display: block;
+      width: 100%;
+      padding: 18px 24px;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, var(--gold-dark) 100%);
+      color: #0C0C0E;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(212, 175, 55, 0.35);
+      transition: all 0.25s ease;
+    }
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(212, 175, 55, 0.45);
+    }
+    .btn-download:active {
+      transform: translateY(1px);
+    }
+    .features-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 28px;
+      text-align: left;
+    }
+    .feature-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .feature-title {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .feature-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .instructions {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 24px;
+      text-align: left;
+    }
+    .instructions h3 {
+      font-size: 13px;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .instructions ol {
+      padding-left: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+    footer {
+      margin-top: auto;
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">Haute Couture AI</div>
+    <h1>OTD COMPANION</h1>
+    <p class="tagline">Your personal luxury stylist powered by intelligent fashion synthesis and virtual fitting studio.</p>
+
+    <div class="download-card">
+      <div class="app-icon">
+        <span>OTD</span>
+      </div>
+      <div class="app-name">OTD Fashion Companion</div>
+      <div class="app-meta">Version 1.0.0 &bull; Android APK &bull; 150 MB</div>
+
+      <a href="fashion_otd_companion.apk" class="btn-download" download="fashion_otd_companion.apk">
+        Download Android APK
+      </a>
+
+      <div class="instructions">
+        <h3>How to Install on Android:</h3>
+        <ol>
+          <li>Tap the <strong>Download Android APK</strong> button above.</li>
+          <li>Once downloaded, tap the notification or open the file from your <strong>Downloads</strong>.</li>
+          <li>If prompted, tap <strong>Settings</strong> and allow <em>"Install unknown apps"</em> for your browser.</li>
+          <li>Tap <strong>Install</strong> and launch the app!</li>
+        </ol>
+      </div>
+
+      <div class="features-list">
+        <div class="feature-item">
+          <div class="feature-title">&#10022; Daily OTD Curation</div>
+          <div class="feature-desc">AI-generated outfit recommendations tailored to weather, mood, and schedule.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">&#10022; Digital Closet</div>
+          <div class="feature-desc">Digitize your wardrobe with automatic categorization and palette tagging.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">&#10022; Virtual Fitting Studio</div>
+          <div class="feature-desc">Interactive virtual try-on engine to preview garments before wearing.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-title">&#10022; Closet Intelligence</div>
+          <div class="feature-desc">Wardrobe gap analysis discovering missing essentials with smart affiliate links.</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>&copy; 2026 OTD LUXURY FASHION AI &bull; ALL RIGHTS RESERVED</footer>
+  </div>
+</body>
+</html>

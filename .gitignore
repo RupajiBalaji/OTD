@@ -1,0 +1,11 @@
+# Ignore APK binaries to adhere to GitHub 100MB file limit
+*.apk
+*.sha1
+
+# Dependencies & Build
+node_modules/
+dist/
+build/
+.dart_tool/
+.gradle/
+*.log
