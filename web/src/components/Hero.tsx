@@ -20,17 +20,18 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDownload, onExploreDemo }) => 
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[var(--border-gold)] bg-[var(--pill-bg)] backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-[var(--gold-primary)] animate-pulse" />
               <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[var(--gold-primary)] font-mono">
-                HAUTE INTELLIGENCE · BESPOKE WARDROBE OS
+                OTD · OUTFIT OF THE DAY · AI STYLING
               </span>
             </div>
 
             {/* Main Headline */}
             <h1 className="font-serif-luxury text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-[var(--text-heading)] leading-[1.08]">
-              Your Personal Couturier, <br />
+              Your Perfect Outfit, <br />
               <span className="italic font-light gold-gradient-text">
-                Powered by Precision AI.
+                Every Single Day.
               </span>
             </h1>
+
 
             {/* Description */}
             <p className="text-base sm:text-lg text-[var(--text-body)] font-light leading-relaxed max-w-2xl mx-auto lg:mx-0">

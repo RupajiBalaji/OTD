@@ -35,9 +35,10 @@ export const AppDownload: React.FC<AppDownloadProps> = ({ onOpenModal }) => {
               </div>
 
               <h2 className="font-serif-luxury text-3xl sm:text-5xl font-normal text-[var(--text-heading)] leading-tight">
-                Carry Your Couturier <br />
+                Your Outfit Of The Day <br />
                 <span className="italic font-light gold-gradient-text">Wherever You Travel</span>
               </h2>
+
 
               <p className="text-sm sm:text-base text-[var(--text-body)] font-light leading-relaxed">
                 Download the official standalone Android APK package. No app store waiting lines. 
@@ -102,7 +103,7 @@ export const AppDownload: React.FC<AppDownloadProps> = ({ onOpenModal }) => {
                     <span className="w-5 h-5 rounded-full bg-[var(--pill-bg)] text-[var(--gold-primary)] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 border border-[var(--border-gold)]">
                       3
                     </span>
-                    <span>Launch Maison OTD and start digitizing your wardrobe</span>
+                    <span>Launch OTD (Outfit Of The Day) and start digitizing your wardrobe</span>
                   </div>
                 </div>
               </div>
@@ -129,10 +130,11 @@ export const AppDownload: React.FC<AppDownloadProps> = ({ onOpenModal }) => {
                     <div className="flex items-center gap-2">
                       <img src="/otd_logo.png" alt="OTD" className="w-6 h-7 object-contain" />
                       <div>
-                        <span className="text-[9px] uppercase tracking-widest text-[var(--gold-primary)] block font-mono font-semibold">MAISON OTD</span>
-                        <span className="text-xs font-serif-luxury font-bold text-[var(--text-heading)]">Good Morning, Curator</span>
+                        <span className="text-[9px] uppercase tracking-widest text-[var(--gold-primary)] block font-mono font-semibold">OTD</span>
+                        <span className="text-xs font-serif-luxury font-bold text-[var(--text-heading)]">Outfit Of The Day</span>
                       </div>
                     </div>
+
                     <div className="w-7 h-7 rounded-full bg-[var(--pill-bg)] border border-[var(--border-gold)] flex items-center justify-center text-xs">
                       ✨
                     </div>

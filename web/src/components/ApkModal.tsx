@@ -40,10 +40,11 @@ export const ApkModal: React.FC<ApkModalProps> = ({ isOpen, onClose }) => {
           </div>
           <div>
             <h3 className="font-serif-luxury text-2xl font-bold text-[var(--text-heading)]">
-              Download Maison OTD
+              Download OTD
             </h3>
-            <p className="text-xs text-[var(--text-muted)] font-medium">Official Android Companion Package (v1.0.0)</p>
+            <p className="text-xs text-[var(--gold-primary)] font-semibold font-mono">Outfit Of The Day (Android APK v1.0.0)</p>
           </div>
+
         </div>
 
         {/* Specs Table */}

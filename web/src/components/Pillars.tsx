@@ -72,8 +72,9 @@ export const Pillars: React.FC = () => {
             </h2>
           </div>
           <p className="text-sm text-[var(--text-body)] max-w-md font-light">
-            Every feature in Maison OTD is engineered to transform a disorganized closet into an intelligent, high-utility personal fashion house.
+            Every feature in OTD (Outfit Of The Day) is engineered to transform your closet into an intelligent, high-utility personal wardrobe.
           </p>
+
         </div>
 
         {/* Pillars 4-Card Grid */}

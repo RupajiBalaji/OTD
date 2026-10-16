@@ -39,9 +39,10 @@ export const Lookbook: React.FC = () => {
               EDITORIAL CURATION
             </span>
             <h2 className="font-serif-luxury text-3xl sm:text-5xl font-normal text-[var(--text-heading)]">
-              Maison OTD <br />
-              <span className="italic font-light gold-gradient-text">Private Lookbook</span>
+              OTD Lookbook <br />
+              <span className="italic font-light gold-gradient-text">Outfit Of The Day Curation</span>
             </h2>
+
           </div>
           <p className="text-sm text-[var(--text-body)] max-w-md font-light">
             A perpetual stream of bespoke sartorial compositions curated by our international fashion directors and neural networks.

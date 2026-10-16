@@ -27,15 +27,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo })
             </div>
             <div className="flex flex-col whitespace-nowrap">
               <div className="flex items-center gap-1.5">
-                <span className="font-cinzel text-base sm:text-lg tracking-[0.2em] font-bold text-[var(--text-heading)]">
-                  MAISON OTD
+                <span className="font-cinzel text-lg sm:text-xl tracking-[0.22em] font-bold text-[var(--text-heading)]">
+                  OTD
                 </span>
                 <span className="text-[var(--gold-primary)] text-xs">✦</span>
               </div>
-              <span className="text-[9px] tracking-[0.28em] uppercase text-[var(--gold-primary)] font-mono font-medium">
-                Haute AI Styling Atelier
+              <span className="text-[10px] tracking-[0.22em] uppercase text-[var(--gold-primary)] font-mono font-semibold">
+                Outfit Of The Day
               </span>
             </div>
+
           </a>
 
           {/* Desktop Navigation Links */}

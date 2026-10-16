@@ -17,10 +17,16 @@ export const Footer: React.FC = () => {
               <div className="h-10 w-9 rounded-md overflow-hidden border border-[var(--border-gold)] bg-[#F7EFE0] p-0.5 shadow-sm">
                 <img src="/otd_logo.png" alt="OTD" className="w-full h-full object-contain" />
               </div>
-              <span className="font-cinzel text-base tracking-[0.22em] text-[var(--text-heading)] font-bold">
-                MAISON OTD
-              </span>
+              <div className="flex flex-col">
+                <span className="font-cinzel text-base tracking-[0.22em] text-[var(--text-heading)] font-bold">
+                  OTD
+                </span>
+                <span className="text-[10px] tracking-[0.2em] uppercase text-[var(--gold-primary)] font-mono font-semibold">
+                  Outfit Of The Day
+                </span>
+              </div>
             </div>
+
 
             <p className="text-xs text-[var(--text-muted)] max-w-sm leading-relaxed">
               The premier artificial intelligence styling atelier. Precision chromatic algorithms, 
@@ -81,8 +87,9 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
           <div>
-            © 2026 Maison OTD Haute Intelligence. All rights reserved.
+            © 2026 OTD (Outfit Of The Day). All rights reserved.
           </div>
+
 
           <button
             onClick={scrollToTop}

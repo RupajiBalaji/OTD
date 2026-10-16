@@ -1,6 +1,7 @@
-# Maison OTD — Haute AI Personal Stylist & Smart Wardrobe Intelligence
+# OTD (Outfit Of The Day) — AI Personal Stylist & Smart Wardrobe Assistant
 
-> **The Haute Couturier in Your Pocket.** Precision chromatic algorithms, predictive wardrobe graphs, and bespoke daily curation for the modern connoisseur.
+> **OTD: Outfit Of The Day.** Precision chromatic algorithms, predictive wardrobe graphs, and bespoke daily outfit curation.
+
 
 ---
 
