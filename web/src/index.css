@@ -73,6 +73,14 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
+.font-playfair {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-script {
+  font-family: 'Alex Brush', cursive;
+}
+
 .font-cinzel {
   font-family: 'Cinzel', serif;
 }

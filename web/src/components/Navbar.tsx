@@ -7,9 +7,18 @@ interface NavbarProps {
   onExploreDemo: () => void;
   onOpenProfile?: () => void;
   onOpenAddPiece?: () => void;
+  onOpenOnboarding?: () => void;
+  onLaunchStudio?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo, onOpenProfile, onOpenAddPiece }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onOpenDownload,
+  onExploreDemo,
+  onOpenProfile,
+  onOpenAddPiece,
+  onOpenOnboarding,
+  onLaunchStudio,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -38,45 +47,44 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo, o
                 Outfit Of The Day
               </span>
             </div>
-
           </a>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-7 text-[11px] tracking-[0.2em] uppercase font-semibold text-[var(--text-body)]">
+          {/* Desktop Navigation Links (Matching Screenshot 1) */}
+          <nav className="hidden lg:flex items-center space-x-8 text-[12px] font-semibold text-[var(--text-body)]">
             <a
-              href="#atelier"
-              className="whitespace-nowrap hover:text-[var(--gold-primary)] transition-colors py-1 relative group"
+              href="#"
+              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative font-bold text-[var(--text-heading)]"
             >
-              <span>Atelier</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
+              <span>Home</span>
+              <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-black dark:bg-white" />
             </a>
             <a
               href="#pillars"
-              className="whitespace-nowrap hover:text-[var(--gold-primary)] transition-colors py-1 relative group"
+              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group"
             >
-              <span>Intelligence</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
+              <span>Features</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
+            </a>
+            <button
+              onClick={onExploreDemo}
+              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group text-left cursor-pointer"
+            >
+              <span>How it Works</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
+            </button>
+            <a
+              href="#lookbook"
+              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group"
+            >
+              <span>Community</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
             </a>
             <a
               href="#wardrobe"
-              className="whitespace-nowrap hover:text-[var(--gold-primary)] transition-colors py-1 relative group"
+              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group"
             >
-              <span>Closet Matrix</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
-            </a>
-            <a
-              href="#gap-analysis"
-              className="whitespace-nowrap hover:text-[var(--gold-primary)] transition-colors py-1 relative group"
-            >
-              <span>Wardrobe Gaps</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
-            </a>
-            <a
-              href="#lookbook"
-              className="whitespace-nowrap hover:text-[var(--gold-primary)] transition-colors py-1 relative group"
-            >
-              <span>Lookbook</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
+              <span>About</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
             </a>
           </nav>
 
@@ -119,19 +127,33 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo, o
               </button>
             )}
 
-            <button
-              onClick={onExploreDemo}
-              className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-4 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer"
-            >
-              Live Atelier
-            </button>
+            {onLaunchStudio && (
+              <button
+                onClick={onLaunchStudio}
+                className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-3.5 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm"
+                title="Launch Web Studio & AI Stylist"
+              >
+                <span>✦ Web Studio</span>
+              </button>
+            )}
+
+            {/* Official Sign In Button (Matching Image 1) */}
+            {onOpenOnboarding && (
+              <button
+                onClick={onOpenOnboarding}
+                className="px-5 py-2.5 rounded-full bg-black text-white text-xs font-bold hover:bg-neutral-800 flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105 transition-all"
+              >
+                <span>Sign In</span>
+                <span className="text-sm">→</span>
+              </button>
+            )}
 
             <button
               onClick={onOpenDownload}
-              className="gold-btn whitespace-nowrap px-4 sm:px-5 py-2.5 rounded-full text-[11px] font-semibold flex items-center gap-2 cursor-pointer shrink-0"
+              className="gold-btn whitespace-nowrap px-4 py-2.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer shrink-0"
             >
               <Download className="w-3.5 h-3.5 shrink-0" />
-              <span>Get Android APK</span>
+              <span>APK</span>
             </button>
           </div>
 

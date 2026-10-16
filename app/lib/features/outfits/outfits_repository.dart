@@ -7,12 +7,12 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
   UserProfileNotifier()
       : super(
           UserProfile(
-            name: 'Curator',
-            height: "5'11\" (180 cm)",
-            bodyShape: 'Athletic / V-Taper',
-            stylePersonas: ['Old Money Heritage', 'Clean Minimalist'],
-            preferredFit: 'Tailored / Regular',
-            palettePreferences: ['Espresso & Earth', 'Ivory & Cream', 'Charcoal & Navy'],
+            name: 'Mustafa Ali',
+            height: "5'10\" (178 cm)",
+            bodyShape: 'Athletic',
+            stylePersonas: ['Minimal', 'Classy', 'Smart Casual'],
+            preferredFit: 'Slim Fit',
+            palettePreferences: ['Black & White', 'Beige & Earth', 'Charcoal & Navy'],
           ),
         );
 

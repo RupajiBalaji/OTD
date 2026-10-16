@@ -13,11 +13,15 @@ import { Footer } from './components/Footer';
 import { ApkModal } from './components/ApkModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { AddPieceModal } from './components/AddPieceModal';
+import { OnboardingModal } from './components/OnboardingModal';
+import { AppStudio } from './components/AppStudio';
 
 function AppContent() {
+  const [viewMode, setViewMode] = useState<'landing' | 'studio'>('landing');
   const [isApkModalOpen, setIsApkModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddPieceModalOpen, setIsAddPieceModalOpen] = useState(false);
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
 
   const handleOpenDownload = () => {
     setIsApkModalOpen(true);
@@ -34,21 +38,46 @@ function AppContent() {
     }
   };
 
+  if (viewMode === 'studio') {
+    return (
+      <>
+        <AppStudio
+          onOpenAddPiece={() => setIsAddPieceModalOpen(true)}
+          onOpenProfile={() => setIsProfileModalOpen(true)}
+          onBackToLanding={() => setViewMode('landing')}
+        />
+
+        {/* Global Modals in Studio */}
+        <UserProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+        />
+        <AddPieceModal
+          isOpen={isAddPieceModalOpen}
+          onClose={() => setIsAddPieceModalOpen(false)}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-body)] flex flex-col selection:bg-[var(--gold-primary)]/30 selection:text-[var(--text-heading)] transition-colors duration-300">
-      {/* Navigation Header with Logo, Light/Dark Switcher, Profile & Garment Add */}
+      {/* Navigation Header matching Screenshot 1 */}
       <Navbar
         onOpenDownload={handleOpenDownload}
         onExploreDemo={handleExploreDemo}
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenAddPiece={() => setIsAddPieceModalOpen(true)}
+        onOpenOnboarding={() => setIsOnboardingModalOpen(true)}
+        onLaunchStudio={() => setViewMode('studio')}
       />
 
       {/* Main Content Area */}
       <main className="flex-1">
-        {/* Context-First Hero: "Where are you going?" + Result Screen & Conversational Modifier */}
+        {/* Hero Section matching Screenshot 1 + Context Engine matching Screenshot 2 */}
         <Hero
           onOpenProfile={() => setIsProfileModalOpen(true)}
+          onOpenOnboarding={() => setIsOnboardingModalOpen(true)}
           onExploreDemo={handleExploreDemo}
         />
 
@@ -58,7 +87,7 @@ function AppContent() {
         {/* 4 Pillars of Wardrobe Intelligence */}
         <Pillars />
 
-        {/* Smart Closet Digital Matrix with Practical AI Styling Attributes */}
+        {/* Smart Closet Digital Matrix (Screenshot 2: Screen 11) */}
         <WardrobeStudio
           onOpenAddPiece={() => setIsAddPieceModalOpen(true)}
         />
@@ -82,13 +111,22 @@ function AppContent() {
         onClose={handleCloseDownload}
       />
 
-      {/* User Profile & Style DNA Calibration Modal */}
+      {/* Complete 4-Step Onboarding Modal (Screenshots 3, 4, 5) */}
+      <OnboardingModal
+        isOpen={isOnboardingModalOpen}
+        onClose={() => setIsOnboardingModalOpen(false)}
+        onComplete={() => {
+          setViewMode('studio');
+        }}
+      />
+
+      {/* Quick User Profile & Style DNA Calibration Modal */}
       <UserProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
       />
 
-      {/* Add Garment / Photo Upload & AI Scan Modal */}
+      {/* Add Garment / Photo Upload & AI Scan Modal (Screenshot 2: Screen 12) */}
       <AddPieceModal
         isOpen={isAddPieceModalOpen}
         onClose={() => setIsAddPieceModalOpen(false)}

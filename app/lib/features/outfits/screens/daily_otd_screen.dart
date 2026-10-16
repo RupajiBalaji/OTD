@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../outfits_repository.dart';
 import '../../auth/screens/profile_dna_sheet.dart';
+import 'plan_your_look_sheet.dart';
 
 class DailyOtdScreen extends ConsumerStatefulWidget {
   const DailyOtdScreen({super.key});
@@ -217,54 +218,276 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.gold.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3)),
+                    // Greeting matching Screenshot 1 & 2
+                    Text(
+                      'Hi Mustafa,',
+                      style: GoogleFonts.cormorantGaramond(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "What's your vibe today?",
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: mutedColor,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Vibe Horizontal Selector
+                    SizedBox(
+                      height: 40,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
                         children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.gold,
-                              shape: BoxShape.circle,
+                          'Daily Wear',
+                          'Office',
+                          'Date Night',
+                          'Travel',
+                          'Party',
+                          'Custom',
+                        ].map((vibe) {
+                          final isSelected = _selectedVibe.toLowerCase().contains(vibe.toLowerCase()) ||
+                              (vibe == 'Date Night' && _selectedOccasion == 'Date Night');
+                          return GestureDetector(
+                            onTap: () {
+                              if (vibe == 'Date Night') {
+                                PlanYourLookSheet.show(context);
+                              } else {
+                                setState(() {
+                                  _selectedVibe = vibe;
+                                  _selectedOccasion = vibe;
+                                });
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppTheme.gold : elevatedColor,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected ? AppTheme.gold : borderColor,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  if (vibe == 'Custom')
+                                    Icon(
+                                      Icons.tune,
+                                      size: 13,
+                                      color: isSelected ? AppTheme.noir : AppTheme.gold,
+                                    )
+                                  else
+                                    Icon(
+                                      Icons.auto_awesome,
+                                      size: 13,
+                                      color: isSelected ? AppTheme.noir : AppTheme.gold,
+                                    ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    vibe,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 11,
+                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                      color: isSelected ? AppTheme.noir : textColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Editorial Banner matching Screenshot 1
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF1A1A1E),
+                            Color(0xFF2C2523),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'YOUR WARDROBE. YOUR WORLD.',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                  color: AppTheme.gold,
+                                ),
+                              ),
+                              const Text('✦', style: TextStyle(color: AppTheme.gold, fontSize: 12)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Your style. Every place.',
+                            style: GoogleFonts.cormorantGaramond(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              fontStyle: FontStyle.italic,
+                              color: const Color(0xFFF7EFE0),
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(height: 4),
                           Text(
-                            'CONTEXT ENGINE · CLOSET AI',
+                            'AI styling powered by the clothes you already own.',
                             style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.5,
-                              color: AppTheme.gold,
+                              fontSize: 11,
+                              color: const Color(0xFFD5C29D),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
 
-                    Text(
-                      'Where are you going?',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
-                        color: textColor,
+                    // Your Next Plan Card matching Screenshot 1
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: surfaceColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: borderColor),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'YOUR NEXT PLAN',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                  color: AppTheme.gold,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  const Icon(Icons.wb_cloudy_outlined, size: 14, color: AppTheme.gold),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Hyderabad · 28°C',
+                                    style: GoogleFonts.outfit(fontSize: 10, color: mutedColor),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: elevatedColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3)),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.restaurant, color: AppTheme.gold, size: 22),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Dinner at L\'amore',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    Text(
+                                      '8:00 PM · Today · Date Night (Banjara Hills)',
+                                      style: GoogleFonts.outfit(fontSize: 11, color: mutedColor),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.auto_awesome, size: 15),
+                              label: Text(
+                                'PLAN YOUR PERFECT LOOK (3-STEP AI WIZARD)',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.gold,
+                                foregroundColor: AppTheme.noir,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onPressed: () => PlanYourLookSheet.show(context),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 20),
+
+                    // Subtitle for Custom Prompt
                     Text(
-                      'Tell OTD your plans. Our AI searches your actual digital closet to curate the ideal outfit from clothes you already own.',
-                      style: GoogleFonts.outfit(fontSize: 12, color: mutedColor, height: 1.4),
+                      'Or customize directly:',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: mutedColor,
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
 
                     // Context Omnibar Card
                     Container(
