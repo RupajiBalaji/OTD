@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Download, Menu, X, Sun, Moon } from 'lucide-react';
+import { Download, Menu, X, Sun, Moon, User, Plus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
   onOpenDownload: () => void;
   onExploreDemo: () => void;
+  onOpenProfile?: () => void;
+  onOpenAddPiece?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo, onOpenProfile, onOpenAddPiece }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -95,11 +97,33 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo })
               )}
             </button>
 
+            {onOpenProfile && (
+              <button
+                onClick={onOpenProfile}
+                className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-3.5 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+                title="Calibrate My Style Profile"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>My Style</span>
+              </button>
+            )}
+
+            {onOpenAddPiece && (
+              <button
+                onClick={onOpenAddPiece}
+                className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-3.5 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+                title="Upload Garment to Digital Closet"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Piece</span>
+              </button>
+            )}
+
             <button
               onClick={onExploreDemo}
               className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-4 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer"
             >
-              Try Live Demo
+              Live Atelier
             </button>
 
             <button
@@ -177,6 +201,32 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDownload, onExploreDemo })
           >
             Haute Lookbook
           </a>
+
+          {onOpenProfile && (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenProfile();
+              }}
+              className="w-full text-left flex items-center gap-2 text-xs tracking-[0.18em] uppercase text-[var(--gold-primary)] py-1 font-semibold"
+            >
+              <User className="w-4 h-4" />
+              <span>Calibrate Style DNA Profile</span>
+            </button>
+          )}
+
+          {onOpenAddPiece && (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenAddPiece();
+              }}
+              className="w-full text-left flex items-center gap-2 text-xs tracking-[0.18em] uppercase text-[var(--gold-primary)] py-1 font-semibold"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Upload Garment (Photo & AI)</span>
+            </button>
+          )}
           <div className="pt-3 border-t border-[var(--border-card)]">
             <button
               onClick={() => {
