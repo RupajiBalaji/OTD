@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { InteractiveStylist } from './components/InteractiveStylist';
@@ -10,7 +11,7 @@ import { AppDownload } from './components/AppDownload';
 import { Footer } from './components/Footer';
 import { ApkModal } from './components/ApkModal';
 
-export function App() {
+function AppContent() {
   const [isApkModalOpen, setIsApkModalOpen] = useState(false);
 
   const handleOpenDownload = () => {
@@ -29,8 +30,8 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0C] text-[#F3F2EE] flex flex-col selection:bg-[#D4AF37]/30 selection:text-[#FFF8DE]">
-      {/* Navigation Header */}
+    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-body)] flex flex-col selection:bg-[var(--gold-primary)]/30 selection:text-[var(--text-heading)] transition-colors duration-300">
+      {/* Navigation Header with Logo and Light/Dark Switcher */}
       <Navbar
         onOpenDownload={handleOpenDownload}
         onExploreDemo={handleExploreDemo}
@@ -72,6 +73,14 @@ export function App() {
         onClose={handleCloseDownload}
       />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

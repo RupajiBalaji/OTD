@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, Download, Copy, Check, Smartphone, ShieldCheck } from 'lucide-react';
+import { X, Download, Copy, Check, ShieldCheck } from 'lucide-react';
+
 
 interface ApkModalProps {
   isOpen: boolean;
@@ -20,13 +21,13 @@ export const ApkModal: React.FC<ApkModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg glass-card rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/40 shadow-[0_0_60px_rgba(212,175,55,0.25)] bg-[#0E0E14]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg glass-card rounded-3xl p-6 sm:p-8 border border-[var(--border-gold)] shadow-2xl bg-[var(--bg-card-elevated)] text-[var(--text-body)]">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-[#A19DA8] hover:text-[#FFF] hover:bg-[#1E1E28] transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--pill-bg)] transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -34,36 +35,34 @@ export const ApkModal: React.FC<ApkModalProps> = ({ isOpen, onClose }) => {
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#8C6D1F] p-[1px]">
-            <div className="w-full h-full bg-[#121217] rounded-2xl flex items-center justify-center">
-              <Smartphone className="w-6 h-6 text-[#EADB9B]" />
-            </div>
+          <div className="h-12 w-10 rounded-lg overflow-hidden border border-[var(--border-gold)] bg-[#F7EFE0] p-0.5 shadow-sm shrink-0">
+            <img src="/otd_logo.png" alt="OTD" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h3 className="font-serif-luxury text-2xl font-bold text-[#FAF8F5]">
+            <h3 className="font-serif-luxury text-2xl font-bold text-[var(--text-heading)]">
               Download Maison OTD
             </h3>
-            <p className="text-xs text-[#A6A2AE]">Official Android Companion Package (v1.0.0)</p>
+            <p className="text-xs text-[var(--text-muted)] font-medium">Official Android Companion Package (v1.0.0)</p>
           </div>
         </div>
 
         {/* Specs Table */}
-        <div className="grid grid-cols-2 gap-3 mb-6 bg-[#14141B] p-3.5 rounded-2xl border border-[#23232C] text-xs">
+        <div className="grid grid-cols-2 gap-3 mb-6 bg-[var(--bg-card-inner)] p-3.5 rounded-2xl border border-[var(--border-card)] text-xs">
           <div>
-            <span className="text-[#888591] block text-[10px] uppercase">File Name</span>
-            <span className="font-mono text-[#EADB9B] truncate block">fashion_otd_companion.apk</span>
+            <span className="text-[var(--text-muted)] block text-[10px] uppercase font-medium">File Name</span>
+            <span className="font-mono text-[var(--gold-primary)] truncate block font-bold">fashion_otd_companion.apk</span>
           </div>
           <div>
-            <span className="text-[#888591] block text-[10px] uppercase">Size</span>
-            <span className="font-mono text-[#ECE9E3]">150.0 MB</span>
+            <span className="text-[var(--text-muted)] block text-[10px] uppercase font-medium">Size</span>
+            <span className="font-mono text-[var(--text-heading)] font-semibold">150.0 MB</span>
           </div>
           <div>
-            <span className="text-[#888591] block text-[10px] uppercase">Operating System</span>
-            <span className="text-[#ECE9E3]">Android 8.0 or Newer</span>
+            <span className="text-[var(--text-muted)] block text-[10px] uppercase font-medium">Operating System</span>
+            <span className="text-[var(--text-heading)] font-semibold">Android 8.0 or Newer</span>
           </div>
           <div>
-            <span className="text-[#888591] block text-[10px] uppercase">Security</span>
-            <span className="text-[#10B981] flex items-center gap-1">
+            <span className="text-[var(--text-muted)] block text-[10px] uppercase font-medium">Security</span>
+            <span className="text-[#10B981] flex items-center gap-1 font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" /> Verified Build
             </span>
           </div>
@@ -75,7 +74,7 @@ export const ApkModal: React.FC<ApkModalProps> = ({ isOpen, onClose }) => {
             href="/fashion_otd_companion.apk"
             download="fashion_otd_companion.apk"
             onClick={onClose}
-            className="gold-btn w-full py-4 rounded-2xl text-xs flex items-center justify-center gap-2 cursor-pointer text-center block"
+            className="gold-btn w-full py-4 rounded-2xl text-xs flex items-center justify-center gap-2 cursor-pointer text-center block shadow-md"
           >
             <Download className="w-4 h-4" />
             <span>Download APK Directly (150 MB)</span>
@@ -91,8 +90,8 @@ export const ApkModal: React.FC<ApkModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Sideload hint */}
-        <div className="mt-5 p-3 rounded-xl bg-[#171722] border border-[#242431] text-[11px] text-[#8E8A98] leading-relaxed">
-          <strong className="text-[#D4AF37]">Android Sideload Note:</strong> If prompted with "File might be harmful", select <strong>Download anyway</strong> and grant permission to install from your browser.
+        <div className="mt-5 p-3 rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] text-[11px] text-[var(--text-body)] leading-relaxed">
+          <strong className="text-[var(--gold-primary)]">Android Sideload Note:</strong> If prompted with "File might be harmful", select <strong>Download anyway</strong> and grant permission to install from your browser.
         </div>
 
       </div>

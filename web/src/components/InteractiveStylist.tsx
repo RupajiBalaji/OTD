@@ -167,39 +167,39 @@ export const InteractiveStylist: React.FC = () => {
   };
 
   return (
-    <section id="atelier" className="py-20 md:py-28 relative bg-[#0C0C10] border-y border-[#D4AF37]/15">
+    <section id="atelier" className="py-20 md:py-28 relative bg-[var(--bg-canvas-subtle)] border-y border-[var(--border-card)] transition-colors duration-300">
       {/* Background decorations */}
-      <div className="absolute inset-0 bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.03] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(var(--gold-primary)_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.04] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-[#D4AF37]/25 bg-[#14141C]">
-            <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span className="text-[11px] tracking-[0.2em] uppercase font-semibold text-[#EADB9B]">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-[var(--border-gold)] bg-[var(--pill-bg)]">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--gold-primary)]" />
+            <span className="text-[11px] tracking-[0.2em] uppercase font-semibold text-[var(--gold-primary)] font-mono">
               LIVE ATELIER SIMULATOR
             </span>
           </div>
 
-          <h2 className="font-serif-luxury text-3xl sm:text-5xl font-normal text-[#FBF9F4]">
+          <h2 className="font-serif-luxury text-3xl sm:text-5xl font-normal text-[var(--text-heading)]">
             Experience Real-Time <br />
             <span className="italic font-light gold-gradient-text">Algorithmic Curation</span>
           </h2>
 
-          <p className="text-sm sm:text-base text-[#9C97A5] font-light">
+          <p className="text-sm sm:text-base text-[var(--text-body)] font-light">
             Select your scenario and aesthetic profile. Watch the OTD stylist engine cross-reference 
             chromatic harmony, silhouettes, and fabric weights in milliseconds.
           </p>
         </div>
 
         {/* Interactive Controls Bar */}
-        <div className="glass-card rounded-2xl p-4 sm:p-6 mb-10 max-w-4xl mx-auto border border-[#D4AF37]/20">
+        <div className="glass-card rounded-2xl p-4 sm:p-6 mb-10 max-w-4xl mx-auto border border-[var(--border-card)]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Occasion Selector */}
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.18em] font-medium text-[#C8C3D2] mb-2.5">
+              <label className="block text-[11px] uppercase tracking-[0.18em] font-semibold text-[var(--text-heading)] mb-2.5">
                 1. Select Occasion & Setting
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -213,12 +213,12 @@ export const InteractiveStylist: React.FC = () => {
                     onClick={() => handleOccasionChange(item.id)}
                     className={`p-3 rounded-xl text-left border transition-all duration-200 cursor-pointer ${
                       occasion === item.id
-                        ? 'border-[#D4AF37] bg-[#D4AF37]/15 text-[#FFF8DE] shadow-[0_0_15px_rgba(212,175,55,0.2)]'
-                        : 'border-[#23232C] bg-[#121217] text-[#9E9BA6] hover:border-[#D4AF37]/40 hover:text-[#E2DFD8]'
+                        ? 'border-[var(--gold-primary)] bg-[var(--pill-bg)] text-[var(--text-heading)] shadow-md'
+                        : 'border-[var(--border-card)] bg-[var(--bg-card-inner)] text-[var(--text-muted)] hover:border-[var(--gold-primary)] hover:text-[var(--text-heading)]'
                     }`}
                   >
                     <span className="text-base block mb-1">{item.icon}</span>
-                    <span className="text-xs font-medium block truncate">{item.label}</span>
+                    <span className="text-xs font-semibold block truncate">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -226,7 +226,7 @@ export const InteractiveStylist: React.FC = () => {
 
             {/* Aesthetic Selector */}
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.18em] font-medium text-[#C8C3D2] mb-2.5">
+              <label className="block text-[11px] uppercase tracking-[0.18em] font-semibold text-[var(--text-heading)] mb-2.5">
                 2. Select Style DNA
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -239,12 +239,12 @@ export const InteractiveStylist: React.FC = () => {
                     onClick={() => handleAestheticChange(item.id)}
                     className={`p-3 rounded-xl text-left border transition-all duration-200 cursor-pointer ${
                       aesthetic === item.id
-                        ? 'border-[#D4AF37] bg-[#D4AF37]/15 text-[#FFF8DE] shadow-[0_0_15px_rgba(212,175,55,0.2)]'
-                        : 'border-[#23232C] bg-[#121217] text-[#9E9BA6] hover:border-[#D4AF37]/40 hover:text-[#E2DFD8]'
+                        ? 'border-[var(--gold-primary)] bg-[var(--pill-bg)] text-[var(--text-heading)] shadow-md'
+                        : 'border-[var(--border-card)] bg-[var(--bg-card-inner)] text-[var(--text-muted)] hover:border-[var(--gold-primary)] hover:text-[var(--text-heading)]'
                     }`}
                   >
-                    <span className="text-xs font-semibold block text-[#EADB9B]">{item.label}</span>
-                    <span className="text-[10px] text-[#86838D] block mt-0.5 truncate">{item.desc}</span>
+                    <span className="text-xs font-semibold block text-[var(--gold-primary)]">{item.label}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] block mt-0.5 truncate">{item.desc}</span>
                   </button>
                 ))}
               </div>
@@ -255,19 +255,19 @@ export const InteractiveStylist: React.FC = () => {
 
         {/* Live Output Canvas */}
         <div className={`transition-opacity duration-300 ${isGenerating ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
-          <div className="glass-card rounded-3xl p-6 sm:p-10 border border-[#D4AF37]/30 max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
+          <div className="glass-card rounded-3xl p-6 sm:p-10 border border-[var(--border-card)] max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
             
             {/* Golden Ribbon Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#D4AF37]/20 gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[var(--border-card)] gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] tracking-[0.2em] uppercase font-semibold text-[#D4AF37]">
+                  <span className="text-[11px] tracking-[0.2em] uppercase font-semibold text-[var(--gold-primary)]">
                     SYNTHESIZED BESPOKE ENSEMBLE
                   </span>
-                  <span className="text-xs text-[#52525E]">·</span>
-                  <span className="text-xs font-mono text-[#8C8795]">{currentLook.formality}</span>
+                  <span className="text-xs text-[var(--text-muted)]">·</span>
+                  <span className="text-xs font-mono text-[var(--text-muted)]">{currentLook.formality}</span>
                 </div>
-                <h3 className="font-serif-luxury text-2xl sm:text-4xl font-normal text-[#FAF8F5]">
+                <h3 className="font-serif-luxury text-2xl sm:text-4xl font-normal text-[var(--text-heading)]">
                   {currentLook.title}
                 </h3>
               </div>
@@ -275,15 +275,15 @@ export const InteractiveStylist: React.FC = () => {
               {/* Score & Metrics */}
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <div className="text-[10px] uppercase tracking-wider text-[#8A8692]">Chromatic Harmony</div>
-                  <div className="text-xl sm:text-2xl font-serif-luxury font-bold text-[#EADB9B]">
+                  <div className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Chromatic Harmony</div>
+                  <div className="text-xl sm:text-2xl font-serif-luxury font-bold text-[var(--gold-primary)]">
                     {currentLook.harmonyScore}%
                   </div>
                 </div>
 
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#8A6D20] p-[1px] shadow-lg">
-                  <div className="w-full h-full bg-[#121217] rounded-2xl flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-[#EADB9B]" />
+                <div className="w-12 h-12 rounded-2xl bg-[var(--gold-btn-bg)] p-[1px] shadow-lg">
+                  <div className="w-full h-full bg-[var(--bg-card-inner)] rounded-2xl flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-[var(--gold-primary)]" />
                   </div>
                 </div>
               </div>
@@ -294,33 +294,33 @@ export const InteractiveStylist: React.FC = () => {
               {currentLook.pieces.slice(0, 4).map((piece, idx) => (
                 <div
                   key={idx}
-                  className="bg-[#121217]/90 rounded-2xl p-5 border border-[#23232C] hover:border-[#D4AF37]/50 transition-all duration-300 group flex flex-col justify-between"
+                  className="bg-[var(--bg-card-inner)] rounded-2xl p-5 border border-[var(--border-card)] hover:border-[var(--gold-primary)] transition-all duration-300 group flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] uppercase font-mono tracking-wider text-[#817E8A]">
+                      <span className="text-[10px] uppercase font-mono tracking-wider text-[var(--text-muted)]">
                         Layer 0{idx + 1}
                       </span>
                       <span className="text-2xl group-hover:scale-110 transition-transform">{piece.icon}</span>
                     </div>
 
-                    <div className="text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase mb-1">
+                    <div className="text-[11px] font-semibold tracking-wider text-[var(--gold-primary)] uppercase mb-1">
                       {piece.category}
                     </div>
 
-                    <h4 className="text-xs font-medium text-[#ECE9E2] group-hover:text-[#FFF] line-clamp-2 mb-2">
+                    <h4 className="text-xs font-medium text-[var(--text-heading)] group-hover:text-[var(--gold-primary)] line-clamp-2 mb-2">
                       {piece.name}
                     </h4>
                   </div>
 
-                  <div className="pt-3 border-t border-[#1F1F27] space-y-1">
+                  <div className="pt-3 border-t border-[var(--border-card)] space-y-1">
                     <div className="flex justify-between text-[10px]">
-                      <span className="text-[#767380]">Tone:</span>
-                      <span className="text-[#CBC7BF] font-medium">{piece.color}</span>
+                      <span className="text-[var(--text-muted)]">Tone:</span>
+                      <span className="text-[var(--text-heading)] font-medium">{piece.color}</span>
                     </div>
                     <div className="flex justify-between text-[10px]">
-                      <span className="text-[#767380]">Textile:</span>
-                      <span className="text-[#CBC7BF] truncate max-w-[110px]">{piece.fabric}</span>
+                      <span className="text-[var(--text-muted)]">Textile:</span>
+                      <span className="text-[var(--text-body)] truncate max-w-[110px]">{piece.fabric}</span>
                     </div>
                   </div>
                 </div>
@@ -328,21 +328,21 @@ export const InteractiveStylist: React.FC = () => {
             </div>
 
             {/* Editorial Stylist Rationale + Palette Footer */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t border-[#D4AF37]/20 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t border-[var(--border-card)] items-center">
               
               {/* Palette */}
               <div className="lg:col-span-4">
-                <span className="text-[10px] uppercase tracking-widest text-[#86838F] block mb-2">
+                <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] block mb-2 font-medium">
                   Extracted Palette
                 </span>
                 <div className="flex items-center gap-2">
                   {currentLook.colorPalette.map((col, idx) => (
                     <div key={idx} className="group relative">
                       <div
-                        className="w-9 h-9 rounded-xl border border-white/10 shadow-md transition-transform group-hover:scale-110"
+                        className="w-9 h-9 rounded-xl border border-black/10 dark:border-white/10 shadow-md transition-transform group-hover:scale-110"
                         style={{ backgroundColor: col.hex }}
                       />
-                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] bg-[#1B1B22] text-[#E0DDD5] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-white/10">
+                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] bg-[var(--bg-card-elevated)] text-[var(--text-heading)] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-card)] shadow-md">
                         {col.name}
                       </span>
                     </div>
@@ -351,17 +351,17 @@ export const InteractiveStylist: React.FC = () => {
               </div>
 
               {/* Rationale Quote */}
-              <div className="lg:col-span-8 bg-[#16161F] p-4 rounded-2xl border border-[#262633]">
+              <div className="lg:col-span-8 bg-[var(--bg-card-inner)] p-4 rounded-2xl border border-[var(--border-card)]">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 flex items-center justify-center shrink-0 border border-[#D4AF37]/30 text-[#EADB9B] text-xs font-serif-luxury font-bold">
+                  <div className="w-8 h-8 rounded-full bg-[var(--pill-bg)] flex items-center justify-center shrink-0 border border-[var(--border-gold)] text-[var(--gold-primary)] text-xs font-serif-luxury font-bold">
                     OTD
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-[#D8D4CC] italic leading-relaxed">
+                    <p className="text-xs text-[var(--text-body)] italic leading-relaxed">
                       "{currentLook.stylistRationale}"
                     </p>
-                    <p className="text-[11px] text-[#9B96A3]">
-                      <strong className="text-[#D4AF37]">Accoutrement:</strong> {currentLook.accessoryNote}
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      <strong className="text-[var(--gold-primary)]">Accoutrement:</strong> {currentLook.accessoryNote}
                     </p>
                   </div>
                 </div>
@@ -370,7 +370,7 @@ export const InteractiveStylist: React.FC = () => {
             </div>
 
             {/* Like & Interaction Bar */}
-            <div className="mt-6 flex items-center justify-between text-xs text-[#8A8692] pt-4 border-t border-[#1E1E26]">
+            <div className="mt-6 flex items-center justify-between text-xs text-[var(--text-muted)] pt-4 border-t border-[var(--border-card)]">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
@@ -379,8 +379,8 @@ export const InteractiveStylist: React.FC = () => {
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                     hasLiked
-                      ? 'border-[#E11D48] bg-[#E11D48]/15 text-[#FDA4AF]'
-                      : 'border-[#262633] hover:border-[#D4AF37]/50 text-[#C2BEB4]'
+                      ? 'border-[#E11D48] bg-[#E11D48]/15 text-[#E11D48]'
+                      : 'border-[var(--border-card)] hover:border-[var(--gold-primary)] text-[var(--text-heading)]'
                   }`}
                 >
                   <Heart className={`w-3.5 h-3.5 ${hasLiked ? 'fill-current text-[#E11D48]' : ''}`} />
@@ -388,7 +388,7 @@ export const InteractiveStylist: React.FC = () => {
                 </button>
               </div>
 
-              <div className="text-[11px] font-mono text-[#D4AF37]">
+              <div className="text-[11px] font-mono text-[var(--gold-primary)] font-medium">
                 AI Confidence: 99.7% · Weather Synchronized
               </div>
             </div>
@@ -400,3 +400,4 @@ export const InteractiveStylist: React.FC = () => {
     </section>
   );
 };
+
