@@ -1,11 +1,25 @@
-# Ignore APK binaries to adhere to GitHub 100MB file limit
+# Binaries (Adhere to GitHub 100MB file limit)
 *.apk
+*.aab
 *.sha1
 
-# Dependencies & Build
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Build Outputs
 dist/
 build/
 .dart_tool/
 .gradle/
 *.log
+
+# Environment & Secrets
+.env
+.env.local
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
