@@ -2,137 +2,189 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/fashion_models.dart';
 import '../wardrobe/wardrobe_repository.dart';
 
-abstract class OutfitsRepository {
-  Future<List<OutfitRecommendation>> getDailyRecommendations();
-  Future<OutfitRecommendation> generateOutfit({
-    required FashionOccasion occasion,
-    required FashionVibe vibe,
-    required String weatherCondition,
-  });
-}
+// User Profile Provider
+class UserProfileNotifier extends StateNotifier<UserProfile> {
+  UserProfileNotifier()
+      : super(
+          UserProfile(
+            name: 'Curator',
+            height: "5'11\" (180 cm)",
+            bodyShape: 'Athletic / V-Taper',
+            stylePersonas: ['Old Money Heritage', 'Clean Minimalist'],
+            preferredFit: 'Tailored / Regular',
+            palettePreferences: ['Espresso & Earth', 'Ivory & Cream', 'Charcoal & Navy'],
+          ),
+        );
 
-class MockOutfitsRepository implements OutfitsRepository {
-  final WardrobeRepository _wardrobeRepo;
-
-  MockOutfitsRepository(this._wardrobeRepo);
-
-  @override
-  Future<List<OutfitRecommendation>> getDailyRecommendations() async {
-    final wardrobe = await _wardrobeRepo.getWardrobeItems();
-    
-    // Curated combinations from the closet
-    return [
-      OutfitRecommendation(
-        id: 'outfit_1',
-        title: 'The Parisian Minimalist',
-        description: 'Understated elegance balancing structured wool tailoring with soft fluid silk. Impeccably suited for transitional temperature changes.',
-        items: wardrobe.take(4).toList(),
-        occasion: FashionOccasion.business,
-        vibe: FashionVibe.minimalist,
-        aiMatchScore: 0.98,
-        weatherFitReason: 'Optimized for 21°C Mild Autumn. Light breathable silk base layer with wool insulation for evening breezes.',
-        isWornToday: false,
-      ),
-      OutfitRecommendation(
-        id: 'outfit_2',
-        title: 'Old Money Leisure',
-        description: 'Tonal cashmere knitwear paired with wide-leg trousers and burnished leather accents. Effortless quiet luxury.',
-        items: wardrobe.reversed.take(3).toList(),
-        occasion: FashionOccasion.casual,
-        vibe: FashionVibe.oldMoney,
-        aiMatchScore: 0.94,
-        weatherFitReason: 'Superb thermal regulation. Warm without bulk, suited for indoor café culture and relaxed meetings.',
-        isWornToday: false,
-      ),
-      OutfitRecommendation(
-        id: 'outfit_3',
-        title: 'Gallery Night Cocktail',
-        description: 'Structured noir blazer worn over monochromatic tones with lug-sole statement footwear for high-fashion contrast.',
-        items: [wardrobe[0], wardrobe[2], wardrobe[3], wardrobe[5]],
-        occasion: FashionOccasion.cocktail,
-        vibe: FashionVibe.streetChic,
-        aiMatchScore: 0.91,
-        weatherFitReason: 'Evening weather approved. Protective outerwear that retains sharp silhouettes indoors.',
-        isWornToday: false,
-      ),
-    ];
-  }
-
-  @override
-  Future<OutfitRecommendation> generateOutfit({
-    required FashionOccasion occasion,
-    required FashionVibe vibe,
-    required String weatherCondition,
-  }) async {
-    final wardrobe = await _wardrobeRepo.getWardrobeItems();
-    await Future.delayed(const Duration(milliseconds: 800)); // Simulate AI neural inference
-    return OutfitRecommendation(
-      id: 'ai_gen_${DateTime.now().millisecondsSinceEpoch}',
-      title: 'Curated ${vibe.name.toUpperCase()} Look',
-      description: 'Algorithmically synthesized to align with your personal color palette and expected ${occasion.name} ambiance.',
-      items: (wardrobe..shuffle()).take(3).toList(),
-      occasion: occasion,
-      vibe: vibe,
-      aiMatchScore: 0.96,
-      weatherFitReason: 'Harmonized for $weatherCondition. Layered configuration allows agile temperature adjustments.',
-    );
+  void updateProfile(UserProfile newProfile) {
+    state = newProfile;
   }
 }
 
-final outfitsRepositoryProvider = Provider<OutfitsRepository>((ref) {
-  final wardrobeRepo = ref.watch(wardrobeRepositoryProvider);
-  return MockOutfitsRepository(wardrobeRepo);
+final userProfileProvider = StateNotifierProvider<UserProfileNotifier, UserProfile>((ref) {
+  return UserProfileNotifier();
 });
 
-class OutfitsNotifier extends StateNotifier<AsyncValue<List<OutfitRecommendation>>> {
-  final OutfitsRepository _repo;
-  final WardrobeNotifier _wardrobeNotifier;
+// Outfit Curation & Modification State
+class CuratedOutfitNotifier extends StateNotifier<AsyncValue<OutfitRecommendation?>> {
+  final WardrobeRepository _wardrobeRepo;
+  final UserProfile _userProfile;
 
-  OutfitsNotifier(this._repo, this._wardrobeNotifier) : super(const AsyncValue.loading()) {
-    loadRecommendations();
-  }
+  CuratedOutfitNotifier(this._wardrobeRepo, this._userProfile)
+      : super(const AsyncValue.data(null));
 
-  Future<void> loadRecommendations() async {
+  Future<void> curateOutfit({
+    required String venue,
+    required String occasion,
+    required String vibe,
+    required String weather,
+  }) async {
+    state = const AsyncValue.loading();
     try {
-      state = const AsyncValue.loading();
-      final list = await _repo.getDailyRecommendations();
-      state = AsyncValue.data(list);
+      final wardrobe = await _wardrobeRepo.getWardrobeItems();
+
+      // Intelligent match based on context and user's actual clothes
+      WardrobeItem top = wardrobe.firstWhere(
+        (i) => i.category == GarmentCategory.tops && i.formality >= 3,
+        orElse: () => wardrobe.firstWhere((i) => i.category == GarmentCategory.tops),
+      );
+
+      WardrobeItem bottom = wardrobe.firstWhere(
+        (i) => i.category == GarmentCategory.bottoms && i.formality >= 3,
+        orElse: () => wardrobe.firstWhere((i) => i.category == GarmentCategory.bottoms),
+      );
+
+      WardrobeItem outerwear = wardrobe.firstWhere(
+        (i) => i.category == GarmentCategory.outerwear && i.formality >= 3,
+        orElse: () => wardrobe.firstWhere((i) => i.category == GarmentCategory.outerwear),
+      );
+
+      WardrobeItem shoe = wardrobe.firstWhere(
+        (i) => i.category == GarmentCategory.footwear && i.formality >= 3,
+        orElse: () => wardrobe.firstWhere((i) => i.category == GarmentCategory.footwear),
+      );
+
+      WardrobeItem acc = wardrobe.firstWhere(
+        (i) => i.category == GarmentCategory.accessories,
+        orElse: () => wardrobe.first,
+      );
+
+      // Context adjustments
+      final lowerOccasion = occasion.toLowerCase();
+      final lowerVenue = venue.toLowerCase();
+      final lowerVibe = vibe.toLowerCase();
+
+      if (lowerVibe.contains('relaxed') || lowerOccasion.contains('casual')) {
+        top = wardrobe.firstWhere((i) => i.id == 't3' || i.id == 't4', orElse: () => top);
+        bottom = wardrobe.firstWhere((i) => i.id == 'b2' || i.id == 'b3', orElse: () => bottom);
+        shoe = wardrobe.firstWhere((i) => i.id == 'f3' || i.id == 'f2', orElse: () => shoe);
+      } else if (lowerOccasion.contains('date') || lowerVenue.contains('rooftop')) {
+        top = wardrobe.firstWhere((i) => i.id == 't1', orElse: () => top); // Silk-Cashmere High Neck
+        bottom = wardrobe.firstWhere((i) => i.id == 'b1', orElse: () => bottom); // Flannel Trousers
+        outerwear = wardrobe.firstWhere((i) => i.id == 'o1', orElse: () => outerwear); // Navy Blazer
+        shoe = wardrobe.firstWhere((i) => i.id == 'f2', orElse: () => shoe); // Belgian Loafers
+      }
+
+      final items = <WardrobeItem>[top, bottom, outerwear, shoe];
+      if (acc.category == GarmentCategory.accessories) items.add(acc);
+
+      final curated = OutfitRecommendation(
+        id: 'otd_${DateTime.now().millisecondsSinceEpoch}',
+        title: '$vibe at $venue',
+        description: 'Contextually tailored for $occasion from your verified Digital Closet.',
+        venue: venue,
+        items: items,
+        occasion: FashionOccasion.evening,
+        vibe: FashionVibe.oldMoney,
+        aiMatchScore: 0.98,
+        weatherFitReason: 'Calibrated for $weather. Breathable natural fibers with responsive thermal layering.',
+        venueRationale: 'Selected to match the lighting and ambience of $venue. The ${top.name} creates an alluring, refined tone without looking excessively corporate.',
+        weatherRationale: 'Layered configuration for $weather. Retains thermal comfort in evening breezes while allowing temperature flexibility.',
+        paletteRationale: 'The pairing of ${top.color} against ${bottom.color} creates high-contrast visual balance matching your ${_userProfile.palettePreferences.first} preference.',
+        isWornToday: false,
+        isBookmarked: false,
+      );
+
+      state = AsyncValue.data(curated);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
-  Future<void> logAsWornToday(String outfitId) async {
-    state.whenData((outfits) {
-      final updated = outfits.map((outfit) {
-        if (outfit.id == outfitId) {
-          // Increment wear counts on items
-          for (final item in outfit.items) {
-            _wardrobeNotifier.markWorn(item.id);
-          }
-          return outfit.copyWith(isWornToday: true);
-        }
-        return outfit.copyWith(isWornToday: false);
-      }).toList();
-      state = AsyncValue.data(updated);
-    });
+  Future<void> modifyCuratedOutfit(String instruction) async {
+    final current = state.value;
+    if (current == null) return;
+
+    state = const AsyncValue.loading();
+    try {
+      final wardrobe = await _wardrobeRepo.getWardrobeItems();
+      final lower = instruction.toLowerCase();
+      List<WardrobeItem> updatedItems = List.from(current.items);
+      String newVenueRationale = current.venueRationale;
+
+      if (lower.contains('casual') || lower.contains('relax')) {
+        // Swap shoe to sneakers
+        final sneakers = wardrobe.firstWhere(
+          (i) => i.subType.contains('Sneaker') || i.category == GarmentCategory.footwear,
+        );
+        updatedItems = updatedItems.map((p) => p.category == GarmentCategory.footwear ? sneakers : p).toList();
+
+        // Swap bottoms to chinos or denim
+        final chinos = wardrobe.firstWhere(
+          (i) => i.id == 'b2' || i.id == 'b3',
+          orElse: () => updatedItems.firstWhere((p) => p.category == GarmentCategory.bottoms),
+        );
+        updatedItems = updatedItems.map((p) => p.category == GarmentCategory.bottoms ? chinos : p).toList();
+        newVenueRationale = 'Modified for a more relaxed, approachable casual energy while retaining clean sartorial lines.';
+      } else if (lower.contains('shoe') || lower.contains('shoes') || lower.contains('boot')) {
+        final currentShoe = updatedItems.firstWhere((p) => p.category == GarmentCategory.footwear);
+        final nextShoe = wardrobe.firstWhere(
+          (i) => i.category == GarmentCategory.footwear && i.id != currentShoe.id,
+          orElse: () => currentShoe,
+        );
+        updatedItems = updatedItems.map((p) => p.category == GarmentCategory.footwear ? nextShoe : p).toList();
+        newVenueRationale = 'Footwear adjusted to ${nextShoe.name} to alter the ground posture and silhouette weight.';
+      } else if (lower.contains('no jeans') || lower.contains('dont use jeans') || lower.contains("don't use jeans")) {
+        final trousers = wardrobe.firstWhere((i) => i.id == 'b1' || i.id == 'b2');
+        updatedItems = updatedItems.map((p) => p.category == GarmentCategory.bottoms ? trousers : p).toList();
+        newVenueRationale = 'Substituted denim with tailored ${trousers.name} for elevated sartorial formality.';
+      } else if (lower.contains('attractive') || lower.contains('date') || lower.contains('sharp')) {
+        final luxuryKnit = wardrobe.firstWhere((i) => i.id == 't1');
+        final chelseaBoots = wardrobe.firstWhere((i) => i.id == 'f4' || i.id == 'f2');
+        updatedItems = updatedItems.map((p) => p.category == GarmentCategory.tops ? luxuryKnit : p).toList();
+        updatedItems = updatedItems.map((p) => p.category == GarmentCategory.footwear ? chelseaBoots : p).toList();
+        newVenueRationale = 'Elevated allure: Swapped in ${luxuryKnit.name} and ${chelseaBoots.name} for high-definition evening appeal.';
+      } else {
+        newVenueRationale = 'Customized based on instruction: "$instruction". Balanced with your digital closet synergy.';
+      }
+
+      final modified = current.copyWith(
+        items: updatedItems,
+        venueRationale: newVenueRationale,
+        aiMatchScore: (current.aiMatchScore + 0.01).clamp(0.90, 0.99),
+      );
+
+      state = AsyncValue.data(modified);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 
-  Future<void> toggleBookmark(String outfitId) async {
-    state.whenData((outfits) {
-      final updated = outfits.map((o) {
-        if (o.id == outfitId) {
-          return o.copyWith(isBookmarked: !o.isBookmarked);
-        }
-        return o;
-      }).toList();
-      state = AsyncValue.data(updated);
-    });
+  void toggleBookmark() {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncValue.data(current.copyWith(isBookmarked: !current.isBookmarked));
+  }
+
+  void toggleWornToday() {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncValue.data(current.copyWith(isWornToday: !current.isWornToday));
   }
 }
 
-final outfitsProvider = StateNotifierProvider<OutfitsNotifier, AsyncValue<List<OutfitRecommendation>>>((ref) {
-  final repo = ref.watch(outfitsRepositoryProvider);
-  final wardrobeNotifier = ref.watch(wardrobeProvider.notifier);
-  return OutfitsNotifier(repo, wardrobeNotifier);
+final curatedOutfitProvider = StateNotifierProvider<CuratedOutfitNotifier, AsyncValue<OutfitRecommendation?>>((ref) {
+  final wardrobeRepo = ref.watch(wardrobeRepositoryProvider);
+  final profile = ref.watch(userProfileProvider);
+  return CuratedOutfitNotifier(wardrobeRepo, profile);
 });

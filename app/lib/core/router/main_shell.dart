@@ -27,17 +27,28 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
+    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.surfaceNoir,
+        decoration: BoxDecoration(
+          color: surfaceColor,
           border: Border(
-            top: BorderSide(color: AppTheme.borderNoir, width: 1),
+            top: BorderSide(color: borderColor, width: 1),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
         ),
         child: SafeArea(
           child: Padding(
@@ -50,6 +61,7 @@ class _MainShellState extends State<MainShell> {
                   activeIcon: Icons.auto_awesome,
                   label: 'OTD',
                   isActive: _currentIndex == 0,
+                  isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 0),
                 ),
                 _NavBarItem(
@@ -57,6 +69,7 @@ class _MainShellState extends State<MainShell> {
                   activeIcon: Icons.checkroom,
                   label: 'CLOSET',
                   isActive: _currentIndex == 1,
+                  isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
                 _NavBarItem(
@@ -64,6 +77,7 @@ class _MainShellState extends State<MainShell> {
                   activeIcon: Icons.accessibility_new,
                   label: 'TRY-ON',
                   isActive: _currentIndex == 2,
+                  isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 2),
                 ),
                 _NavBarItem(
@@ -71,6 +85,7 @@ class _MainShellState extends State<MainShell> {
                   activeIcon: Icons.explore,
                   label: 'FEED',
                   isActive: _currentIndex == 3,
+                  isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 3),
                 ),
                 _NavBarItem(
@@ -78,6 +93,7 @@ class _MainShellState extends State<MainShell> {
                   activeIcon: Icons.insights,
                   label: 'ANALYTICS',
                   isActive: _currentIndex == 4,
+                  isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 4),
                 ),
               ],
@@ -94,6 +110,7 @@ class _NavBarItem extends StatelessWidget {
   final IconData activeIcon;
   final String label;
   final bool isActive;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _NavBarItem({
@@ -101,11 +118,14 @@ class _NavBarItem extends StatelessWidget {
     required this.activeIcon,
     required this.label,
     required this.isActive,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final inactiveColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -115,16 +135,16 @@ class _NavBarItem extends StatelessWidget {
           Icon(
             isActive ? activeIcon : icon,
             size: 22,
-            color: isActive ? AppTheme.gold : AppTheme.mutedSilver,
+            color: isActive ? AppTheme.gold : inactiveColor,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.outfit(
               fontSize: 10,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
               letterSpacing: 1.0,
-              color: isActive ? AppTheme.gold : AppTheme.mutedSilver,
+              color: isActive ? AppTheme.gold : inactiveColor,
             ),
           ),
         ],
