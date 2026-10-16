@@ -44,21 +44,22 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDownload, onExploreDemo }) => 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <button
                 onClick={onOpenDownload}
-                className="gold-btn w-full sm:w-auto px-8 py-4 rounded-full text-xs flex items-center justify-center gap-3 group cursor-pointer"
+                className="gold-btn whitespace-nowrap w-full sm:w-auto px-7 py-3.5 rounded-full text-xs flex items-center justify-center gap-2.5 group cursor-pointer shadow-lg"
               >
                 <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
                 <span>Download Android APK</span>
-                <span className="bg-[#0A0A0C]/20 text-[10px] px-2 py-0.5 rounded font-mono">v1.0.0</span>
+                <span className="bg-[#0A0A0C]/25 text-[10px] px-2 py-0.5 rounded font-mono">v1.0.0</span>
               </button>
 
               <button
                 onClick={onExploreDemo}
-                className="gold-btn-outline w-full sm:w-auto px-7 py-4 rounded-full text-xs flex items-center justify-center gap-2 cursor-pointer"
+                className="gold-btn-outline whitespace-nowrap w-full sm:w-auto px-6 py-3.5 rounded-full text-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Launch Interactive Atelier</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
+
 
             {/* Trust Badges */}
             <div className="pt-6 border-t border-[#D4AF37]/15 grid grid-cols-3 gap-4 text-center lg:text-left">
