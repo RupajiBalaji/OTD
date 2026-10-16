@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../outfits_repository.dart';
 import '../../auth/screens/profile_dna_sheet.dart';
+import '../../wardrobe/screens/add_piece_sheet.dart';
 import 'plan_your_look_sheet.dart';
 
 class DailyOtdScreen extends ConsumerStatefulWidget {
@@ -478,9 +479,247 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                     ),
                     const SizedBox(height: 20),
 
+                    // Quick Actions (Screenshot 2)
+                    Text(
+                      'QUICK ACTIONS',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: AppTheme.gold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    SizedBox(
+                      height: 105,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          _QuickActionCard(
+                            title: 'Upload New Item',
+                            subtitle: 'Add to your closet',
+                            icon: Icons.add_photo_alternate_outlined,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () => AddPieceSheet.show(context),
+                          ),
+                          _QuickActionCard(
+                            title: 'Get Outfit Ideas',
+                            subtitle: 'AI powered styling',
+                            icon: Icons.auto_awesome_outlined,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () => PlanYourLookSheet.show(context),
+                          ),
+                          _QuickActionCard(
+                            title: 'Outfit for a Place',
+                            subtitle: 'Destination mode',
+                            icon: Icons.location_on_outlined,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () => PlanYourLookSheet.show(context),
+                          ),
+                          _QuickActionCard(
+                            title: 'Virtual Try-On',
+                            subtitle: 'See on your avatar',
+                            icon: Icons.camera_alt_outlined,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Switched to Try-On Studio tab.')),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // Outfit Suggestions For You (Screenshot 1 & 2)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Outfit Suggestions For You',
+                              style: GoogleFonts.cormorantGaramond(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: textColor,
+                              ),
+                            ),
+                            Text(
+                              'Curated for your style and today\'s Hyderabad weather',
+                              style: GoogleFonts.outfit(fontSize: 11, color: mutedColor),
+                            ),
+                          ],
+                        ),
+                        TextButton(
+                          onPressed: () => PlanYourLookSheet.show(context),
+                          child: Text(
+                            'See All →',
+                            style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.gold),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    SizedBox(
+                      height: 230,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          _OutfitSuggestionCard(
+                            title: 'Smart Casual',
+                            subtitle: 'For Today\'s Weather (28°C)',
+                            matchPercent: 98,
+                            imageUrl: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=400&q=80',
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTry: () {
+                              ref.read(curatedOutfitProvider.notifier).curateOutfit(
+                                    venue: 'Relaxed Dinner',
+                                    occasion: 'Casual Evening',
+                                    vibe: 'Smart Casual',
+                                    weather: 'Tonight · 28°C Partly Cloudy',
+                                  );
+                            },
+                          ),
+                          _OutfitSuggestionCard(
+                            title: 'Date Night',
+                            subtitle: 'Classy & Effortless for L\'amore',
+                            matchPercent: 95,
+                            imageUrl: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=400&q=80',
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTry: () {
+                              ref.read(curatedOutfitProvider.notifier).curateOutfit(
+                                    venue: 'L\'amore Bistro',
+                                    occasion: 'Date Night',
+                                    vibe: 'Romantic & Classy',
+                                    weather: 'Tonight · 28°C Breezy',
+                                  );
+                            },
+                          ),
+                          _OutfitSuggestionCard(
+                            title: 'Office Ready',
+                            subtitle: 'Clean & Polished Tailoring',
+                            matchPercent: 92,
+                            imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80',
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTry: () {
+                              ref.read(curatedOutfitProvider.notifier).curateOutfit(
+                                    venue: 'Executive Office',
+                                    occasion: 'Workplace',
+                                    vibe: 'Sharp & Minimal',
+                                    weather: 'Daytime · 28°C',
+                                  );
+                            },
+                          ),
+                          _OutfitSuggestionCard(
+                            title: 'Travel Look',
+                            subtitle: 'Comfort Meets Modern Style',
+                            matchPercent: 90,
+                            imageUrl: 'https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=400&q=80',
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTry: () {
+                              ref.read(curatedOutfitProvider.notifier).curateOutfit(
+                                    venue: 'Airport Transit',
+                                    occasion: 'Travel',
+                                    vibe: 'Relaxed & Breathable',
+                                    weather: 'Transit · 24°C',
+                                  );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // Your Closet Quick Stats (Screenshot 2: "Your Closet")
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: surfaceColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'YOUR CLOSET OVERVIEW',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                  color: AppTheme.gold,
+                                ),
+                              ),
+                              Text(
+                                'See All →',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.gold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _ClosetCategoryPill(icon: '👕', name: 'Tops', count: '12 items', textColor: textColor, mutedColor: mutedColor),
+                              _ClosetCategoryPill(icon: '👖', name: 'Bottoms', count: '8 items', textColor: textColor, mutedColor: mutedColor),
+                              _ClosetCategoryPill(icon: '🧥', name: 'Outerwear', count: '5 items', textColor: textColor, mutedColor: mutedColor),
+                              _ClosetCategoryPill(icon: '👞', name: 'Shoes', count: '6 items', textColor: textColor, mutedColor: mutedColor),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
                     // Subtitle for Custom Prompt
                     Text(
-                      'Or customize directly:',
+                      'AI Stylist Prompt & Destination:',
                       style: GoogleFonts.outfit(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -1057,6 +1296,246 @@ class _TweakChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool isDark;
+  final Color surfaceColor;
+  final Color borderColor;
+  final Color textColor;
+  final Color mutedColor;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.isDark,
+    required this.surfaceColor,
+    required this.borderColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.gold.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: AppTheme.gold),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    color: mutedColor,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OutfitSuggestionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final int matchPercent;
+  final String imageUrl;
+  final bool isDark;
+  final Color surfaceColor;
+  final Color borderColor;
+  final Color textColor;
+  final Color mutedColor;
+  final VoidCallback onTry;
+
+  const _OutfitSuggestionCard({
+    required this.title,
+    required this.subtitle,
+    required this.matchPercent,
+    required this.imageUrl,
+    required this.isDark,
+    required this.surfaceColor,
+    required this.borderColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.onTry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 175,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Flat lay preview image
+          SizedBox(
+            height: 120,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(17)),
+                  child: Image.network(
+                    imageUrl,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$matchPercent% MATCH',
+                      style: GoogleFonts.outfit(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.cormorantGaramond(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.outfit(fontSize: 10, color: mutedColor),
+                ),
+                const SizedBox(height: 8),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: onTry,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? Colors.white : Colors.black,
+                      foregroundColor: isDark ? Colors.black : Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      minimumSize: const Size(0, 28),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      'Try Look →',
+                      style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ClosetCategoryPill extends StatelessWidget {
+  final String icon;
+  final String name;
+  final String count;
+  final Color textColor;
+  final Color mutedColor;
+
+  const _ClosetCategoryPill({
+    required this.icon,
+    required this.name,
+    required this.count,
+    required this.textColor,
+    required this.mutedColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(icon, style: const TextStyle(fontSize: 22)),
+        const SizedBox(height: 4),
+        Text(
+          name,
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+        Text(
+          count,
+          style: GoogleFonts.outfit(
+            fontSize: 9,
+            color: mutedColor,
+          ),
+        ),
+      ],
     );
   }
 }

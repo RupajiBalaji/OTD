@@ -18,9 +18,16 @@ class _VirtualTryOnScreenState extends ConsumerState<VirtualTryOnScreen> {
   @override
   Widget build(BuildContext context) {
     final wardrobeAsync = ref.watch(wardrobeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bgColor = isDark ? AppTheme.noir : AppTheme.ivorySilk;
+    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
+    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
+    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
+    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
 
     return Scaffold(
-      backgroundColor: AppTheme.noir,
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -45,16 +52,20 @@ class _VirtualTryOnScreenState extends ConsumerState<VirtualTryOnScreen> {
                       const SizedBox(height: 4),
                       Text(
                         'Virtual Try-On',
-                        style: Theme.of(context).textTheme.displayMedium,
+                        style: GoogleFonts.cormorantGaramond(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: textColor,
+                        ),
                       ),
                     ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceNoir,
+                      color: elevatedColor,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.borderNoir),
+                      border: Border.all(color: borderColor),
                     ),
                     child: Row(
                       children: [
@@ -62,7 +73,7 @@ class _VirtualTryOnScreenState extends ConsumerState<VirtualTryOnScreen> {
                         const SizedBox(width: 6),
                         Text(
                           'Diffusion V2',
-                          style: GoogleFonts.outfit(fontSize: 11, color: AppTheme.silkWhite),
+                          style: GoogleFonts.outfit(fontSize: 11, color: textColor),
                         ),
                       ],
                     ),
@@ -76,20 +87,20 @@ class _VirtualTryOnScreenState extends ConsumerState<VirtualTryOnScreen> {
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceNoir,
+                  color: surfaceColor,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: AppTheme.borderNoir),
+                  border: Border.all(color: borderColor),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Avatar Model Image
+                      // Avatar Model Image (Mustafa Ali)
                       Image.network(
                         _showRenderedModel
-                            ? 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80'
-                            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=80',
+                            ? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1000&q=80'
+                            : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=80',
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
@@ -184,11 +195,11 @@ class _VirtualTryOnScreenState extends ConsumerState<VirtualTryOnScreen> {
                 children: [
                   Text(
                     'Select Pieces to Drape',
-                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.silkWhite),
+                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: textColor),
                   ),
                   Text(
                     '3 Items Selected',
-                    style: GoogleFonts.outfit(fontSize: 11, color: AppTheme.champagne),
+                    style: GoogleFonts.outfit(fontSize: 11, color: AppTheme.gold),
                   ),
                 ],
               ),
@@ -207,9 +218,9 @@ class _VirtualTryOnScreenState extends ConsumerState<VirtualTryOnScreen> {
                       width: 85,
                       margin: const EdgeInsets.only(right: 10),
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceNoir,
+                        color: surfaceColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: i < 3 ? AppTheme.gold : AppTheme.borderNoir),
+                        border: Border.all(color: i < 3 ? AppTheme.gold : borderColor),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(15),

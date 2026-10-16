@@ -3,9 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../../features/outfits/screens/daily_otd_screen.dart';
 import '../../features/wardrobe/screens/wardrobe_screen.dart';
+import '../../features/outfits/screens/plan_your_look_screen.dart';
 import '../../features/try_on/screens/try_on_screen.dart';
-import '../../features/social/screens/community_feed_screen.dart';
-import '../../features/analytics/screens/closet_intelligence_screen.dart';
+import '../../features/auth/screens/profile_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -20,9 +20,9 @@ class _MainShellState extends State<MainShell> {
   final List<Widget> _screens = const [
     DailyOtdScreen(),
     WardrobeScreen(),
+    PlanYourLookScreen(),
     VirtualTryOnScreen(),
-    CommunityFeedScreen(),
-    ClosetIntelligenceScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -57,9 +57,9 @@ class _MainShellState extends State<MainShell> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavBarItem(
-                  icon: Icons.auto_awesome_outlined,
-                  activeIcon: Icons.auto_awesome,
-                  label: 'OTD',
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'HOME',
                   isActive: _currentIndex == 0,
                   isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 0),
@@ -73,25 +73,25 @@ class _MainShellState extends State<MainShell> {
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
                 _NavBarItem(
-                  icon: Icons.accessibility_new_outlined,
-                  activeIcon: Icons.accessibility_new,
-                  label: 'TRY-ON',
+                  icon: Icons.auto_awesome_outlined,
+                  activeIcon: Icons.auto_awesome,
+                  label: 'AI STYLIST',
                   isActive: _currentIndex == 2,
                   isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 2),
                 ),
                 _NavBarItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore,
-                  label: 'FEED',
+                  icon: Icons.camera_alt_outlined,
+                  activeIcon: Icons.camera_alt,
+                  label: 'TRY-ON',
                   isActive: _currentIndex == 3,
                   isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 3),
                 ),
                 _NavBarItem(
-                  icon: Icons.insights_outlined,
-                  activeIcon: Icons.insights,
-                  label: 'ANALYTICS',
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'PROFILE',
                   isActive: _currentIndex == 4,
                   isDark: isDark,
                   onTap: () => setState(() => _currentIndex = 4),
