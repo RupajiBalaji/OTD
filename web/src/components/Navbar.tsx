@@ -8,6 +8,7 @@ interface NavbarProps {
   onOpenProfile?: () => void;
   onOpenAddPiece?: () => void;
   onOpenOnboarding?: () => void;
+  onOpenAuth?: () => void;
   onLaunchStudio?: () => void;
 }
 
@@ -17,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenProfile,
   onOpenAddPiece,
   onOpenOnboarding,
+  onOpenAuth,
   onLaunchStudio,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -138,9 +140,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* Official Sign In Button (Matching Image 1) */}
-            {onOpenOnboarding && (
+            {(onOpenAuth || onOpenOnboarding) && (
               <button
-                onClick={onOpenOnboarding}
+                onClick={onOpenAuth || onOpenOnboarding}
                 className="px-5 py-2.5 rounded-full bg-black text-white text-xs font-bold hover:bg-neutral-800 flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105 transition-all"
               >
                 <span>Sign In</span>
@@ -249,7 +251,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Upload Garment (Photo & AI)</span>
             </button>
           )}
-          <div className="pt-3 border-t border-[var(--border-card)]">
+          <div className="pt-3 border-t border-[var(--border-card)] space-y-2.5">
+            {(onOpenAuth || onOpenOnboarding) && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onOpenAuth) onOpenAuth();
+                  else if (onOpenOnboarding) onOpenOnboarding();
+                }}
+                className="w-full py-3 rounded-full bg-black text-white text-xs font-bold hover:bg-neutral-800 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <span>Sign In to OTD</span>
+                <span className="text-sm">→</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setMobileMenuOpen(false);

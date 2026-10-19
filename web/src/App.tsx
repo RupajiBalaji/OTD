@@ -14,6 +14,7 @@ import { ApkModal } from './components/ApkModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { AddPieceModal } from './components/AddPieceModal';
 import { OnboardingModal } from './components/OnboardingModal';
+import { AuthModal } from './components/AuthModal';
 import { AppStudio } from './components/AppStudio';
 
 function AppContent() {
@@ -22,6 +23,7 @@ function AppContent() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddPieceModalOpen, setIsAddPieceModalOpen] = useState(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const handleOpenDownload = () => {
     setIsApkModalOpen(true);
@@ -56,6 +58,10 @@ function AppContent() {
           isOpen={isAddPieceModalOpen}
           onClose={() => setIsAddPieceModalOpen(false)}
         />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
       </>
     );
   }
@@ -69,6 +75,7 @@ function AppContent() {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenAddPiece={() => setIsAddPieceModalOpen(true)}
         onOpenOnboarding={() => setIsOnboardingModalOpen(true)}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
         onLaunchStudio={() => setViewMode('studio')}
       />
 
@@ -104,6 +111,12 @@ function AppContent() {
 
       {/* Luxury Footer */}
       <Footer />
+
+      {/* Dedicated Authentication Modal (Matching Reference Screenshot) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
 
       {/* Direct APK Download Modal */}
       <ApkModal
