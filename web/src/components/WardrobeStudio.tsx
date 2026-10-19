@@ -104,8 +104,12 @@ export const WardrobeStudio: React.FC<WardrobeStudioProps> = ({ onOpenAddPiece }
               >
                 <div>
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] flex items-center justify-center text-2xl group-hover:scale-105 transition-transform shadow-sm">
-                      {item.icon}
+                    <div className="w-12 h-12 rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] flex items-center justify-center text-2xl group-hover:scale-105 transition-transform shadow-sm overflow-hidden">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        item.icon
+                      )}
                     </div>
                     <span className="text-[10px] font-mono text-[var(--gold-primary)] px-2.5 py-1 rounded-full bg-[var(--pill-bg)] border border-[var(--border-gold)] font-medium">
                       Tier {item.formality} · {getFormalityLabel(item.formality)}
@@ -147,8 +151,12 @@ export const WardrobeStudio: React.FC<WardrobeStudioProps> = ({ onOpenAddPiece }
                 </div>
 
                 <div className="my-6 text-center">
-                  <div className="w-24 h-24 mx-auto rounded-3xl bg-[var(--bg-card-inner)] border border-[var(--border-gold)] flex items-center justify-center text-5xl shadow-md mb-4">
-                    {selectedItem.icon}
+                  <div className="w-24 h-24 mx-auto rounded-3xl bg-[var(--bg-card-inner)] border border-[var(--border-gold)] flex items-center justify-center text-5xl shadow-md mb-4 overflow-hidden">
+                    {selectedItem.imageUrl ? (
+                      <img src={selectedItem.imageUrl} alt={selectedItem.name} className="w-full h-full object-cover" />
+                    ) : (
+                      selectedItem.icon
+                    )}
                   </div>
                   <span className="text-xs uppercase tracking-[0.2em] text-[var(--gold-primary)] font-mono font-medium block">
                     {selectedItem.brand}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Camera, Upload, Sparkles, Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Camera, Upload, Check, AlertCircle, RefreshCw } from 'lucide-react';
 import { useCloset, type ClosetItem } from '../context/ClosetContext';
 
 interface AddPieceModalProps {
@@ -7,12 +7,53 @@ interface AddPieceModalProps {
   onClose: () => void;
 }
 
+const PRESET_SAMPLES = [
+  {
+    name: 'Oatmeal Wool Flannel Trousers',
+    brand: 'Fox Brothers',
+    category: 'bottoms' as const,
+    subType: 'Flannel Trousers',
+    color: 'Oatmeal Beige',
+    fit: 'Regular' as const,
+    formality: 4 as const,
+    icon: '👖',
+    imageUrl: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    name: 'Raw Silk Safari Overshirt',
+    brand: 'Zegna',
+    category: 'outerwear' as const,
+    subType: 'Overshirt',
+    color: 'Olive Forest',
+    fit: 'Relaxed / Tailored' as const,
+    formality: 3 as const,
+    icon: '🧥',
+    imageUrl: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    name: 'Calfskin Horsebit Loafers',
+    brand: 'Gucci 1953',
+    category: 'footwear' as const,
+    subType: 'Loafers',
+    color: 'Burgundy Noir',
+    fit: 'Regular' as const,
+    formality: 4 as const,
+    icon: '👞',
+    imageUrl: 'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=400&q=80',
+  },
+];
+
 export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose }) => {
   const { addClosetItem } = useCloset();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [stage, setStage] = useState<'upload' | 'analyzing' | 'confirm'>('upload');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewIcon, setPreviewIcon] = useState('🧥');
-  
-  // Detected fields
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  // Form fields
   const [name, setName] = useState('Double-Faced Camel Wool Overcoat');
   const [brand, setBrand] = useState('Loro Piana');
   const [category, setCategory] = useState<ClosetItem['category']>('outerwear');
@@ -21,54 +62,115 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
   const [fit, setFit] = useState<ClosetItem['fit']>('Relaxed / Tailored');
   const [formality, setFormality] = useState<ClosetItem['formality']>(4);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   if (!isOpen) return null;
 
-  const simulateAiScan = (preset?: { name: string; brand: string; cat: ClosetItem['category']; sub: string; col: string; icon: string; form: ClosetItem['formality'] }) => {
-    setStage('analyzing');
-    if (preset) {
-      setName(preset.name);
-      setBrand(preset.brand);
-      setCategory(preset.cat);
-      setSubType(preset.sub);
-      setColor(preset.col);
-      setPreviewIcon(preset.icon);
-      setFormality(preset.form);
+  const handleFile = (file: File) => {
+    setFileError(null);
+    if (!file.type.startsWith('image/')) {
+      setFileError('Please select a valid image file (JPEG, PNG, WebP).');
+      return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError('Image size exceeds 10MB limit. Please choose a smaller file.');
+      return;
+    }
+
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setPreviewUrl(dataUrl);
+
+      // Auto-detect a sensible default name from filename
+      const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+      setName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+
+      // Quick analyzing transition
+      setStage('analyzing');
+      setTimeout(() => {
+        setStage('confirm');
+      }, 700);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handlePresetSelect = (preset: typeof PRESET_SAMPLES[0]) => {
+    setFileError(null);
+    setName(preset.name);
+    setBrand(preset.brand);
+    setCategory(preset.category);
+    setSubType(preset.subType);
+    setColor(preset.color);
+    setFit(preset.fit);
+    setFormality(preset.formality);
+    setPreviewIcon(preset.icon);
+    setPreviewUrl(preset.imageUrl);
+    setSelectedFile(null);
+
+    setStage('analyzing');
     setTimeout(() => {
       setStage('confirm');
-    }, 900);
+    }, 600);
   };
 
   const handleConfirmAdd = () => {
     addClosetItem({
       category,
       subType,
-      name,
-      brand,
-      color,
+      name: name.trim() || 'Custom Garment',
+      brand: brand.trim() || 'Bespoke',
+      color: color.trim() || 'Classic Tone',
       fit,
       formality,
-      icon: previewIcon
+      icon: previewIcon,
+      imageUrl: previewUrl || undefined,
     });
+
     setIsSuccess(true);
     setTimeout(() => {
       setIsSuccess(false);
-      setStage('upload');
+      resetState();
       onClose();
     }, 700);
   };
 
+  const resetState = () => {
+    setStage('upload');
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setFileError(null);
+    setIsDragging(false);
+  };
+
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg glass-card rounded-3xl p-6 sm:p-8 border border-[var(--border-gold)] shadow-2xl bg-[var(--bg-card-elevated)] text-[var(--text-body)]">
-        
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto"
+      onClick={handleClose}
+    >
+      <div
+        className="relative w-full max-w-lg glass-card rounded-3xl p-6 sm:p-8 border border-[var(--border-gold)] shadow-2xl bg-[var(--bg-card)] text-[var(--text-body)] max-h-[92vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
-          onClick={() => {
-            setStage('upload');
-            onClose();
-          }}
+          onClick={handleClose}
           className="absolute top-5 right-5 p-2 rounded-full text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--pill-bg)] transition-colors cursor-pointer"
           aria-label="Close modal"
         >
@@ -81,50 +183,97 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
             <Camera className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-serif-luxury text-2xl font-bold text-[var(--text-heading)]">
+            <h3 className="font-playfair text-2xl font-bold text-[var(--text-heading)]">
               Add Garment to Closet
             </h3>
-            <p className="text-xs text-[var(--text-muted)] font-medium">Single-photo AI garment identification & cataloging</p>
+            <p className="text-xs text-[var(--text-muted)] font-medium">
+              Real photo intake & AI garment cataloging
+            </p>
           </div>
         </div>
 
-        {/* Stage 1: Upload / Take Photo */}
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/heic"
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              handleFile(e.target.files[0]);
+            }
+          }}
+        />
+
+        {/* Stage 1: File Upload / Drag & Drop */}
         {stage === 'upload' && (
           <div className="space-y-5">
+            {/* Drop Zone */}
             <div
-              onClick={() => simulateAiScan()}
-              className="border-2 border-dashed border-[var(--border-gold)] rounded-2xl p-8 text-center cursor-pointer hover:bg-[var(--pill-bg)] transition-all group"
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all group ${
+                isDragging
+                  ? 'border-[var(--gold-primary)] bg-[var(--pill-bg)] scale-[1.01]'
+                  : 'border-[var(--border-gold)] hover:bg-[var(--pill-bg)]'
+              }`}
             >
-              <div className="w-14 h-14 mx-auto rounded-full bg-[var(--bg-card-inner)] flex items-center justify-center text-[var(--gold-primary)] group-hover:scale-110 transition-transform mb-3 border border-[var(--border-card)]">
+              <div className="w-14 h-14 mx-auto rounded-full bg-[var(--pill-bg)] flex items-center justify-center text-[var(--gold-primary)] group-hover:scale-110 transition-transform mb-3 border border-[var(--border-card)]">
                 <Upload className="w-6 h-6" />
               </div>
               <p className="text-sm font-semibold text-[var(--text-heading)]">
-                Take Photo or Drop Garment Image
+                Choose Photo or Drag Garment Image Here
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
-                OTD Computer Vision will remove backgrounds and detect fabric, color & cut.
+                Supports JPG, PNG, WebP up to 10MB
               </p>
+              <button
+                type="button"
+                className="mt-3.5 px-4 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold pointer-events-none"
+              >
+                Browse Files
+              </button>
             </div>
 
+            {/* Error Message */}
+            {fileError && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{fileError}</span>
+              </div>
+            )}
+
+            {/* Sample presets */}
             <div>
               <span className="text-[10px] uppercase font-mono tracking-wider text-[var(--text-muted)] block mb-2 font-semibold">
-                Or Try Sample Uploads:
+                Or Try Sample Editorial Pieces:
               </span>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                {[
-                  { name: 'Oatmeal Wool Flannel Trousers', brand: 'Fox Brothers', cat: 'bottoms' as const, sub: 'Flannel Trousers', col: 'Oatmeal Beige', icon: '👖', form: 4 as const },
-                  { name: 'Raw Silk Safari Overshirt', brand: 'Zegna', cat: 'outerwear' as const, sub: 'Overshirt', col: 'Olive Forest', icon: '🧥', form: 3 as const },
-                  { name: 'Calfskin Horsebit Loafers', brand: 'Gucci 1953', cat: 'footwear' as const, sub: 'Loafers', col: 'Burgundy Noir', icon: '👞', form: 4 as const },
-                ].map((sample, idx) => (
+              <div className="grid grid-cols-3 gap-2.5 text-xs">
+                {PRESET_SAMPLES.map((sample, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => simulateAiScan(sample)}
-                    className="p-2.5 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card-inner)] hover:border-[var(--gold-primary)] text-left transition-all cursor-pointer"
+                    onClick={() => handlePresetSelect(sample)}
+                    className="p-2.5 rounded-xl border border-[var(--border-card)] bg-[var(--pill-bg)]/50 hover:border-[var(--gold-primary)] text-left transition-all cursor-pointer group hover:scale-[1.02]"
                   >
-                    <span className="text-xl block mb-1">{sample.icon}</span>
-                    <span className="text-[11px] font-semibold text-[var(--text-heading)] line-clamp-1 block">{sample.name}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] block">{sample.col}</span>
+                    <div className="w-full h-16 rounded-lg overflow-hidden mb-2 bg-neutral-900 border border-[var(--border-card)]">
+                      <img
+                        src={sample.imageUrl}
+                        alt={sample.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <span className="text-[11px] font-semibold text-[var(--text-heading)] line-clamp-1 block">
+                      {sample.name}
+                    </span>
+                    <span className="text-[10px] text-[var(--text-muted)] block truncate">
+                      {sample.color}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -143,23 +292,48 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
             </div>
             <div>
               <p className="text-sm font-semibold text-[var(--text-heading)]">
-                OTD Vision Engine Scanning...
+                Cataloging Garment...
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
-                Isolating garment silhouette, chromatic palette & fabric weight
+                Processing dimensions, color family & silhouette profile
               </p>
             </div>
           </div>
         )}
 
-        {/* Stage 3: Confirm / Edit Detection */}
+        {/* Stage 3: Confirm & Edit Attributes */}
         {stage === 'confirm' && (
           <div className="space-y-4 text-xs">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--pill-bg)] text-[var(--gold-primary)] font-semibold border border-[var(--border-gold)]">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Identification Complete. Confirm or edit below:</span>
+            {/* Preview Banner */}
+            <div className="p-3 rounded-2xl border border-[var(--border-card)] bg-[var(--pill-bg)] flex items-center gap-3">
+              <div className="w-14 h-16 rounded-xl overflow-hidden bg-neutral-900 border border-[var(--border-gold)] shrink-0 flex items-center justify-center text-2xl">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Garment Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{previewIcon}</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] uppercase font-mono font-semibold text-[var(--gold-primary)]">
+                  Photo Selected
+                </span>
+                <p className="text-xs font-bold text-[var(--text-heading)] truncate">
+                  {name || 'Selected Piece'}
+                </p>
+                <p className="text-[11px] text-[var(--text-muted)]">
+                  {selectedFile ? `${(selectedFile.size / 1024).toFixed(0)} KB • Local file` : 'Curated sample'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStage('upload')}
+                className="text-[11px] font-semibold text-[var(--gold-primary)] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" /> Change
+              </button>
             </div>
 
+            {/* Form Fields */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] uppercase font-semibold text-[var(--text-muted)] mb-1">
@@ -168,8 +342,8 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
                 <input
                   type="text"
                   value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-[var(--bg-card-inner)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
                 />
               </div>
 
@@ -180,8 +354,8 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
                 <input
                   type="text"
                   value={brand}
-                  onChange={e => setBrand(e.target.value)}
-                  className="w-full bg-[var(--bg-card-inner)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
+                  onChange={(e) => setBrand(e.target.value)}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
                 />
               </div>
             </div>
@@ -193,8 +367,8 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
                 </label>
                 <select
                   value={category}
-                  onChange={e => setCategory(e.target.value as ClosetItem['category'])}
-                  className="w-full bg-[var(--bg-card-inner)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
+                  onChange={(e) => setCategory(e.target.value as ClosetItem['category'])}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
                 >
                   <option value="tops">Tops / Shirts / Knits</option>
                   <option value="bottoms">Bottoms / Trousers / Denim</option>
@@ -211,8 +385,8 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
                 <input
                   type="text"
                   value={color}
-                  onChange={e => setColor(e.target.value)}
-                  className="w-full bg-[var(--bg-card-inner)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
                 />
               </div>
             </div>
@@ -224,8 +398,8 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
                 </label>
                 <select
                   value={fit}
-                  onChange={e => setFit(e.target.value as ClosetItem['fit'])}
-                  className="w-full bg-[var(--bg-card-inner)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
+                  onChange={(e) => setFit(e.target.value as ClosetItem['fit'])}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
                 >
                   <option value="Slim">Slim / Tailored</option>
                   <option value="Regular">Regular Classic</option>
@@ -239,8 +413,8 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
                 </label>
                 <select
                   value={formality}
-                  onChange={e => setFormality(Number(e.target.value) as ClosetItem['formality'])}
-                  className="w-full bg-[var(--bg-card-inner)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
+                  onChange={(e) => setFormality(Number(e.target.value) as ClosetItem['formality'])}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl px-3 py-2 text-[var(--text-heading)] font-medium outline-none focus:border-[var(--gold-primary)]"
                 >
                   <option value={1}>Tier 1: Casual Street / Lounge</option>
                   <option value={2}>Tier 2: Smart Casual</option>
@@ -251,19 +425,19 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
               </div>
             </div>
 
-            <div className="pt-4 flex gap-3">
+            <div className="pt-3 flex gap-3">
               <button
                 type="button"
                 onClick={() => setStage('upload')}
-                className="gold-btn-outline py-3 px-4 rounded-xl text-xs cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-[var(--border-card)] text-xs font-semibold hover:bg-[var(--pill-bg)] transition-colors cursor-pointer"
               >
-                Retake
+                Back
               </button>
 
               <button
                 type="button"
                 onClick={handleConfirmAdd}
-                className="gold-btn flex-1 py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="flex-1 py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md hover:opacity-95 transition-all"
               >
                 {isSuccess ? (
                   <>
@@ -280,7 +454,6 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

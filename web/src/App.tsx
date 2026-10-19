@@ -116,6 +116,9 @@ function AppContent() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setViewMode('studio');
+        }}
       />
 
       {/* Direct APK Download Modal */}

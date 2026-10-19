@@ -14,6 +14,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
 
   // Step 1: Personal Details State
   const [fullName, setFullName] = useState<string>(profile.name === 'Curator' ? 'Mustafa Ali' : profile.name);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [age, setAge] = useState<number>(22);
   const [gender, setGender] = useState<string>('Male');
   const [heightValue, setHeightValue] = useState<number>(178);
@@ -265,11 +266,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
                     <input
                       type="text"
                       value={fullName}
-                      onChange={e => setFullName(e.target.value)}
+                      onChange={e => {
+                        setFullName(e.target.value);
+                        if (nameError) setNameError(null);
+                      }}
                       placeholder="e.g. Mustafa Ali"
-                      className="w-full bg-[#FCF8F2] border border-[#DCD0BE] rounded-xl pl-10 pr-4 py-3 text-sm font-semibold text-[#1C1612] outline-none focus:border-black"
+                      className={`w-full bg-[#FCF8F2] border rounded-xl pl-10 pr-4 py-3 text-sm font-semibold text-[#1C1612] outline-none ${
+                        nameError ? 'border-rose-500 ring-1 ring-rose-200' : 'border-[#DCD0BE] focus:border-black'
+                      }`}
                     />
                   </div>
+                  {nameError && (
+                    <p className="text-xs text-rose-600 mt-1 font-medium">{nameError}</p>
+                  )}
                 </div>
 
                 {/* Age & Gender */}
@@ -915,7 +924,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
             {currentStep < 3 ? (
               <button
                 type="button"
-                onClick={() => setCurrentStep(prev => prev + 1)}
+                onClick={() => {
+                  if (currentStep === 1 && !fullName.trim()) {
+                    setNameError('Please enter your full name before continuing.');
+                    return;
+                  }
+                  setNameError(null);
+                  setCurrentStep(prev => prev + 1);
+                }}
                 className="px-8 py-3.5 rounded-full bg-black text-white text-xs font-bold hover:bg-neutral-800 flex items-center gap-2 cursor-pointer shadow-lg hover:scale-105 transition-all"
               >
                 <span>Next</span>

@@ -10,6 +10,7 @@ export interface ClosetItem {
   fit: 'Slim' | 'Regular' | 'Relaxed / Tailored';
   formality: 1 | 2 | 3 | 4 | 5; // 1 = Casual, 5 = Black Tie
   icon: string;
+  imageUrl?: string;
 }
 
 export interface UserProfile {
@@ -42,6 +43,8 @@ interface ClosetContextType {
   updateProfile: (newProfile: Partial<UserProfile>) => void;
   closet: ClosetItem[];
   addClosetItem: (item: Omit<ClosetItem, 'id'>) => void;
+  deleteClosetItem: (id: string) => void;
+  updateClosetItem: (id: string, updates: Partial<ClosetItem>) => void;
   currentOutfit: OutfitRecommendation | null;
   generateOutfit: (context: { venue: string; occasion: string; vibe: string; weather: string }) => void;
   modifyOutfit: (instruction: string) => void;
@@ -122,6 +125,14 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: `custom_${Date.now()}`
     };
     setCloset(prev => [newItem, ...prev]);
+  };
+
+  const deleteClosetItem = (id: string) => {
+    setCloset(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateClosetItem = (id: string, updates: Partial<ClosetItem>) => {
+    setCloset(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
   };
 
   const generateOutfit = (context: { venue: string; occasion: string; vibe: string; weather: string }) => {
@@ -233,6 +244,8 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         updateProfile,
         closet,
         addClosetItem,
+        deleteClosetItem,
+        updateClosetItem,
         currentOutfit,
         generateOutfit,
         modifyOutfit,
