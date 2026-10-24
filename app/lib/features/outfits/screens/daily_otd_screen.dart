@@ -5,8 +5,18 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../outfits_repository.dart';
 import '../../auth/screens/profile_dna_sheet.dart';
+import '../../auth/screens/auth_modal_sheet.dart';
+import '../../auth/screens/settings_modal_sheet.dart';
 import '../../wardrobe/screens/add_piece_sheet.dart';
 import 'plan_your_look_sheet.dart';
+import 'notifications_sheet.dart';
+import 'saved_looks_screen.dart';
+import 'destinations_screen.dart';
+import 'outfit_calendar_screen.dart';
+import 'outfit_ideas_screen.dart';
+import 'interactive_stylist_screen.dart';
+import 'gap_intelligence_screen.dart';
+import '../../auth/screens/onboarding_survey_modal.dart';
 
 class DailyOtdScreen extends ConsumerStatefulWidget {
   const DailyOtdScreen({super.key});
@@ -107,28 +117,31 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                     // Official OTD Brand Monogram
                     Row(
                       children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF7EFE0),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppTheme.gold),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.gold.withValues(alpha: 0.2),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(2),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              'assets/images/otd_logo.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Center(
-                                child: Text('OTD', style: TextStyle(color: Color(0xFF1C1612), fontSize: 10, fontWeight: FontWeight.w900)),
+                        GestureDetector(
+                          onTap: () => AuthModalSheet.show(context),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7EFE0),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppTheme.gold),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.gold.withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(2),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                'assets/images/otd_logo.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const Center(
+                                  child: Text('OTD', style: TextStyle(color: Color(0xFF1C1612), fontSize: 10, fontWeight: FontWeight.w900)),
+                                ),
                               ),
                             ),
                           ),
@@ -166,9 +179,17 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                       ],
                     ),
 
-                    // Actions: Theme Toggle + Profile Button
+                    // Actions: Notifications + Theme Toggle + Settings + Profile Button
                     Row(
                       children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.notifications_none_outlined,
+                            size: 20,
+                            color: AppTheme.gold,
+                          ),
+                          onPressed: () => NotificationsSheet.show(context),
+                        ),
                         IconButton(
                           icon: Icon(
                             isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
@@ -178,6 +199,14 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                           onPressed: () {
                             ref.read(themeModeProvider.notifier).toggleTheme();
                           },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.tune_outlined,
+                            size: 19,
+                            color: AppTheme.gold,
+                          ),
+                          onPressed: () => SettingsModalSheet.show(context),
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
@@ -510,14 +539,26 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                           ),
                           _QuickActionCard(
                             title: 'Get Outfit Ideas',
-                            subtitle: 'AI powered styling',
+                            subtitle: 'Haute editorial gallery',
                             icon: Icons.auto_awesome_outlined,
                             isDark: isDark,
                             surfaceColor: surfaceColor,
                             borderColor: borderColor,
                             textColor: textColor,
                             mutedColor: mutedColor,
-                            onTap: () => PlanYourLookSheet.show(context),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => OutfitIdeasScreen(
+                                    onRecreateWithCloset: (title) {
+                                      ref.read(curatedOutfitProvider.notifier).modifyCuratedOutfit('Recreate $title');
+                                      PlanYourLookSheet.show(context);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           _QuickActionCard(
                             title: 'Outfit for a Place',
@@ -528,22 +569,114 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             borderColor: borderColor,
                             textColor: textColor,
                             mutedColor: mutedColor,
-                            onTap: () => PlanYourLookSheet.show(context),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DestinationsScreen(
+                                    onSelectVenue: (venue) {
+                                      ref.read(curatedOutfitProvider.notifier).curateOutfit(
+                                            venue: venue.name,
+                                            occasion: venue.category,
+                                            vibe: venue.vibe,
+                                            weather: 'Tonight · 28°C',
+                                          );
+                                      PlanYourLookSheet.show(context);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           _QuickActionCard(
-                            title: 'Virtual Try-On',
-                            subtitle: 'See on your avatar',
-                            icon: Icons.camera_alt_outlined,
+                            title: 'Outfit Calendar',
+                            subtitle: 'Weekly schedule & plan',
+                            icon: Icons.calendar_today_outlined,
                             isDark: isDark,
                             surfaceColor: surfaceColor,
                             borderColor: borderColor,
                             textColor: textColor,
                             mutedColor: mutedColor,
                             onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Switched to Try-On Studio tab.')),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => OutfitCalendarScreen(
+                                    onPlanLook: () => PlanYourLookSheet.show(context),
+                                  ),
+                                ),
                               );
                             },
+                          ),
+                          _QuickActionCard(
+                            title: 'Saved Looks',
+                            subtitle: 'Curated favorites',
+                            icon: Icons.bookmark_border,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SavedLooksScreen(
+                                    onWearLook: (look) {
+                                      ref.read(curatedOutfitProvider.notifier).modifyCuratedOutfit(look.title);
+                                      PlanYourLookSheet.show(context);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          _QuickActionCard(
+                            title: 'Stylist Preset Lab',
+                            subtitle: 'Architectural presets',
+                            icon: Icons.style_outlined,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const InteractiveStylistStudioScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _QuickActionCard(
+                            title: 'Gap Intelligence',
+                            subtitle: 'Predictive closet graph',
+                            icon: Icons.hub_outlined,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const GapIntelligenceScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _QuickActionCard(
+                            title: 'Style Calibration',
+                            subtitle: '3-step biometric survey',
+                            icon: Icons.tune,
+                            isDark: isDark,
+                            surfaceColor: surfaceColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            onTap: () => OnboardingSurveyModal.show(context),
                           ),
                         ],
                       ),

@@ -344,6 +344,11 @@ class WardrobeNotifier extends StateNotifier<AsyncValue<List<WardrobeItem>>> {
     await loadItems();
   }
 
+  Future<void> deleteItem(String id) async {
+    await _repo.deleteWardrobeItem(id);
+    await loadItems();
+  }
+
   Future<void> markWorn(String id) async {
     await _repo.incrementWearCount(id);
     await loadItems();

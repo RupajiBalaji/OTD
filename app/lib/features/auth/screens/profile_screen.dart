@@ -5,6 +5,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../outfits/outfits_repository.dart';
 import 'profile_dna_sheet.dart';
+import 'settings_modal_sheet.dart';
+import 'auth_modal_sheet.dart';
+import 'onboarding_survey_modal.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -54,6 +57,14 @@ class ProfileScreen extends ConsumerWidget {
                           onPressed: () {
                             ref.read(themeModeProvider.notifier).toggleTheme();
                           },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.tune_outlined, size: 20, color: AppTheme.gold),
+                          onPressed: () => SettingsModalSheet.show(context),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.lock_outline, size: 20, color: AppTheme.gold),
+                          onPressed: () => AuthModalSheet.show(context),
                         ),
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 20, color: AppTheme.gold),
@@ -352,27 +363,54 @@ class ProfileScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.tune, size: 16),
-                    label: Text(
-                      'CALIBRATE STYLE DNA PROFILE',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.0,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.assignment_outlined, size: 16),
+                        label: Text(
+                          'FULL STYLE ONBOARDING SURVEY',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.gold,
+                          foregroundColor: AppTheme.noir,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                        onPressed: () => OnboardingSurveyModal.show(context),
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.gold,
-                      foregroundColor: AppTheme.noir,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.tune, size: 16, color: AppTheme.gold),
+                        label: Text(
+                          'CALIBRATE STYLE DNA PROFILE',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.0,
+                            color: textColor,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: AppTheme.gold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                        onPressed: () => ProfileDnaSheet.show(context),
                       ),
                     ),
-                    onPressed: () => ProfileDnaSheet.show(context),
-                  ),
+                  ],
                 ),
               ),
             ),
