@@ -6,36 +6,98 @@ enum FashionVibe { minimalist, oldMoney, streetChic, bohemian, y2k, avantGarde }
 
 class UserProfile {
   final String name;
+  final String city;
   final String height;
   final String bodyShape;
   final List<String> stylePersonas;
   final String preferredFit;
   final List<String> palettePreferences;
+  final String gender;
+  final double weightKg;
+  final List<String> goals;
+  final String avatarId;
+  final String skinTone;
+  final String hairStyle;
 
-  UserProfile({
+  const UserProfile({
     required this.name,
+    this.city = 'Mumbai',
     required this.height,
     required this.bodyShape,
     required this.stylePersonas,
     required this.preferredFit,
     required this.palettePreferences,
+    this.gender = 'Male',
+    this.weightKg = 68.0,
+    this.goals = const ['Everyday Looks', 'Work/Office'],
+    this.avatarId = 'avatar_1',
+    this.skinTone = '#E0AC69',
+    this.hairStyle = 'Classic Taper',
   });
 
   UserProfile copyWith({
     String? name,
+    String? city,
     String? height,
     String? bodyShape,
     List<String>? stylePersonas,
     String? preferredFit,
     List<String>? palettePreferences,
+    String? gender,
+    double? weightKg,
+    List<String>? goals,
+    String? avatarId,
+    String? skinTone,
+    String? hairStyle,
   }) {
     return UserProfile(
       name: name ?? this.name,
+      city: city ?? this.city,
       height: height ?? this.height,
       bodyShape: bodyShape ?? this.bodyShape,
       stylePersonas: stylePersonas ?? this.stylePersonas,
       preferredFit: preferredFit ?? this.preferredFit,
       palettePreferences: palettePreferences ?? this.palettePreferences,
+      gender: gender ?? this.gender,
+      weightKg: weightKg ?? this.weightKg,
+      goals: goals ?? this.goals,
+      avatarId: avatarId ?? this.avatarId,
+      skinTone: skinTone ?? this.skinTone,
+      hairStyle: hairStyle ?? this.hairStyle,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'city': city,
+        'height': height,
+        'bodyShape': bodyShape,
+        'stylePersonas': stylePersonas,
+        'preferredFit': preferredFit,
+        'palettePreferences': palettePreferences,
+        'gender': gender,
+        'weightKg': weightKg,
+        'goals': goals,
+        'avatarId': avatarId,
+        'skinTone': skinTone,
+        'hairStyle': hairStyle,
+      };
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      name: json['name'] as String? ?? 'Alexa',
+      city: json['city'] as String? ?? 'Mumbai',
+      height: json['height'] as String? ?? "5'10\" (178 cm)",
+      bodyShape: json['bodyShape'] as String? ?? 'Rectangle',
+      stylePersonas: (json['stylePersonas'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['Minimal', 'Smart Casual'],
+      preferredFit: json['preferredFit'] as String? ?? 'Tailored',
+      palettePreferences: (json['palettePreferences'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['Black & White', 'Beige & Earth'],
+      gender: json['gender'] as String? ?? 'Female',
+      weightKg: (json['weightKg'] as num?)?.toDouble() ?? 62.0,
+      goals: (json['goals'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['Everyday Looks', 'Work/Office'],
+      avatarId: json['avatarId'] as String? ?? 'avatar_1',
+      skinTone: json['skinTone'] as String? ?? '#E0AC69',
+      hairStyle: json['hairStyle'] as String? ?? 'Classic Taper',
     );
   }
 }
@@ -180,6 +242,48 @@ class OutfitRecommendation {
       isBookmarked: isBookmarked ?? this.isBookmarked,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'venue': venue,
+    'items': items.map((i) => i.toJson()).toList(),
+    'occasion': occasion.name,
+    'vibe': vibe.name,
+    'aiMatchScore': aiMatchScore,
+    'weatherFitReason': weatherFitReason,
+    'venueRationale': venueRationale,
+    'weatherRationale': weatherRationale,
+    'paletteRationale': paletteRationale,
+    'isWornToday': isWornToday,
+    'isBookmarked': isBookmarked,
+  };
+
+  factory OutfitRecommendation.fromJson(Map<String, dynamic> json) => OutfitRecommendation(
+    id: json['id'] ?? '',
+    title: json['title'] ?? '',
+    description: json['description'] ?? '',
+    venue: json['venue'] ?? '',
+    items: (json['items'] as List<dynamic>? ?? [])
+        .map((i) => WardrobeItem.fromJson(i as Map<String, dynamic>))
+        .toList(),
+    occasion: FashionOccasion.values.firstWhere(
+      (e) => e.name == json['occasion'],
+      orElse: () => FashionOccasion.evening,
+    ),
+    vibe: FashionVibe.values.firstWhere(
+      (e) => e.name == json['vibe'],
+      orElse: () => FashionVibe.oldMoney,
+    ),
+    aiMatchScore: (json['aiMatchScore'] as num?)?.toDouble() ?? 0.95,
+    weatherFitReason: json['weatherFitReason'] ?? '',
+    venueRationale: json['venueRationale'] ?? '',
+    weatherRationale: json['weatherRationale'] ?? '',
+    paletteRationale: json['paletteRationale'] ?? '',
+    isWornToday: json['isWornToday'] as bool? ?? false,
+    isBookmarked: json['isBookmarked'] as bool? ?? false,
+  );
 }
 
 class WardrobeGap {

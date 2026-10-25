@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/otd_tokens.dart';
+import '../../../shared/models/fashion_models.dart';
+import '../../../shared/widgets/luxury_image.dart';
+import '../../../shared/widgets/otd_chip.dart';
+import '../../wardrobe/wardrobe_repository.dart';
 import '../outfits_repository.dart';
-import 'plan_your_look_sheet.dart';
+import '../stylist_repository.dart';
 
 class InteractiveStylistStudioScreen extends ConsumerStatefulWidget {
   const InteractiveStylistStudioScreen({super.key});
@@ -13,255 +19,218 @@ class InteractiveStylistStudioScreen extends ConsumerStatefulWidget {
 }
 
 class _InteractiveStylistStudioScreenState extends ConsumerState<InteractiveStylistStudioScreen> {
-  String _selectedOccasion = 'boardroom';
-  String _selectedVibe = 'old-money';
+  final TextEditingController _inputController = TextEditingController();
+  final ScrollController _scrollController = TextEditingController() as ScrollController? ?? ScrollController();
 
-  final Map<String, String> _occasions = {
-    'boardroom': 'Executive Boardroom',
-    'soiree': 'Monaco Soirée',
-    'date': 'Rooftop Date Night',
-    'gallery': 'Vernissage Gallery',
-  };
+  @override
+  void dispose() {
+    _inputController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-  final Map<String, String> _vibes = {
-    'old-money': 'Old Money Heritage',
-    'minimalist': 'Architectural Minimalist',
-    'sartorial': 'Contemporary Sartorial',
-  };
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _sendMessage([String? presetText]) {
+    final text = presetText ?? _inputController.text.trim();
+    if (text.isEmpty) return;
+
+    _inputController.clear();
+    ref.read(stylistChatProvider.notifier).sendMessage(text);
+    _scrollToBottom();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppTheme.noir : AppTheme.ivorySilk;
-    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
-    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
-    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
-    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
-    final mutedColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
+    final colors = OtdColors.of(context);
+    final chatState = ref.watch(stylistChatProvider);
+    final wardrobeAsync = ref.watch(wardrobeProvider);
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: colors.canvas,
       appBar: AppBar(
-        backgroundColor: surfaceColor,
+        backgroundColor: colors.canvas,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, size: 18, color: textColor),
-          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back_ios_new, size: 20, color: colors.textPrimary),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/home');
+            }
+          },
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'EDITORIAL ENGINE',
-              style: GoogleFonts.outfit(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 2.0,
-                color: AppTheme.gold,
-              ),
+              style: OtdTokens.caption(
+                color: colors.accent,
+                weight: FontWeight.w700,
+              ).copyWith(letterSpacing: 2.0),
             ),
             Text(
-              'Interactive AI Stylist Preset Lab',
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-              ),
+              'Interactive Stylist',
+              style: OtdTokens.headingSmall(color: colors.textPrimary, weight: FontWeight.w700),
             ),
           ],
         ),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              ref.read(stylistChatProvider.notifier).clearChat();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Started a fresh styling session.')),
+              );
+            },
+            icon: Icon(Icons.refresh, size: 16, color: colors.accent),
+            label: Text(
+              'New Chat',
+              style: OtdTokens.label(color: colors.accent, weight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Occasion Matrix Selector
-            Text('1. Select Architectural Setting / Occasion', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _occasions.entries.map((e) {
-                  final isSelected = _selectedOccasion == e.key;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(e.value),
-                      selected: isSelected,
-                      selectedColor: AppTheme.gold,
-                      backgroundColor: elevatedColor,
-                      labelStyle: GoogleFonts.outfit(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, color: isSelected ? AppTheme.noir : textColor),
-                      onSelected: (_) => setState(() => _selectedOccasion = e.key),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Vibe Selector
-            Text('2. Silhouette Persona / Aesthetic Vibe', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _vibes.entries.map((e) {
-                  final isSelected = _selectedVibe == e.key;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(e.value),
-                      selected: isSelected,
-                      selectedColor: AppTheme.gold,
-                      backgroundColor: elevatedColor,
-                      labelStyle: GoogleFonts.outfit(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, color: isSelected ? AppTheme.noir : textColor),
-                      onSelected: (_) => setState(() => _selectedVibe = e.key),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Curated Look Editorial Showcase Card
-            Container(
-              decoration: BoxDecoration(
-                color: surfaceColor,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: borderColor),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05), blurRadius: 12, offset: const Offset(0, 4)),
-                ],
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.gold.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text('99.4% SILHOUETTE HARMONY', style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.gold)),
-                      ),
-                      const Icon(Icons.auto_awesome, size: 16, color: AppTheme.gold),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-
-                  Text(
-                    _selectedOccasion == 'boardroom'
-                        ? (_selectedVibe == 'old-money' ? 'The Sovereign Executive' : 'The Modernist Architect')
-                        : 'The Nocturne Bespoke',
-                    style: GoogleFonts.cormorantGaramond(fontSize: 26, fontWeight: FontWeight.w700, color: textColor),
-                  ),
-                  Text(
-                    'Precision curated for ${_occasions[_selectedOccasion]} with ${_vibes[_selectedVibe]} posture.',
-                    style: GoogleFonts.outfit(fontSize: 12, color: mutedColor),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Color Harmony Palette Swatches
-                  Text('HARMONIC PALETTE', style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: AppTheme.gold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _PaletteSwatch(name: 'Charcoal', color: const Color(0xFF2A2D34), textColor: textColor),
-                      const SizedBox(width: 8),
-                      _PaletteSwatch(name: 'French Blue', color: const Color(0xFF779ECB), textColor: textColor),
-                      const SizedBox(width: 8),
-                      _PaletteSwatch(name: 'Burgundy', color: const Color(0xFF631B26), textColor: textColor),
-                      const SizedBox(width: 8),
-                      _PaletteSwatch(name: 'Cream Silk', color: const Color(0xFFF7EFE0), textColor: textColor),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-
-                  // Pieces List
-                  Text('RECOMMENDED WARDROBE ENSEMBLE', style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: AppTheme.gold)),
-                  const SizedBox(height: 10),
-
-                  ...[
-                    {'cat': 'Outerwear', 'name': 'Double-Breasted Chalk-Stripe Jacket', 'brand': 'Brunello Cucinelli', 'icon': '🧥'},
-                    {'cat': 'Shirt', 'name': 'Hand-Finished Sea Island Cotton Poplin', 'brand': 'Charvet', 'icon': '👔'},
-                    {'cat': 'Trousers', 'name': 'Forward-Pleat Flannel Trousers', 'brand': 'Savile Row Bespoke', 'icon': '👖'},
-                    {'cat': 'Footwear', 'name': 'Antique Museum Calf Loafers', 'brand': 'Baudoin & Lange', 'icon': '👞'},
-                  ].map((p) => Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: elevatedColor,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: borderColor),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(p['icon']!, style: const TextStyle(fontSize: 22)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(p['name']!, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
-                                  Text('${p['cat']} · ${p['brand']}', style: GoogleFonts.outfit(fontSize: 10, color: mutedColor)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-
-                  const SizedBox(height: 16),
-
-                  // Stylist Rationale
-                  Container(
-                    padding: const EdgeInsets.all(14),
+            // Wardrobe check warning if empty
+            wardrobeAsync.maybeWhen(
+              data: (items) {
+                if (items.isEmpty) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppTheme.gold.withValues(alpha: 0.1),
+                      color: colors.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3)),
+                      border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text('STYLIST RATIONALE', style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.gold)),
-                        const SizedBox(height: 4),
-                        Text(
-                          'The chalk-stripe tailoring introduces vertical authority, while breathable natural fibers remain responsive to interior climate control and transition gracefully into post-event socials.',
-                          style: GoogleFonts.outfit(fontSize: 11, color: textColor, height: 1.35),
+                        Icon(Icons.info_outline, size: 18, color: colors.accent),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Your closet is empty. Add a few pieces so the stylist can create looks.',
+                            style: OtdTokens.caption(color: colors.textPrimary),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/closet/add'),
+                          child: Text('Add Piece', style: OtdTokens.label(color: colors.accent, weight: FontWeight.w700)),
                         ),
                       ],
                     ),
-                  ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+              orElse: () => const SizedBox.shrink(),
+            ),
 
-                  const SizedBox(height: 18),
+            // Chat Messages List
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 12,
+                ),
+                itemCount: chatState.messages.length + (chatState.isThinking ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == chatState.messages.length && chatState.isThinking) {
+                    return _buildTypingIndicator(colors);
+                  }
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.gold,
-                        foregroundColor: AppTheme.noir,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  final message = chatState.messages[index];
+                  return _buildMessageItem(context, message, colors);
+                },
+              ),
+            ),
+
+            // Suggestion Quick Chips
+            if (chatState.messages.isNotEmpty && chatState.messages.last.suggestions.isNotEmpty)
+              Container(
+                height: 40,
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: OtdTokens.screenPaddingH),
+                  itemCount: chatState.messages.last.suggestions.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, idx) {
+                    final suggestion = chatState.messages.last.suggestions[idx];
+                    return OtdChip(
+                      label: suggestion,
+                      isSelected: false,
+                      onTap: () => _sendMessage(suggestion),
+                    );
+                  },
+                ),
+              ),
+
+            // Input Bar
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              decoration: BoxDecoration(
+                color: colors.card,
+                border: Border(top: BorderSide(color: colors.border)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _inputController,
+                      style: OtdTokens.bodyMedium(color: colors.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Ask stylist: "Make it more formal", "Swap shoes"...',
+                        hintStyle: OtdTokens.bodySmall(color: colors.textMuted),
+                        filled: true,
+                        fillColor: colors.canvas,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(color: colors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(color: colors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(color: colors.accent),
+                        ),
                       ),
-                      icon: const Icon(Icons.auto_awesome, size: 16),
-                      label: Text('ADAPT THIS PRESET TO MY CLOSET', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                      onPressed: () {
-                        ref.read(curatedOutfitProvider.notifier).curateOutfit(
-                              venue: _occasions[_selectedOccasion]!,
-                              occasion: _selectedOccasion,
-                              vibe: _vibes[_selectedVibe]!,
-                              weather: 'Tonight · 28°C',
-                            );
-                        PlanYourLookSheet.show(context);
-                      },
+                      onSubmitted: (_) => _sendMessage(),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: colors.accent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_upward, size: 22, color: AppTheme.noir),
+                      onPressed: () => _sendMessage(),
                     ),
                   ),
                 ],
@@ -272,31 +241,224 @@ class _InteractiveStylistStudioScreenState extends ConsumerState<InteractiveStyl
       ),
     );
   }
-}
 
-class _PaletteSwatch extends StatelessWidget {
-  final String name;
-  final Color color;
-  final Color textColor;
+  Widget _buildMessageItem(BuildContext context, StylistMessage message, OtdColors colors) {
+    final isUser = message.isUser;
 
-  const _PaletteSwatch({required this.name, required this.color, required this.textColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppTheme.gold.withValues(alpha: 0.4), width: 1.5),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isUser) ...[
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: colors.accent.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: colors.accent),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(Iconsax.magic_star, size: 16, color: colors.accent),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isUser ? colors.accent : colors.card,
+                    borderRadius: BorderRadius.circular(18).copyWith(
+                      bottomRight: isUser ? const Radius.circular(4) : null,
+                      bottomLeft: !isUser ? const Radius.circular(4) : null,
+                    ),
+                    border: Border.all(
+                      color: isUser ? colors.accent : colors.border,
+                    ),
+                    boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 8, offsetY: 2),
+                  ),
+                  child: Text(
+                    message.text,
+                    style: OtdTokens.bodyMedium(
+                      color: isUser ? AppTheme.noir : colors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(name, style: GoogleFonts.outfit(fontSize: 9, color: textColor)),
-      ],
+
+          // Embedded Outfit Preview Card inside assistant message (Screen 22)
+          if (!isUser && message.outfit != null) ...[
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 40),
+              child: _buildEmbeddedOutfitCard(context, message.outfit!, colors),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmbeddedOutfitCard(BuildContext context, OutfitRecommendation outfit, OtdColors colors) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.accent.withValues(alpha: 0.5)),
+        boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 12, offsetY: 3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'UPDATED CURATION',
+                style: OtdTokens.caption(color: colors.accent, weight: FontWeight.w700).copyWith(letterSpacing: 1.2),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${(outfit.aiMatchScore > 1 ? outfit.aiMatchScore : (outfit.aiMatchScore * 100)).toInt()}% Match',
+                  style: OtdTokens.caption(color: colors.accent, weight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            outfit.title,
+            style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w700).copyWith(fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+
+          // Horizontal row of garment thumbnails
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: outfit.items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (ctx, idx) {
+                final item = outfit.items[idx];
+                return Container(
+                  width: 58,
+                  decoration: BoxDecoration(
+                    color: colors.canvas,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: colors.border),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: LuxuryImage(
+                    imageUrl: item.imageUrl,
+                    fit: BoxFit.cover,
+                    fallbackIcon: item.icon,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Actions: View In Result & Try On
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    side: BorderSide(color: colors.border),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    ref.read(curatedOutfitProvider.notifier).setOutfit(outfit);
+                    context.push('/plan/result');
+                  },
+                  child: Text('Inspect Look', style: OtdTokens.label(color: colors.textPrimary)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    backgroundColor: colors.accent,
+                    foregroundColor: AppTheme.noir,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    ref.read(curatedOutfitProvider.notifier).setOutfit(outfit);
+                    context.push('/try-on');
+                  },
+                  child: Text('Try On', style: OtdTokens.label(color: AppTheme.noir, weight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator(OtdColors colors) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: colors.accent.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+              border: Border.all(color: colors.accent),
+            ),
+            alignment: Alignment.center,
+            child: Icon(Iconsax.magic_star, size: 16, color: colors.accent),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(colors.accent),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Stylist is curating...',
+                  style: OtdTokens.caption(color: colors.textMuted),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

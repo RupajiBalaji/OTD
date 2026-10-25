@@ -1,0 +1,11 @@
+# Example key.properties for Android release signing
+# Copy this file to android/key.properties and fill with your actual keystore credentials.
+# NEVER commit the real key.properties or .jks file to version control.
+#
+# Generate your upload keystore using:
+# keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=../upload-keystore.jks

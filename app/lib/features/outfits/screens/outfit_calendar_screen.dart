@@ -1,99 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/otd_tokens.dart';
+import '../../../shared/widgets/luxury_image.dart';
 
-class CalendarPlanItem {
-  final String day;
-  final String name;
-  final String occasion;
-  final bool planned;
-  final String? img;
+class CalendarEntry {
+  final int day;
+  final String weekday;
+  final String event;
+  final bool isToday;
+  final String? outfitTitle;
+  final String? imageUrl;
 
-  CalendarPlanItem({
+  CalendarEntry({
     required this.day,
-    required this.name,
-    required this.occasion,
-    required this.planned,
-    this.img,
+    required this.weekday,
+    required this.event,
+    this.isToday = false,
+    this.outfitTitle,
+    this.imageUrl,
   });
 }
 
-class OutfitCalendarScreen extends StatefulWidget {
-  final VoidCallback? onPlanLook;
-
-  const OutfitCalendarScreen({super.key, this.onPlanLook});
+class OutfitCalendarScreen extends ConsumerStatefulWidget {
+  const OutfitCalendarScreen({super.key});
 
   @override
-  State<OutfitCalendarScreen> createState() => _OutfitCalendarScreenState();
+  ConsumerState<OutfitCalendarScreen> createState() => _OutfitCalendarScreenState();
 }
 
-class _OutfitCalendarScreenState extends State<OutfitCalendarScreen> {
-  final List<CalendarPlanItem> _plans = [
-    CalendarPlanItem(
-      day: '14',
-      name: 'Mon',
-      occasion: "Dinner at L'amore",
-      planned: true,
-      img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=400&q=80',
+class _OutfitCalendarScreenState extends ConsumerState<OutfitCalendarScreen> {
+  final List<CalendarEntry> _schedule = [
+    CalendarEntry(
+      day: 24,
+      weekday: 'Thu',
+      event: 'Design Review & Executive Sync',
+      outfitTitle: 'Minimal Tailored Suit',
+      imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=400&q=80',
     ),
-    CalendarPlanItem(
-      day: '15',
-      name: 'Tue',
-      occasion: 'Executive Boardroom',
-      planned: true,
-      img: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=400&q=80',
+    CalendarEntry(
+      day: 25,
+      weekday: 'Fri',
+      event: 'Casual Friday & Rooftop Dinner',
+      isToday: true,
+      outfitTitle: 'Silk Camp Shirt & Chinos',
+      imageUrl: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=400&q=80',
     ),
-    CalendarPlanItem(
-      day: '16',
-      name: 'Wed',
-      occasion: 'Client Lunch',
-      planned: false,
+    CalendarEntry(
+      day: 26,
+      weekday: 'Sat',
+      event: 'Vernissage Art Gallery & Soirée',
+      outfitTitle: null,
+      imageUrl: null,
     ),
-    CalendarPlanItem(
-      day: '17',
-      name: 'Thu',
-      occasion: 'Art Gallery Opening',
-      planned: true,
-      img: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=400&q=80',
+    CalendarEntry(
+      day: 27,
+      weekday: 'Sun',
+      event: 'Weekend Brunch & Stroll',
+      outfitTitle: 'Cashmere Knit & Denim',
+      imageUrl: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=400&q=80',
     ),
-    CalendarPlanItem(
-      day: '18',
-      name: 'Fri',
-      occasion: 'Casual Friday & Drinks',
-      planned: false,
-    ),
-    CalendarPlanItem(
-      day: '19',
-      name: 'Sat',
-      occasion: 'Rooftop Lounge Party',
-      planned: true,
-      img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80',
-    ),
-    CalendarPlanItem(
-      day: '20',
-      name: 'Sun',
-      occasion: 'Weekend Brunch',
-      planned: false,
+    CalendarEntry(
+      day: 28,
+      weekday: 'Mon',
+      event: 'Client Presentation Boardroom',
+      outfitTitle: null,
+      imageUrl: null,
     ),
   ];
 
+  void _scheduleLookForDay(int day, String event) {
+    context.push('/plan');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppTheme.noir : AppTheme.ivorySilk;
-    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
-    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
-    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
-    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
-    final mutedColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
+    final colors = OtdColors.of(context);
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: colors.canvas,
       appBar: AppBar(
-        backgroundColor: surfaceColor,
+        backgroundColor: colors.canvas,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, size: 18, color: textColor),
+          icon: Icon(Icons.arrow_back_ios_new, size: 20, color: colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -101,136 +93,170 @@ class _OutfitCalendarScreenState extends State<OutfitCalendarScreen> {
           children: [
             Text(
               'OUTFIT CALENDAR',
-              style: GoogleFonts.outfit(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 2.0,
-                color: AppTheme.gold,
-              ),
+              style: OtdTokens.caption(
+                color: colors.accent,
+                weight: FontWeight.w700,
+              ).copyWith(letterSpacing: 2.0),
             ),
             Text(
-              'Weekly Schedule & Log',
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-              ),
+              'Schedule & Events',
+              style: OtdTokens.headingSmall(color: colors.textPrimary, weight: FontWeight.w700),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Iconsax.add, size: 22, color: colors.accent),
+            tooltip: 'Plan a Look',
+            onPressed: () => context.push('/plan'),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(20),
-        itemCount: _plans.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 14),
-        itemBuilder: (context, index) {
-          final item = _plans[index];
-          return Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: item.planned ? AppTheme.gold.withValues(alpha: 0.5) : borderColor,
-                width: item.planned ? 1.5 : 1.0,
-              ),
-            ),
-            child: Row(
-              children: [
-                // Day & Date Pill
-                Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: item.planned ? AppTheme.gold : elevatedColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        item.name.toUpperCase(),
-                        style: GoogleFonts.outfit(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: item.planned ? AppTheme.noir : AppTheme.gold,
-                        ),
-                      ),
-                      Text(
-                        item.day,
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: item.planned ? AppTheme.noir : textColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
+      body: SafeArea(
+        child: ListView.separated(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(
+            horizontal: OtdTokens.screenPaddingH,
+            vertical: 16,
+          ),
+          itemCount: _schedule.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final entry = _schedule[index];
+            final hasOutfit = entry.outfitTitle != null;
 
-                // Info & Planned State
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.occasion,
-                        style: GoogleFonts.cormorantGaramond(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
+            return Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: entry.isToday ? colors.accent : colors.border,
+                  width: entry.isToday ? 1.5 : 1.0,
+                ),
+                boxShadow: entry.isToday
+                    ? [
+                        BoxShadow(
+                          color: colors.accent.withValues(alpha: 0.15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
                         ),
+                      ]
+                    : OtdTokens.softShadow(isDark: colors.isDark, blur: 6, offsetY: 2),
+              ),
+              child: Row(
+                children: [
+                  // Day & Date Pill
+                  Container(
+                    width: 52,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: entry.isToday ? colors.accent : colors.canvas,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: entry.isToday ? colors.accent : colors.border,
                       ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Icon(
-                            item.planned ? Icons.check_circle : Icons.schedule,
-                            size: 13,
-                            color: item.planned ? const Color(0xFF10B981) : mutedColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            item.planned ? 'Outfit Curated & Ready' : 'No ensemble locked yet',
-                            style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              fontWeight: item.planned ? FontWeight.bold : FontWeight.normal,
-                              color: item.planned ? const Color(0xFF10B981) : mutedColor,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          entry.weekday.toUpperCase(),
+                          style: OtdTokens.caption(
+                            color: entry.isToday ? AppTheme.noir : colors.accent,
+                            weight: FontWeight.w800,
+                          ).copyWith(fontSize: 9),
+                        ),
+                        Text(
+                          '${entry.day}',
+                          style: OtdTokens.label(
+                            color: entry.isToday ? AppTheme.noir : colors.textPrimary,
+                            weight: FontWeight.w800,
+                          ).copyWith(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Event Info & Outfit Status
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (entry.isToday)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Text(
+                              'TODAY',
+                              style: OtdTokens.caption(
+                                color: colors.accent,
+                                weight: FontWeight.w800,
+                              ).copyWith(fontSize: 9, letterSpacing: 1.0),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        Text(
+                          entry.event,
+                          style: OtdTokens.headingSmall(color: colors.textPrimary, weight: FontWeight.w700).copyWith(fontSize: 15),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(
+                              hasOutfit ? Iconsax.tick_circle : Iconsax.clock,
+                              size: 13,
+                              color: hasOutfit ? colors.accent : colors.textMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                hasOutfit ? entry.outfitTitle! : 'No outfit scheduled',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: OtdTokens.caption(
+                                  color: hasOutfit ? colors.textSecondary : colors.textMuted,
+                                  weight: hasOutfit ? FontWeight.w600 : FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                // Thumbnail or Add Action
-                if (item.planned && item.img != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      item.img!,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
+                  // Image thumbnail or + Plan button
+                  if (hasOutfit && entry.imageUrl != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: LuxuryImage(
+                          imageUrl: entry.imageUrl!,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                  else
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        backgroundColor: colors.accent.withValues(alpha: 0.12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () => _scheduleLookForDay(entry.day, entry.event),
+                      child: Text(
+                        '+ Plan',
+                        style: OtdTokens.label(color: colors.accent, weight: FontWeight.w700),
+                      ),
                     ),
-                  )
-                else
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      if (widget.onPlanLook != null) widget.onPlanLook!();
-                    },
-                    child: Text(
-                      '+ Plan',
-                      style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.gold),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

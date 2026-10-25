@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/theme_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
+import '../../../core/theme/otd_tokens.dart';
+import '../../../shared/widgets/luxury_image.dart';
+import '../../../shared/widgets/otd_button.dart';
+import '../../../shared/widgets/otd_card.dart';
+import '../../../shared/widgets/otd_chip.dart';
+import '../../../shared/widgets/selectable_tile.dart';
+import '../../../shared/widgets/step_progress.dart';
+import '../../destinations/venue_repository.dart';
 import '../outfits_repository.dart';
+import '../plan_look_provider.dart';
 
 class PlanYourLookScreen extends ConsumerStatefulWidget {
   const PlanYourLookScreen({super.key});
@@ -13,858 +21,741 @@ class PlanYourLookScreen extends ConsumerStatefulWidget {
 }
 
 class _PlanYourLookScreenState extends ConsumerState<PlanYourLookScreen> {
-  int _currentStep = 1;
-
-  // Step 1 State
-  String _selectedOccasion = 'Date';
-  final TextEditingController _destinationController =
-      TextEditingController(text: "L'amore, Banjara Hills, Hyderabad");
-  String _selectedVenueCategory = 'Restaurant';
-  final String _selectedDate = 'Mon, 14 Oct 2024';
-  final String _selectedTime = '8:00 PM';
-
-  // Step 2 State
-  String _selectedMood = 'Confident';
-  String _selectedWeather = 'Partly Cloudy';
-  final Set<String> _selectedPreferences = {'Light & Breezy'};
-
-  // Step 3 State
-  final TextEditingController _chatController = TextEditingController();
-  final List<Map<String, String>> _messages = [
-    {
-      'sender': 'user',
-      'text': "I'm going to L'amore tonight for a date. Suggest an outfit from my wardrobe.",
-    },
-    {
-      'sender': 'ai',
-      'text':
-          "Here are some outfit options for L'amore based on the ambience, weather (28°C Partly Cloudy) and your style. Would you like to see more options or try a different vibe?",
-    },
-  ];
+  final PageController _pageController = PageController();
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _customOccasionController = TextEditingController();
+  int _venueTab = 0; // 0: Recent, 1: Popular, 2: Saved
 
   @override
   void dispose() {
-    _destinationController.dispose();
-    _chatController.dispose();
+    _pageController.dispose();
+    _searchController.dispose();
+    _customOccasionController.dispose();
     super.dispose();
   }
 
-  void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
-    setState(() {
-      _messages.add({'sender': 'user', 'text': text.trim()});
-    });
-    ref.read(curatedOutfitProvider.notifier).modifyCuratedOutfit(text.trim());
-    _chatController.clear();
-
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      setState(() {
-        _messages.add({
-          'sender': 'ai',
-          'text': "Refined your look with those adjustments! Swapped pieces from your verified wardrobe.",
-        });
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppTheme.noir : AppTheme.ivorySilk;
-    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
-    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
-    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
-    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
-    final mutedColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
-
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'OTD AI STYLIST',
-                        style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2.0,
-                          color: AppTheme.gold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _currentStep == 1
-                            ? 'Plan Your Perfect Look'
-                            : _currentStep == 2
-                                ? 'Set Your Mood & Weather'
-                                : 'Curated Outfit of the Day',
-                        style: GoogleFonts.cormorantGaramond(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-                          size: 20,
-                          color: AppTheme.gold,
-                        ),
-                        onPressed: () {
-                          ref.read(themeModeProvider.notifier).toggleTheme();
-                        },
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: elevatedColor,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppTheme.gold.withValues(alpha: 0.5)),
-                        ),
-                        child: Text(
-                          'Step $_currentStep of 3',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.gold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Stepper Indicator Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-              child: Row(
-                children: [
-                  _StepTab(num: 1, title: 'Occasion', isActive: _currentStep >= 1, isCurrent: _currentStep == 1),
-                  Expanded(child: Container(height: 1, color: _currentStep >= 2 ? AppTheme.gold : borderColor)),
-                  _StepTab(num: 2, title: 'Mood & Weather', isActive: _currentStep >= 2, isCurrent: _currentStep == 2),
-                  Expanded(child: Container(height: 1, color: _currentStep >= 3 ? AppTheme.gold : borderColor)),
-                  _StepTab(num: 3, title: 'AI Match', isActive: _currentStep >= 3, isCurrent: _currentStep == 3),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Step Content
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: _buildStepBody(
-                  surfaceColor: surfaceColor,
-                  elevatedColor: elevatedColor,
-                  borderColor: borderColor,
-                  textColor: textColor,
-                  mutedColor: mutedColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+  void _goToStep(int step) {
+    ref.read(planLookProvider.notifier).setStep(step);
+    _pageController.animateToPage(
+      step,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOut,
     );
   }
 
-  Widget _buildStepBody({
-    required Color surfaceColor,
-    required Color elevatedColor,
-    required Color borderColor,
-    required Color textColor,
-    required Color mutedColor,
-  }) {
-    if (_currentStep == 1) {
-      return _buildStep1(
-        surfaceColor: surfaceColor,
-        elevatedColor: elevatedColor,
-        borderColor: borderColor,
-        textColor: textColor,
-        mutedColor: mutedColor,
-      );
-    } else if (_currentStep == 2) {
-      return _buildStep2(
-        surfaceColor: surfaceColor,
-        elevatedColor: elevatedColor,
-        borderColor: borderColor,
-        textColor: textColor,
-        mutedColor: mutedColor,
-      );
+  void _handleBack() {
+    final state = ref.read(planLookProvider);
+    if (state.currentStep > 0) {
+      _goToStep(state.currentStep - 1);
     } else {
-      return _buildStep3(
-        surfaceColor: surfaceColor,
-        elevatedColor: elevatedColor,
-        borderColor: borderColor,
-        textColor: textColor,
-        mutedColor: mutedColor,
-      );
+      context.pop();
     }
   }
 
-  // STEP 1: Occasion & Destination (Screenshot 3)
-  Widget _buildStep1({
-    required Color surfaceColor,
-    required Color elevatedColor,
-    required Color borderColor,
-    required Color textColor,
-    required Color mutedColor,
-  }) {
-    final occasions = ['Date', 'Casual Outing', 'Party', 'Wedding', 'Office', 'Travel'];
-    final categories = ['Restaurant', 'Café', 'Bar / Club', 'Mall', 'Resort', 'Outdoor'];
+  void _handleNext() {
+    final state = ref.read(planLookProvider);
+    if (state.currentStep < 3) {
+      _goToStep(state.currentStep + 1);
+    } else {
+      // Trigger curation & route to AI Loading
+      final venue = state.effectiveVenueName;
+      final occasion = state.effectiveOccasion;
+      final mood = state.mood;
+      final weather = state.weatherSnapshot?.summary ?? '24°C • Pleasant';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "1. What's the occasion?",
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 10),
+      ref.read(curatedOutfitProvider.notifier).curateOutfit(
+            venue: venue,
+            occasion: occasion,
+            vibe: mood,
+            weather: weather,
+          );
 
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: occasions.map((occ) {
-            final isSelected = _selectedOccasion == occ;
-            return ChoiceChip(
-              label: Text(occ),
-              selected: isSelected,
-              onSelected: (_) => setState(() => _selectedOccasion = occ),
-              selectedColor: AppTheme.gold,
-              backgroundColor: elevatedColor,
-              labelStyle: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppTheme.noir : textColor,
-              ),
-            );
-          }).toList(),
-        ),
-
-        const SizedBox(height: 20),
-
-        Text(
-          "2. Where are you going?",
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        TextField(
-          controller: _destinationController,
-          style: TextStyle(color: textColor, fontSize: 13),
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.location_on_outlined, color: AppTheme.gold, size: 18),
-            hintText: "Search for a specific place...",
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            fillColor: elevatedColor,
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: categories.map((cat) {
-            final isSelected = _selectedVenueCategory == cat;
-            return ChoiceChip(
-              label: Text(cat),
-              selected: isSelected,
-              onSelected: (_) => setState(() => _selectedVenueCategory = cat),
-              selectedColor: AppTheme.gold,
-              backgroundColor: elevatedColor,
-              labelStyle: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppTheme.noir : textColor,
-              ),
-            );
-          }).toList(),
-        ),
-
-        const SizedBox(height: 20),
-
-        // Date and Time (Screenshot 3: Section 3)
-        Text(
-          "3. When are you going? (Optional)",
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: elevatedColor,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, size: 14, color: AppTheme.gold),
-                        const SizedBox(width: 8),
-                        Text(_selectedDate, style: GoogleFonts.outfit(fontSize: 12, color: textColor)),
-                      ],
-                    ),
-                    const Icon(Icons.arrow_drop_down, size: 18, color: AppTheme.gold),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: elevatedColor,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, size: 14, color: AppTheme.gold),
-                        const SizedBox(width: 8),
-                        Text(_selectedTime, style: GoogleFonts.outfit(fontSize: 12, color: textColor)),
-                      ],
-                    ),
-                    const Icon(Icons.arrow_drop_down, size: 18, color: AppTheme.gold),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 20),
-
-        // Weather Auto-detected Card (Screenshot 3: Section 4)
-        Text(
-          "4. Weather (Auto-detected)",
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderColor),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.wb_sunny_outlined, color: Colors.amber, size: 28),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '28°C · Partly Cloudy',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
-                        ),
-                      ),
-                      Text(
-                        'Hyderabad, India · Feels like 29°C',
-                        style: GoogleFonts.outfit(fontSize: 11, color: mutedColor),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Auto-detected',
-                  style: GoogleFonts.outfit(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.arrow_forward, size: 18),
-            label: Text(
-              'NEXT: SET MOOD & WEATHER',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w800, letterSpacing: 1.0),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.gold,
-              foregroundColor: AppTheme.noir,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            ),
-            onPressed: () => setState(() => _currentStep = 2),
-          ),
-        ),
-      ],
-    );
+      context.push('/plan/loading');
+    }
   }
-
-  // STEP 2: Mood & Weather (Screenshot 4)
-  Widget _buildStep2({
-    required Color surfaceColor,
-    required Color elevatedColor,
-    required Color borderColor,
-    required Color textColor,
-    required Color mutedColor,
-  }) {
-    final moods = ['Confident', 'Chill', 'Romantic', 'Energetic', 'Classy', 'Minimal', 'Trendy', 'Bold'];
-    final weatherOptions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Windy', 'Cold', 'Hot'];
-    final preferences = ['Light & Breezy', 'Layering', 'Warm & Cozy', 'Breathable', 'All Day Comfort'];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "1. What's your mood today?",
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: moods.map((m) {
-            final isSelected = _selectedMood == m;
-            return ChoiceChip(
-              label: Text(m),
-              selected: isSelected,
-              onSelected: (_) => setState(() => _selectedMood = m),
-              selectedColor: AppTheme.gold,
-              backgroundColor: elevatedColor,
-              labelStyle: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppTheme.noir : textColor,
-              ),
-            );
-          }).toList(),
-        ),
-
-        const SizedBox(height: 20),
-
-        Text(
-          "2. What's the weather like?",
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: weatherOptions.map((w) {
-            final isSelected = _selectedWeather == w;
-            return ChoiceChip(
-              label: Text(w),
-              selected: isSelected,
-              onSelected: (_) => setState(() => _selectedWeather = w),
-              selectedColor: AppTheme.gold,
-              backgroundColor: elevatedColor,
-              labelStyle: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppTheme.noir : textColor,
-              ),
-            );
-          }).toList(),
-        ),
-
-        const SizedBox(height: 20),
-
-        Text(
-          "3. Any additional preferences?",
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: preferences.map((p) {
-            final isSelected = _selectedPreferences.contains(p);
-            return FilterChip(
-              label: Text(p),
-              selected: isSelected,
-              onSelected: (val) {
-                setState(() {
-                  if (val) {
-                    _selectedPreferences.add(p);
-                  } else {
-                    _selectedPreferences.remove(p);
-                  }
-                });
-              },
-              selectedColor: AppTheme.gold,
-              backgroundColor: elevatedColor,
-              labelStyle: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppTheme.noir : textColor,
-              ),
-            );
-          }).toList(),
-        ),
-
-        const SizedBox(height: 24),
-
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => setState(() => _currentStep = 1),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                ),
-                child: const Text('BACK'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.auto_awesome, size: 18),
-                label: Text(
-                  'GENERATE OUTFIT',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w800, letterSpacing: 1.0),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.gold,
-                  foregroundColor: AppTheme.noir,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                ),
-                onPressed: () {
-                  ref.read(curatedOutfitProvider.notifier).curateOutfit(
-                        venue: _destinationController.text,
-                        occasion: _selectedOccasion,
-                        vibe: _selectedMood,
-                        weather: _selectedWeather,
-                      );
-                  setState(() => _currentStep = 3);
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // STEP 3: Outfit Recommendation & Chat
-  Widget _buildStep3({
-    required Color surfaceColor,
-    required Color elevatedColor,
-    required Color borderColor,
-    required Color textColor,
-    required Color mutedColor,
-  }) {
-    final curatedAsync = ref.watch(curatedOutfitProvider);
-
-    return curatedAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 60),
-        child: Center(
-          child: Column(
-            children: [
-              CircularProgressIndicator(color: AppTheme.gold),
-              SizedBox(height: 16),
-              Text('Styling from your verified Digital Closet...'),
-            ],
-          ),
-        ),
-      ),
-      error: (err, _) => Text('Error: $err'),
-      data: (outfit) {
-        if (outfit == null) return const SizedBox();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Match Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    '${(outfit.aiMatchScore * 100).toInt()}% CLOSET MATCH',
-                    style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.green),
-                  ),
-                ),
-                Text(
-                  'Dinner at L\'amore',
-                  style: GoogleFonts.outfit(fontSize: 12, color: mutedColor),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            Text(
-              outfit.title,
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Garments
-            Text(
-              'CLOTHES FROM YOUR WARDROBE',
-              style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.gold),
-            ),
-            const SizedBox(height: 8),
-
-            ...outfit.items.map((item) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(item.icon, style: const TextStyle(fontSize: 22)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item.name, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
-                            Text('${item.color} · ${item.brand}', style: GoogleFonts.outfit(fontSize: 10, color: mutedColor)),
-                          ],
-                        ),
-                      ),
-                      Text(item.category.name.toUpperCase(), style: GoogleFonts.outfit(fontSize: 9, color: AppTheme.gold, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                )),
-
-            const SizedBox(height: 16),
-
-            // AI Stylist Chat
-            Text(
-              'CHAT & TWEAK WITH AI STYLIST',
-              style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.gold),
-            ),
-            const SizedBox(height: 8),
-
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: surfaceColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor),
-              ),
-              child: Column(
-                children: [
-                  ..._messages.map((msg) => Align(
-                        alignment: msg['sender'] == 'user' ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: msg['sender'] == 'user'
-                                ? AppTheme.gold.withValues(alpha: 0.2)
-                                : elevatedColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            msg['text']!,
-                            style: GoogleFonts.outfit(fontSize: 12, color: textColor),
-                          ),
-                        ),
-                      )),
-
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      'Make it more casual.',
-                      'Change the shoes.',
-                      "Don't use jeans.",
-                      'Make it more attractive.',
-                    ].map((p) => ActionChip(
-                          label: Text(p, style: const TextStyle(fontSize: 10)),
-                          onPressed: () => _sendMessage(p),
-                          backgroundColor: elevatedColor,
-                        )).toList(),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _chatController,
-                          style: TextStyle(color: textColor, fontSize: 12),
-                          decoration: InputDecoration(
-                            hintText: 'Ask OTD to change something...',
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            fillColor: elevatedColor,
-                          ),
-                          onSubmitted: _sendMessage,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.send, color: AppTheme.gold, size: 18),
-                        onPressed: () => _sendMessage(_chatController.text),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Look confirmed and saved!')),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.gold,
-                  foregroundColor: AppTheme.noir,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                ),
-                child: Text(
-                  'CONFIRM & SAVE LOOK',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w800, letterSpacing: 1.0),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _StepTab extends StatelessWidget {
-  final int num;
-  final String title;
-  final bool isActive;
-  final bool isCurrent;
-
-  const _StepTab({
-    required this.num,
-    required this.title,
-    required this.isActive,
-    required this.isCurrent,
-  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 22,
-          height: 22,
-          decoration: BoxDecoration(
-            color: isActive ? AppTheme.gold : Colors.transparent,
-            shape: BoxShape.circle,
-            border: Border.all(color: isActive ? AppTheme.gold : Colors.grey),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            '$num',
-            style: GoogleFonts.outfit(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: isActive ? AppTheme.noir : Colors.grey,
+    final colors = OtdColors.of(context);
+    final state = ref.watch(planLookProvider);
+
+    return Scaffold(
+      backgroundColor: colors.canvas,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top Step Progress Indicator
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: OtdTokens.screenPaddingH,
+                vertical: 12,
+              ),
+              child: StepProgress(
+                currentStep: state.currentStep + 1,
+                totalSteps: 4,
+                stepLabel: 'STEP ${state.currentStep + 1} OF 4',
+                onBack: _handleBack,
+              ),
+            ),
+
+            // Wizard Step Pages
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildStep1Venue(context, colors, state),
+                  _buildStep2Occasion(context, colors, state),
+                  _buildStep3Mood(context, colors, state),
+                  _buildStep4Weather(context, colors, state),
+                ],
+              ),
+            ),
+
+            // Bottom Navigation Action
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: OtdTokens.screenPaddingH,
+                vertical: 16,
+              ),
+              child: OtdButton(
+                text: state.currentStep == 3 ? 'Create My Look' : 'Next',
+                variant: state.currentStep == 3
+                    ? OtdButtonVariant.gold
+                    : OtdButtonVariant.primary,
+                suffixIcon: state.currentStep == 3
+                    ? const Icon(Iconsax.magic_star, size: 18)
+                    : const Icon(Icons.arrow_forward, size: 18),
+                onPressed: _isCurrentStepValid(state) ? _handleNext : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isCurrentStepValid(PlanLookState state) {
+    switch (state.currentStep) {
+      case 0:
+        return state.isStep1Valid;
+      case 1:
+        return state.isStep2Valid;
+      case 2:
+        return state.isStep3Valid;
+      case 3:
+        return state.isStep4Valid;
+      default:
+        return true;
+    }
+  }
+
+  // STEP 1: WHERE ARE YOU GOING?
+  Widget _buildStep1Venue(
+      BuildContext context, OtdColors colors, PlanLookState state) {
+    final venueRepo = ref.watch(venueRepositoryProvider);
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: OtdTokens.screenPaddingH,
+        vertical: 8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Where are you going?',
+            style: OtdTokens.headingLarge(
+              color: colors.textPrimary,
+              weight: FontWeight.w700,
             ),
           ),
-        ),
-        const SizedBox(width: 6),
+          const SizedBox(height: 6),
+          Text(
+            'Select your venue or destination so AI can calibrate ambient lighting and dress codes.',
+            style: OtdTokens.bodyMedium(color: colors.textMuted),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Search Field
+          TextField(
+            controller: _searchController,
+            style: OtdTokens.bodyMedium(color: colors.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Search restaurants, lounges, galas...',
+              prefixIcon: Icon(Iconsax.search_normal, size: 18, color: colors.textMuted),
+            ),
+            onChanged: (val) {
+              setState(() {});
+              ref.read(planLookProvider.notifier).setCustomVenue(val);
+            },
+          ),
+
+          const SizedBox(height: 14),
+
+          // Use Current Location Row
+          InkWell(
+            onTap: () {
+              ref.read(planLookProvider.notifier).setCustomVenue('Current Location (Nearby)');
+              _searchController.text = 'Current Location (Nearby)';
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  Icon(Iconsax.location, size: 20, color: colors.accent),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Use current location',
+                    style: OtdTokens.bodyMedium(
+                      color: colors.textPrimary,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.arrow_forward_ios, size: 14, color: colors.textMuted),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 22),
+
+          // Venue Category Filter Tabs
+          Row(
+            children: [
+              _buildVenueTabChip(0, 'Recent', colors),
+              const SizedBox(width: 8),
+              _buildVenueTabChip(1, 'Popular', colors),
+              const SizedBox(width: 8),
+              _buildVenueTabChip(2, 'Saved', colors),
+            ],
+          ),
+
+          const SizedBox(height: 18),
+
+          // Venue List
+          FutureBuilder<List<VenueItem>>(
+            future: _searchController.text.trim().isNotEmpty
+                ? venueRepo.searchVenues(_searchController.text.trim())
+                : _venueTab == 0
+                    ? venueRepo.getRecentVenues()
+                    : _venueTab == 1
+                        ? venueRepo.getPopularVenues()
+                        : venueRepo.getSavedVenues(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              }
+              final venues = snapshot.data ?? [];
+              if (venues.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'No matching destinations found.',
+                      style: OtdTokens.bodyMedium(color: colors.textMuted),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: venues.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final v = venues[index];
+                  final isSelected = state.venue?.id == v.id;
+
+                  return OtdCard(
+                    padding: const EdgeInsets.all(12),
+                    borderRadius: 16,
+                    borderColor: isSelected ? colors.accent : colors.border,
+                    borderWidth: isSelected ? 1.5 : 1.0,
+                    color: isSelected ? colors.accentTint : colors.card,
+                    onTap: () {
+                      ref.read(planLookProvider.notifier).setVenue(v);
+                      _searchController.clear();
+                    },
+                    child: Row(
+                      children: [
+                        LuxuryImage(
+                          imageUrl: v.imageUrl,
+                          width: 58,
+                          height: 58,
+                          borderRadius: 12,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                v.name,
+                                style: OtdTokens.headingSmall(
+                                  color: isSelected
+                                      ? (colors.isDark ? colors.accent : OtdTokens.goldDeep)
+                                      : colors.textPrimary,
+                                  weight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                '${v.category} • ${v.location}',
+                                style: OtdTokens.bodySmall(color: colors.textMuted),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isSelected)
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.accent,
+                            ),
+                            child: const Icon(Icons.check, size: 14, color: OtdTokens.white),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVenueTabChip(int index, String label, OtdColors colors) {
+    final isSelected = _venueTab == index;
+    return OtdChip(
+      label: label,
+      isSelected: isSelected,
+      onTap: () => setState(() => _venueTab = index),
+    );
+  }
+
+  // STEP 2: WHAT'S THE OCCASION?
+  Widget _buildStep2Occasion(
+      BuildContext context, OtdColors colors, PlanLookState state) {
+    final occasions = [
+      {'title': 'Date', 'subtitle': 'Alluring & Romantic', 'icon': Iconsax.heart},
+      {'title': 'Casual', 'subtitle': 'Relaxed Comfort', 'icon': Iconsax.coffee},
+      {'title': 'Work', 'subtitle': 'Sharp Corporate', 'icon': Iconsax.briefcase},
+      {'title': 'College', 'subtitle': 'Effortless Campus', 'icon': Iconsax.book},
+      {'title': 'Party', 'subtitle': 'High-Energy Nightlife', 'icon': Iconsax.music},
+      {'title': 'Wedding', 'subtitle': 'Luxury Gala', 'icon': Iconsax.crown},
+      {'title': 'Travel', 'subtitle': 'Packable Chic', 'icon': Iconsax.airplane},
+      {'title': 'Custom', 'subtitle': 'Personalized Event', 'icon': Iconsax.edit},
+    ];
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: OtdTokens.screenPaddingH,
+        vertical: 8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "What's the occasion?",
+            style: OtdTokens.headingLarge(
+              color: colors.textPrimary,
+              weight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tell us what you are dressing for so we can set the appropriate formality and cuts.',
+            style: OtdTokens.bodyMedium(color: colors.textMuted),
+          ),
+
+          const SizedBox(height: 20),
+
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1.25,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: occasions.length,
+            itemBuilder: (context, index) {
+              final occ = occasions[index];
+              final title = occ['title'] as String;
+              final subtitle = occ['subtitle'] as String;
+              final icon = occ['icon'] as IconData;
+              final isSelected = state.occasion == title;
+
+              return SelectableTile(
+                title: title,
+                subtitle: subtitle,
+                icon: Icon(
+                  icon,
+                  size: 26,
+                  color: isSelected ? colors.accent : colors.textMuted,
+                ),
+                isSelected: isSelected,
+                onTap: () {
+                  ref.read(planLookProvider.notifier).setOccasion(title);
+                },
+              );
+            },
+          ),
+
+          if (state.occasion == 'Custom') ...[
+            const SizedBox(height: 20),
+            Text(
+              'SPECIFY YOUR OCCASION',
+              style: OtdTokens.label(color: colors.textSecondary, letterSpacing: 1.0),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _customOccasionController,
+              style: OtdTokens.bodyMedium(color: colors.textPrimary),
+              decoration: const InputDecoration(
+                hintText: 'e.g. Art Gallery Vernissage, Rooftop Birthday',
+              ),
+              onChanged: (val) {
+                ref
+                    .read(planLookProvider.notifier)
+                    .setOccasion('Custom', customText: val);
+              },
+            ),
+          ],
+
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // STEP 3: HOW DO YOU WANT TO FEEL? (MOOD)
+  Widget _buildStep3Mood(
+      BuildContext context, OtdColors colors, PlanLookState state) {
+    final moods = [
+      {'title': 'Elegant', 'subtitle': 'Quiet luxury & refined lines'},
+      {'title': 'Attractive', 'subtitle': 'Alluring & confident appeal'},
+      {'title': 'Confident', 'subtitle': 'Commanding modern architecture'},
+      {'title': 'Casual', 'subtitle': 'Approachable & laid back'},
+      {'title': 'Comfortable', 'subtitle': 'Unrestricted natural flow'},
+      {'title': 'Mysterious', 'subtitle': 'Deep tonal layering'},
+      {'title': 'Romantic', 'subtitle': 'Soft textures & intimate vibe'},
+      {'title': 'Effortless', 'subtitle': 'French undone sophistication'},
+    ];
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: OtdTokens.screenPaddingH,
+        vertical: 8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'How do you want to feel?',
+            style: OtdTokens.headingLarge(
+              color: colors.textPrimary,
+              weight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Choose the emotional energy and fashion persona you want to project today.',
+            style: OtdTokens.bodyMedium(color: colors.textMuted),
+          ),
+
+          const SizedBox(height: 20),
+
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1.35,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: moods.length,
+            itemBuilder: (context, index) {
+              final m = moods[index];
+              final title = m['title']!;
+              final subtitle = m['subtitle']!;
+              final isSelected = state.mood == title;
+
+              return SelectableTile(
+                title: title,
+                subtitle: subtitle,
+                isSelected: isSelected,
+                onTap: () {
+                  ref.read(planLookProvider.notifier).setMood(title);
+                },
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // STEP 4: WEATHER & TIME
+  Widget _buildStep4Weather(
+      BuildContext context, OtdColors colors, PlanLookState state) {
+    final weather = state.weatherSnapshot;
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: OtdTokens.screenPaddingH,
+        vertical: 8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Weather & Timing',
+            style: OtdTokens.headingLarge(
+              color: colors.textPrimary,
+              weight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'AI cross-references micro-climate temperatures with your destination timing.',
+            style: OtdTokens.bodyMedium(color: colors.textMuted),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Weather Card
+          OtdCard(
+            padding: const EdgeInsets.all(20),
+            borderRadius: 20,
+            color: colors.card,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          state.effectiveVenueName,
+                          style: OtdTokens.headingSmall(
+                            color: colors.textPrimary,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          weather?.city ?? 'Local Climate',
+                          style: OtdTokens.bodySmall(color: colors.textMuted),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      weather?.icon ?? '⛅',
+                      style: const TextStyle(fontSize: 32),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${weather?.temperature ?? 24}°C',
+                      style: OtdTokens.headingLarge(
+                        color: colors.isDark ? colors.accent : OtdTokens.goldDeep,
+                        weight: FontWeight.w700,
+                      ).copyWith(fontSize: 40),
+                    ),
+                    const SizedBox(width: 12),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        weather?.condition ?? 'Pleasant & Mild',
+                        style: OtdTokens.bodyLarge(
+                          color: colors.textSecondary,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+                Divider(color: colors.border),
+                const SizedBox(height: 12),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildWeatherStat(
+                      Iconsax.drop,
+                      'HUMIDITY',
+                      '${weather?.humidity ?? 55}%',
+                      colors,
+                    ),
+                    _buildWeatherStat(
+                      Iconsax.wind_2,
+                      'WIND',
+                      '${weather?.windSpeedKmH ?? 12} km/h',
+                      colors,
+                    ),
+                    _buildWeatherStat(
+                      Iconsax.sun_1,
+                      'THERMAL FIT',
+                      'Optimal',
+                      colors,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // When? Segmented Options
+          Text(
+            'WHEN ARE YOU WEARING THIS?',
+            style: OtdTokens.label(color: colors.textSecondary, letterSpacing: 1.0),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: ['Now', 'Later', 'Custom'].map((w) {
+              final isSelected = state.whenOption == w;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: OtdChip(
+                    label: w,
+                    isSelected: isSelected,
+                    height: 44,
+                    onTap: () =>
+                        ref.read(planLookProvider.notifier).setWhen(w),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Time Dropdown / Picker
+          Text(
+            'SELECT TIME',
+            style: OtdTokens.label(color: colors.textSecondary, letterSpacing: 1.0),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.border),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Iconsax.clock, size: 20, color: colors.accent),
+                    const SizedBox(width: 10),
+                    Text(
+                      state.selectedTime,
+                      style: OtdTokens.bodyMedium(
+                        color: colors.textPrimary,
+                        weight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: state.selectedTime,
+                    icon: Icon(Icons.keyboard_arrow_down, color: colors.textMuted),
+                    dropdownColor: colors.card,
+                    items: ['12:30 PM', '4:00 PM', '7:00 PM', '8:00 PM', '9:30 PM']
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(
+                                t,
+                                style: OtdTokens.bodyMedium(color: colors.textPrimary),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        ref
+                            .read(planLookProvider.notifier)
+                            .setWhen(state.whenOption, time: val);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherStat(
+      IconData icon, String label, String value, OtdColors colors) {
+    return Column(
+      children: [
+        Icon(icon, size: 18, color: colors.accent),
+        const SizedBox(height: 4),
         Text(
-          title,
-          style: GoogleFonts.outfit(
-            fontSize: 10,
-            fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
-            color: isCurrent ? AppTheme.gold : Colors.grey,
+          label,
+          style: OtdTokens.label(
+            color: colors.textMuted,
+            letterSpacing: 0.8,
+          ).copyWith(fontSize: 10),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: OtdTokens.bodySmall(
+            color: colors.textPrimary,
+            weight: FontWeight.w700,
           ),
         ),
       ],

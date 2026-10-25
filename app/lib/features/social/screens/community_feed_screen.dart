@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/otd_tokens.dart';
 import '../../../shared/models/fashion_models.dart';
+import '../../../shared/widgets/luxury_image.dart';
 import '../social_repository.dart';
 
 class CommunityFeedScreen extends ConsumerWidget {
@@ -10,94 +12,84 @@ class CommunityFeedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = OtdColors.of(context);
     final feedAsync = ref.watch(socialFeedProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.noir,
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'COMMUNITY LOOKBOOK',
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 2.0,
-                        color: AppTheme.gold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Style Inspiration',
-                      style: Theme.of(context).textTheme.displayMedium,
-                    ),
-                  ],
-                ),
-              ),
+      backgroundColor: colors.canvas,
+      appBar: AppBar(
+        backgroundColor: colors.canvas,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, size: 20, color: colors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'COMMUNITY LOOKBOOK',
+              style: OtdTokens.caption(
+                color: colors.accent,
+                weight: FontWeight.w700,
+              ).copyWith(letterSpacing: 2.0),
             ),
-
-            feedAsync.when(
-              loading: () => const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator(color: AppTheme.gold)),
-              ),
-              error: (err, _) => SliverFillRemaining(
-                child: Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
-              ),
-              data: (posts) {
-                return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final post = posts[index];
-                        return _SocialPostCard(post: post);
-                      },
-                      childCount: posts.length,
-                    ),
-                  ),
-                );
-              },
+            Text(
+              'Style Inspiration',
+              style: OtdTokens.headingSmall(color: colors.textPrimary, weight: FontWeight.w700),
             ),
           ],
         ),
       ),
+      body: SafeArea(
+        child: feedAsync.when(
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppTheme.gold),
+          ),
+          error: (err, _) => Center(
+            child: Text('Error: $err', style: const TextStyle(color: Colors.red)),
+          ),
+          data: (posts) {
+            return ListView.separated(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: OtdTokens.screenPaddingH,
+                vertical: 16,
+              ),
+              itemCount: posts.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 20),
+              itemBuilder: (context, index) {
+                final post = posts[index];
+                return _buildSocialPostCard(context, ref, post, colors);
+              },
+            );
+          },
+        ),
+      ),
     );
   }
-}
 
-class _SocialPostCard extends ConsumerWidget {
-  final SocialPost post;
-
-  const _SocialPostCard({required this.post});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget _buildSocialPostCard(BuildContext context, WidgetRef ref, SocialPost post, OtdColors colors) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceNoir,
+        color: colors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.borderNoir),
+        border: Border.all(color: colors.border),
+        boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 14, offsetY: 4),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Author Header
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 20,
                   backgroundImage: NetworkImage(post.userAvatar),
+                  backgroundColor: colors.canvas,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -106,15 +98,11 @@ class _SocialPostCard extends ConsumerWidget {
                     children: [
                       Text(
                         post.userName,
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.silkWhite,
-                        ),
+                        style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w700),
                       ),
                       Text(
-                        '${post.userHandle} • ${post.timeAgo}',
-                        style: GoogleFonts.outfit(fontSize: 11, color: AppTheme.mutedSilver),
+                        '${post.userHandle} · ${post.timeAgo}',
+                        style: OtdTokens.caption(color: colors.textMuted),
                       ),
                     ],
                   ),
@@ -122,17 +110,16 @@ class _SocialPostCard extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppTheme.elevatedNoir,
+                    color: colors.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.borderNoir),
+                    border: Border.all(color: colors.accent.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     post.vibeTag,
-                    style: GoogleFonts.outfit(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.gold,
-                    ),
+                    style: OtdTokens.caption(
+                      color: colors.accent,
+                      weight: FontWeight.w700,
+                    ).copyWith(letterSpacing: 0.6),
                   ),
                 ),
               ],
@@ -140,11 +127,11 @@ class _SocialPostCard extends ConsumerWidget {
           ),
 
           // Outfit Photography
-          ClipRRect(
-            child: Image.network(
-              post.imageUrl,
-              width: double.infinity,
-              height: 340,
+          SizedBox(
+            height: 340,
+            width: double.infinity,
+            child: LuxuryImage(
+              imageUrl: post.imageUrl,
               fit: BoxFit.cover,
             ),
           ),
@@ -157,11 +144,7 @@ class _SocialPostCard extends ConsumerWidget {
               children: [
                 Text(
                   post.outfitTitle,
-                  style: GoogleFonts.cormorantGaramond(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.silkWhite,
-                  ),
+                  style: OtdTokens.headingSmall(color: colors.textPrimary, weight: FontWeight.w700).copyWith(fontSize: 18),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -175,37 +158,32 @@ class _SocialPostCard extends ConsumerWidget {
                           Icon(
                             post.isLiked ? Icons.favorite : Icons.favorite_border,
                             size: 20,
-                            color: post.isLiked ? AppTheme.roseGold : AppTheme.mutedSilver,
+                            color: post.isLiked ? const Color(0xFFF43F5E) : colors.textMuted,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             '${post.likes}',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.silkWhite,
+                            style: OtdTokens.label(
+                              color: post.isLiked ? const Color(0xFFF43F5E) : colors.textPrimary,
+                              weight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 20),
                     Row(
                       children: [
-                        const Icon(Icons.chat_bubble_outline, size: 18, color: AppTheme.mutedSilver),
+                        Icon(Iconsax.message, size: 18, color: colors.textMuted),
                         const SizedBox(width: 6),
                         Text(
                           '${post.comments}',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.silkWhite,
-                          ),
+                          style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w600),
                         ),
                       ],
                     ),
                     const Spacer(),
-                    const Icon(Icons.share_outlined, size: 18, color: AppTheme.mutedSilver),
+                    Icon(Iconsax.share, size: 18, color: colors.textMuted),
                   ],
                 ),
               ],

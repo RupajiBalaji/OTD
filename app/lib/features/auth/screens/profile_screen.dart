@@ -1,31 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
+import '../../../core/theme/otd_tokens.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../shared/widgets/avatar_widget.dart';
 import '../../outfits/outfits_repository.dart';
+import '../../outfits/screens/notifications_sheet.dart';
+import '../auth_state_provider.dart';
 import 'profile_dna_sheet.dart';
-import 'settings_modal_sheet.dart';
-import 'auth_modal_sheet.dart';
-import 'onboarding_survey_modal.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
+  void _confirmLogout(BuildContext context, WidgetRef ref, OtdColors colors) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Log Out', style: OtdTokens.headingSmall(color: colors.textPrimary)),
+        content: Text(
+          'Are you sure you want to end your current styling session?',
+          style: OtdTokens.bodyMedium(color: colors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: OtdTokens.label(color: colors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: OtdTokens.espresso,
+              foregroundColor: colors.accent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(authNotifierProvider.notifier).logout();
+            },
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = OtdColors.of(context);
     final userProfile = ref.watch(userProfileProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final bgColor = isDark ? AppTheme.noir : AppTheme.ivorySilk;
-    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
-    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
-    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
-    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
-    final mutedColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
-
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: colors.canvas,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -33,18 +61,19 @@ class ProfileScreen extends ConsumerWidget {
             // Top App Bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'STYLE PROFILE & DNA',
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2.0,
-                        color: AppTheme.gold,
-                      ),
+                      style: OtdTokens.caption(
+                        color: colors.accent,
+                        weight: FontWeight.w700,
+                      ).copyWith(letterSpacing: 2.0),
                     ),
                     Row(
                       children: [
@@ -52,23 +81,14 @@ class ProfileScreen extends ConsumerWidget {
                           icon: Icon(
                             isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
                             size: 20,
-                            color: AppTheme.gold,
+                            color: colors.accent,
                           ),
-                          onPressed: () {
-                            ref.read(themeModeProvider.notifier).toggleTheme();
-                          },
+                          onPressed: () => ref.read(themeModeProvider.notifier).toggleTheme(),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.tune_outlined, size: 20, color: AppTheme.gold),
-                          onPressed: () => SettingsModalSheet.show(context),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.lock_outline, size: 20, color: AppTheme.gold),
-                          onPressed: () => AuthModalSheet.show(context),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 20, color: AppTheme.gold),
-                          onPressed: () => ProfileDnaSheet.show(context),
+                          icon: const Icon(Iconsax.setting_2, size: 20),
+                          color: colors.textPrimary,
+                          onPressed: () => context.push('/settings'),
                         ),
                       ],
                     ),
@@ -77,44 +97,46 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
 
-            // Profile Header Card
+            // Profile Header Card (Screen 24 style)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 8,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: surfaceColor,
+                    color: colors.card,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: borderColor),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    border: Border.all(color: colors.border),
+                    boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 16, offsetY: 4),
                   ),
                   child: Row(
                     children: [
-                      // User Avatar with gold border
-                      Container(
-                        width: 76,
-                        height: 76,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.gold, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.gold.withValues(alpha: 0.2),
-                              blurRadius: 12,
+                      // Avatar linked to Avatar Customizer
+                      GestureDetector(
+                        onTap: () => context.push('/avatar'),
+                        child: Container(
+                          width: 74,
+                          height: 74,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: colors.accent, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors.accent.withValues(alpha: 0.25),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: AvatarWidget(
+                              skinTone: userProfile.skinTone,
+                              hairStyle: userProfile.hairStyle,
+                              size: 74,
+                              showGoldBackdrop: true,
                             ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Image.network(
-                            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -127,41 +149,39 @@ class ProfileScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  userProfile.name,
-                                  style: GoogleFonts.cormorantGaramond(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                    color: textColor,
+                                Flexible(
+                                  child: Text(
+                                    userProfile.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: OtdTokens.headingMedium(color: colors.textPrimary, weight: FontWeight.w700),
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Icon(Icons.verified, size: 16, color: AppTheme.gold),
+                                Icon(Icons.verified, size: 16, color: colors.accent),
                               ],
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Hyderabad, India · Age 22',
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                color: mutedColor,
-                              ),
+                              '${userProfile.city} · ${userProfile.gender}',
+                              style: OtdTokens.bodySmall(color: colors.textSecondary),
                             ),
                             const SizedBox(height: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppTheme.gold.withValues(alpha: 0.15),
+                                color: colors.accent.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: colors.accent.withValues(alpha: 0.3)),
                               ),
                               child: Text(
-                                'STYLE ARCHETYPE: MINIMAL LUXE',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.0,
-                                  color: AppTheme.gold,
-                                ),
+                                userProfile.stylePersonas.isNotEmpty
+                                    ? 'STYLE: ${userProfile.stylePersonas.first.toUpperCase()} LUXE'
+                                    : 'STYLE: MINIMAL LUXE',
+                                style: OtdTokens.caption(
+                                  color: colors.accent,
+                                  weight: FontWeight.w700,
+                                ).copyWith(fontSize: 9, letterSpacing: 1.0),
                               ),
                             ),
                           ],
@@ -173,47 +193,39 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
 
-            // Telemetry Grid: Height, Body Shape, Skin Tone
+            // Telemetry Chips (Height, Body Shape, Aesthetic)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Expanded(
-                      child: _TelemetryCard(
+                      child: _buildTelemetryTile(
                         label: 'HEIGHT',
                         value: userProfile.height,
-                        icon: Icons.height,
-                        elevatedColor: elevatedColor,
-                        borderColor: borderColor,
-                        textColor: textColor,
-                        mutedColor: mutedColor,
+                        icon: Iconsax.ruler,
+                        colors: colors,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _TelemetryCard(
-                        label: 'BODY SHAPE',
+                      child: _buildTelemetryTile(
+                        label: 'SHAPE',
                         value: userProfile.bodyShape,
-                        icon: Icons.accessibility,
-                        elevatedColor: elevatedColor,
-                        borderColor: borderColor,
-                        textColor: textColor,
-                        mutedColor: mutedColor,
+                        icon: Iconsax.user_tag,
+                        colors: colors,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _TelemetryCard(
-                        label: 'SKIN TONE',
-                        value: 'Medium',
-                        isColorSwatch: true,
-                        swatchColor: const Color(0xFFD4A373),
-                        icon: Icons.palette_outlined,
-                        elevatedColor: elevatedColor,
-                        borderColor: borderColor,
-                        textColor: textColor,
-                        mutedColor: mutedColor,
+                      child: _buildTelemetryTile(
+                        label: 'FIT',
+                        value: userProfile.preferredFit,
+                        icon: Iconsax.scissor,
+                        colors: colors,
                       ),
                     ),
                   ],
@@ -221,193 +233,169 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
 
-            // Style Preferences Card (Screenshot 2: "Your Style Profile")
+            // Section 1: Main Menu Rows (Reference Screen 24)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 12,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ACCOUNT & WARDROBE',
+                      style: OtdTokens.caption(
+                        color: colors.accent,
+                        weight: FontWeight.w700,
+                      ).copyWith(letterSpacing: 1.5),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Column(
                         children: [
-                          Text(
-                            'STYLE PREFERENCES',
-                            style: GoogleFonts.outfit(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.2,
-                              color: AppTheme.gold,
-                            ),
+                          _buildMenuRow(
+                            icon: Iconsax.user_octagon,
+                            title: 'My Avatar',
+                            subtitle: 'Customize skin tone, hair & body shape',
+                            colors: colors,
+                            onTap: () => context.push('/avatar'),
                           ),
-                          GestureDetector(
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.user,
+                            title: 'My Profile',
+                            subtitle: 'Calibrate your personal dimensions',
+                            colors: colors,
                             onTap: () => ProfileDnaSheet.show(context),
-                            child: Text(
-                              'Edit',
-                              style: GoogleFonts.outfit(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.gold,
-                              ),
-                            ),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Icons.checkroom_outlined,
+                            title: 'My Closet',
+                            subtitle: 'View, filter, and add garments',
+                            colors: colors,
+                            onTap: () => context.go('/closet'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.bookmark,
+                            title: 'Saved Looks',
+                            subtitle: 'Your curated and favorite outfits',
+                            colors: colors,
+                            onTap: () => context.push('/saved'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.slider_horizontal,
+                            title: 'Style Preferences',
+                            subtitle: 'Color palettes, aesthetics, silhouettes',
+                            colors: colors,
+                            onTap: () => ProfileDnaSheet.show(context),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.notification,
+                            title: 'Notifications',
+                            subtitle: 'Daily morning style alerts & wear reminders',
+                            colors: colors,
+                            onTap: () => NotificationsSheet.show(context),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-
-                      _ProfileDetailRow(
-                        icon: Icons.style_outlined,
-                        title: 'Aesthetic',
-                        value: userProfile.stylePersonas.join(', '),
-                        textColor: textColor,
-                        mutedColor: mutedColor,
-                      ),
-                      const Divider(height: 16),
-
-                      _ProfileDetailRow(
-                        icon: Icons.checkroom_outlined,
-                        title: 'Preferred Fit',
-                        value: userProfile.preferredFit,
-                        textColor: textColor,
-                        mutedColor: mutedColor,
-                      ),
-                      const Divider(height: 16),
-
-                      _ProfileDetailRow(
-                        icon: Icons.palette_outlined,
-                        title: 'Palette Tone',
-                        value: userProfile.palettePreferences.join(' · '),
-                        textColor: textColor,
-                        mutedColor: mutedColor,
-                      ),
-                      const Divider(height: 16),
-
-                      _ProfileDetailRow(
-                        icon: Icons.auto_awesome,
-                        title: 'Style Mood',
-                        value: 'Modern · Versatile · Comfortable',
-                        textColor: textColor,
-                        mutedColor: mutedColor,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Wardrobe Goals & Priorities
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'WARDROBE GOALS',
-                        style: GoogleFonts.outfit(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                          color: AppTheme.gold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          '✨ Elevate Date Night Looks',
-                          '👔 Sharp Executive Presence',
-                          '🌱 Maximize Garment Versatility',
-                          '🎨 Master Color Harmonies',
-                          '⚡ Fast Morning Decisions',
-                        ].map((goal) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: elevatedColor,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: borderColor),
-                              ),
-                              child: Text(
-                                goal,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: textColor,
-                                ),
-                              ),
-                            )).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Action Buttons: Calibrate Style DNA
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.assignment_outlined, size: 16),
-                        label: Text(
-                          'FULL STYLE ONBOARDING SURVEY',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.gold,
-                          foregroundColor: AppTheme.noir,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                        ),
-                        onPressed: () => OnboardingSurveyModal.show(context),
-                      ),
                     ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.tune, size: 16, color: AppTheme.gold),
-                        label: Text(
-                          'CALIBRATE STYLE DNA PROFILE',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.0,
-                            color: textColor,
+                  ],
+                ),
+              ),
+            ),
+
+            // Section 2: Style Intelligence Suite
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'STYLE SUITE & TOOLS',
+                      style: OtdTokens.caption(
+                        color: colors.accent,
+                        weight: FontWeight.w700,
+                      ).copyWith(letterSpacing: 1.5),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildMenuRow(
+                            icon: Iconsax.chart_2,
+                            title: 'Closet Intelligence',
+                            subtitle: 'Wear frequency, cost per wear & analytics',
+                            colors: colors,
+onTap: () => context.push('/closet-intelligence'),
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: AppTheme.gold),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.radar_2,
+                            title: 'Gap Intelligence',
+                            subtitle: 'Missing essentials to unlock new looks',
+                            colors: colors,
+onTap: () => context.push('/gap-intelligence'),
                           ),
-                        ),
-                        onPressed: () => ProfileDnaSheet.show(context),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.calendar_1,
+                            title: 'Outfit Calendar',
+                            subtitle: 'Schedule looks for upcoming events',
+                            colors: colors,
+onTap: () => context.push('/calendar'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.lamp_on,
+                            title: 'Outfit Ideas',
+                            subtitle: 'Curated editorial ensembles & aesthetics',
+                            colors: colors,
+onTap: () => context.push('/ideas'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.location,
+                            title: 'Destinations',
+                            subtitle: 'Venue dress codes and weather guidance',
+                            colors: colors,
+onTap: () => context.push('/destinations'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.magicpen,
+                            title: 'Virtual Try-On',
+                            subtitle: 'Simulate looks with your virtual avatar',
+                            colors: colors,
+onTap: () => context.push('/try-on'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.people,
+                            title: 'Community Feed',
+                            subtitle: 'See looks curated by fellow fashion enthusiasts',
+                            colors: colors,
+onTap: () => context.push('/community'),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -415,144 +403,176 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            // Section 3: Preferences & Support
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PREFERENCES & SUPPORT',
+                      style: OtdTokens.caption(
+                        color: colors.accent,
+                        weight: FontWeight.w700,
+                      ).copyWith(letterSpacing: 1.5),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildMenuRow(
+                            icon: Iconsax.clipboard_text,
+                            title: 'Recalibrate Style Onboarding',
+                            subtitle: 'Retake the 3-step style calibration',
+                            colors: colors,
+                            onTap: () => context.push('/onboarding/about'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.shield_tick,
+                            title: 'Privacy & Data Storage',
+                            subtitle: 'What is stored locally on this device',
+                            colors: colors,
+                            onTap: () => context.push('/privacy'),
+                          ),
+                          _buildDivider(colors),
+                          _buildMenuRow(
+                            icon: Iconsax.message_question,
+                            title: 'Help & Concierge Support',
+                            subtitle: 'FAQ, styling tips & concierge email',
+                            colors: colors,
+                            onTap: () => context.push('/help'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Log Out Button (Screen 24 styled)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 16,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colors.card,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colors.accent.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Iconsax.logout, size: 20, color: colors.accent),
+                    ),
+                    title: Text(
+                      'Log Out',
+                      style: OtdTokens.label(
+                        color: colors.accent,
+                        weight: FontWeight.w700,
+                      ).copyWith(letterSpacing: 0.5),
+                    ),
+                    subtitle: Text(
+                      'Sign out of your OTD account',
+                      style: OtdTokens.caption(color: colors.textMuted),
+                    ),
+                    trailing: Icon(Icons.chevron_right, size: 18, color: colors.accent),
+                    onTap: () => _confirmLogout(context, ref, colors),
+                  ),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 48)),
           ],
         ),
       ),
     );
   }
-}
 
-class _TelemetryCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final bool isColorSwatch;
-  final Color? swatchColor;
-  final Color elevatedColor;
-  final Color borderColor;
-  final Color textColor;
-  final Color mutedColor;
-
-  const _TelemetryCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.isColorSwatch = false,
-    this.swatchColor,
-    required this.elevatedColor,
-    required this.borderColor,
-    required this.textColor,
-    required this.mutedColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildTelemetryTile({
+    required String label,
+    required String value,
+    required IconData icon,
+    required OtdColors colors,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: elevatedColor,
+        color: colors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 16, color: AppTheme.gold),
-          const SizedBox(height: 6),
+          Icon(icon, size: 16, color: colors.accent),
+          const SizedBox(height: 4),
           Text(
             label,
-            style: GoogleFonts.outfit(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.0,
-              color: mutedColor,
-            ),
+            style: OtdTokens.caption(color: colors.textMuted, weight: FontWeight.w700).copyWith(fontSize: 8.5),
           ),
-          const SizedBox(height: 4),
-          if (isColorSwatch)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: swatchColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.2)),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  value,
-                  style: GoogleFonts.outfit(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: textColor,
-                  ),
-                ),
-              ],
-            )
-          else
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-              ),
-            ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w700).copyWith(fontSize: 11),
+          ),
         ],
       ),
     );
   }
-}
 
-class _ProfileDetailRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final Color textColor;
-  final Color mutedColor;
-
-  const _ProfileDetailRow({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.textColor,
-    required this.mutedColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: AppTheme.gold),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 90,
-          child: Text(
-            title,
-            style: GoogleFonts.outfit(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: mutedColor,
-            ),
-          ),
+  Widget _buildMenuRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required OtdColors colors,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: colors.canvas,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: colors.border),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: GoogleFonts.outfit(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-            ),
-          ),
-        ),
-      ],
+        child: Icon(icon, size: 18, color: colors.accent),
+      ),
+      title: Text(
+        title,
+        style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: OtdTokens.caption(color: colors.textSecondary).copyWith(fontSize: 10.5),
+      ),
+      trailing: Icon(Icons.chevron_right, size: 16, color: colors.textMuted),
+      onTap: onTap,
     );
+  }
+
+  Widget _buildDivider(OtdColors colors) {
+    return Divider(height: 1, indent: 56, endIndent: 16, color: colors.border.withValues(alpha: 0.6));
   }
 }

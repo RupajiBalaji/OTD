@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
+import '../../../core/theme/otd_tokens.dart';
+import '../../../shared/widgets/luxury_image.dart';
+import '../../weather/weather_repository.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../outfits_repository.dart';
 import '../../auth/screens/profile_dna_sheet.dart';
-import '../../auth/screens/auth_modal_sheet.dart';
-import '../../auth/screens/settings_modal_sheet.dart';
-import '../../wardrobe/screens/add_piece_sheet.dart';
-import 'plan_your_look_sheet.dart';
-import 'notifications_sheet.dart';
-import 'saved_looks_screen.dart';
-import 'destinations_screen.dart';
-import 'outfit_calendar_screen.dart';
-import 'outfit_ideas_screen.dart';
-import 'interactive_stylist_screen.dart';
-import 'gap_intelligence_screen.dart';
-import '../../auth/screens/onboarding_survey_modal.dart';
 
 class DailyOtdScreen extends ConsumerStatefulWidget {
   const DailyOtdScreen({super.key});
@@ -26,6 +19,52 @@ class DailyOtdScreen extends ConsumerStatefulWidget {
 }
 
 class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
+  String _getTimeGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
+  Widget _buildScreen8QuickAction({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required OtdColors colors,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+          boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 6, offsetY: 2),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: colors.accent),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: OtdTokens.label(
+                color: colors.textPrimary,
+                weight: FontWeight.w600,
+              ).copyWith(fontSize: 11),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   final TextEditingController _promptController =
       TextEditingController(text: 'Rooftop restaurant tonight for a date');
   final TextEditingController _chatController = TextEditingController();
@@ -92,7 +131,12 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
   Widget build(BuildContext context) {
     final curatedAsync = ref.watch(curatedOutfitProvider);
     final userProfile = ref.watch(userProfileProvider);
+    final weatherAsync = ref.watch(currentWeatherProvider);
+    final savedLooks = ref.watch(savedLooksProvider);
+    final recentLooks = ref.watch(recentLooksProvider);
+    final displayRecent = recentLooks.isNotEmpty ? recentLooks : savedLooks;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = OtdColors.of(context);
 
     final bgColor = isDark ? AppTheme.noir : AppTheme.ivorySilk;
     final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
@@ -118,7 +162,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => AuthModalSheet.show(context),
+                          onTap: () => context.push('/profile'),
                           child: Container(
                             width: 36,
                             height: 36,
@@ -188,7 +232,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             size: 20,
                             color: AppTheme.gold,
                           ),
-                          onPressed: () => NotificationsSheet.show(context),
+                          onPressed: () => context.push('/notifications'),
                         ),
                         IconButton(
                           icon: Icon(
@@ -206,7 +250,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             size: 19,
                             color: AppTheme.gold,
                           ),
-                          onPressed: () => SettingsModalSheet.show(context),
+                          onPressed: () => context.push('/settings'),
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
@@ -248,114 +292,89 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Greeting matching Screenshot 1 & 2
-                    Text(
-                      'Hi Mustafa,',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "What's your vibe today?",
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: mutedColor,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Vibe Horizontal Selector
-                    SizedBox(
-                      height: 40,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        children: [
-                          'Daily Wear',
-                          'Office',
-                          'Date Night',
-                          'Travel',
-                          'Party',
-                          'Custom',
-                        ].map((vibe) {
-                          final isSelected = _selectedVibe.toLowerCase().contains(vibe.toLowerCase()) ||
-                              (vibe == 'Date Night' && _selectedOccasion == 'Date Night');
-                          return GestureDetector(
-                            onTap: () {
-                              if (vibe == 'Date Night') {
-                                PlanYourLookSheet.show(context);
-                              } else {
-                                setState(() {
-                                  _selectedVibe = vibe;
-                                  _selectedOccasion = vibe;
-                                });
-                              }
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: isSelected ? AppTheme.gold : elevatedColor,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isSelected ? AppTheme.gold : borderColor,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  if (vibe == 'Custom')
-                                    Icon(
-                                      Icons.tune,
-                                      size: 13,
-                                      color: isSelected ? AppTheme.noir : AppTheme.gold,
-                                    )
-                                  else
-                                    Icon(
-                                      Icons.auto_awesome,
-                                      size: 13,
-                                      color: isSelected ? AppTheme.noir : AppTheme.gold,
-                                    ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    vibe,
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 11,
-                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                      color: isSelected ? AppTheme.noir : textColor,
-                                    ),
-                                  ),
-                                ],
+                    // Screen 8 Header: Dynamic Greeting & Weather Chip
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_getTimeGreeting()},',
+                              style: OtdTokens.bodyMedium(color: mutedColor),
+                            ),
+                            Text(
+                              userProfile.name,
+                              style: OtdTokens.headingLarge(
+                                color: textColor,
+                                weight: FontWeight.w700,
                               ),
                             ),
-                          );
-                        }).toList(),
-                      ),
+                          ],
+                        ),
+                        // City + Temperature chip
+                        weatherAsync.when(
+                          data: (w) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: surfaceColor,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: borderColor),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(w.icon, style: const TextStyle(fontSize: 14)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${w.city} • ${w.temperature}°C',
+                                  style: OtdTokens.label(
+                                    color: isDark ? AppTheme.gold : const Color(0xFF1C1612),
+                                    weight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
 
-                    // Editorial Banner matching Screenshot 1
+                    const SizedBox(height: 18),
+
+                    // Screen 8 Dark Hero Card: "Where are you going today?"
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(22),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
-                            Color(0xFF1A1A1E),
-                            Color(0xFF2C2523),
+                            Color(0xFF141316),
+                            Color(0xFF221F1C),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: AppTheme.gold.withValues(alpha: 0.35),
+                          width: 1.2,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: Colors.black.withValues(alpha: 0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
@@ -366,147 +385,246 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'YOUR WARDROBE. YOUR WORLD.',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.5,
+                                'AI LOOK PLANNER',
+                                style: OtdTokens.label(
                                   color: AppTheme.gold,
+                                  letterSpacing: 1.5,
+                                  weight: FontWeight.w700,
                                 ),
                               ),
-                              const Text('✦', style: TextStyle(color: AppTheme.gold, fontSize: 12)),
+                              const Text('✦', style: TextStyle(color: AppTheme.gold, fontSize: 13)),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Where are you going today?',
+                            style: GoogleFonts.cormorantGaramond(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFF7EFE0),
+                              height: 1.2,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Your style. Every place.',
-                            style: GoogleFonts.cormorantGaramond(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              fontStyle: FontStyle.italic,
-                              color: const Color(0xFFF7EFE0),
+                            'Tailor your look for any venue, event, or mood in seconds with your closet synergy.',
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              color: const Color(0xFFC7BBAE),
+                              height: 1.4,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'AI styling powered by the clothes you already own.',
-                            style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              color: const Color(0xFFD5C29D),
+                          const SizedBox(height: 20),
+
+                          // "Create My Look" Pill with Arrow
+                          GestureDetector(
+                            onTap: () => context.push('/plan'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.gold,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.gold.withValues(alpha: 0.4),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Create My Look',
+                                    style: OtdTokens.buttonText(
+                                      color: const Color(0xFF1C1612),
+                                      weight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF1C1612),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.arrow_forward,
+                                        size: 14,
+                                        color: AppTheme.gold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
 
-                    // Your Next Plan Card matching Screenshot 1
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: surfaceColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: borderColor),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                    const SizedBox(height: 22),
+
+                    // Quick Actions Row (My Closet, Saved Looks, Style Profile)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildScreen8QuickAction(
+                            context: context,
+                            title: 'My Closet',
+                            icon: Iconsax.bag_2,
+                            colors: colors,
+                            onTap: () => context.go('/closet'),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'YOUR NEXT PLAN',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.2,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildScreen8QuickAction(
+                            context: context,
+                            title: 'Saved Looks',
+                            icon: Iconsax.bookmark,
+                            colors: colors,
+                            onTap: () => context.push('/saved'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildScreen8QuickAction(
+                            context: context,
+                            title: 'Style Profile',
+                            icon: Iconsax.user,
+                            colors: colors,
+                            onTap: () => context.go('/profile'),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Screen 8: Recent Looks Horizontal List
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Recent Looks',
+                          style: OtdTokens.headingSmall(
+                            color: textColor,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/saved'),
+                          child: Text(
+                            'See all',
+                            style: OtdTokens.label(
+                              color: AppTheme.gold,
+                              weight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (displayRecent.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: surfaceColor,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Iconsax.magicpen, size: 28, color: colors.accent),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No recent outfits yet',
+                              style: OtdTokens.bodyMedium(
+                                color: textColor,
+                                weight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Plan your first look to start your daily wardrobe history.',
+                              style: OtdTokens.bodySmall(color: mutedColor),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () => context.push('/plan'),
+                              child: Text(
+                                'Create Your First Look',
+                                style: OtdTokens.label(
                                   color: AppTheme.gold,
+                                  weight: FontWeight.w700,
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  const Icon(Icons.wb_cloudy_outlined, size: 14, color: AppTheme.gold),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Hyderabad · 28°C',
-                                    style: GoogleFonts.outfit(fontSize: 10, color: mutedColor),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 140,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: displayRecent.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemBuilder: (context, idx) {
+                            final look = displayRecent[idx];
+                            return GestureDetector(
+                              onTap: () => context.push('/plan/result'),
+                              child: Container(
+                                width: 140,
+                                padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: elevatedColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3)),
+                                  color: surfaceColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: borderColor),
                                 ),
-                                child: const Center(
-                                  child: Icon(Icons.restaurant, color: AppTheme.gold, size: 22),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Dinner at L\'amore',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: textColor,
+                                    if (look.items.isNotEmpty)
+                                      LuxuryImage(
+                                        imageUrl: look.items.first.imageUrl,
+                                        width: double.infinity,
+                                        height: 70,
+                                        borderRadius: 10,
                                       ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      look.title,
+                                      style: OtdTokens.label(
+                                        color: textColor,
+                                        weight: FontWeight.w700,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
-                                      '8:00 PM · Today · Date Night (Banjara Hills)',
-                                      style: GoogleFonts.outfit(fontSize: 11, color: mutedColor),
+                                      look.venue,
+                                      style: OtdTokens.bodySmall(color: mutedColor),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.auto_awesome, size: 15),
-                              label: Text(
-                                'PLAN YOUR PERFECT LOOK (3-STEP AI WIZARD)',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.gold,
-                                foregroundColor: AppTheme.noir,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              onPressed: () => PlanYourLookSheet.show(context),
-                            ),
-                          ),
-                        ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+
+                    const SizedBox(height: 28),
 
                     // Quick Actions (Screenshot 2)
                     Text(
@@ -535,7 +653,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             borderColor: borderColor,
                             textColor: textColor,
                             mutedColor: mutedColor,
-                            onTap: () => AddPieceSheet.show(context),
+                            onTap: () => context.push('/closet/add'),
                           ),
                           _QuickActionCard(
                             title: 'Get Outfit Ideas',
@@ -547,17 +665,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             textColor: textColor,
                             mutedColor: mutedColor,
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => OutfitIdeasScreen(
-                                    onRecreateWithCloset: (title) {
-                                      ref.read(curatedOutfitProvider.notifier).modifyCuratedOutfit('Recreate $title');
-                                      PlanYourLookSheet.show(context);
-                                    },
-                                  ),
-                                ),
-                              );
+context.push('/ideas');
                             },
                           ),
                           _QuickActionCard(
@@ -570,22 +678,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             textColor: textColor,
                             mutedColor: mutedColor,
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DestinationsScreen(
-                                    onSelectVenue: (venue) {
-                                      ref.read(curatedOutfitProvider.notifier).curateOutfit(
-                                            venue: venue.name,
-                                            occasion: venue.category,
-                                            vibe: venue.vibe,
-                                            weather: 'Tonight · 28°C',
-                                          );
-                                      PlanYourLookSheet.show(context);
-                                    },
-                                  ),
-                                ),
-                              );
+context.push('/destinations');
                             },
                           ),
                           _QuickActionCard(
@@ -598,14 +691,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             textColor: textColor,
                             mutedColor: mutedColor,
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => OutfitCalendarScreen(
-                                    onPlanLook: () => PlanYourLookSheet.show(context),
-                                  ),
-                                ),
-                              );
+context.push('/calendar');
                             },
                           ),
                           _QuickActionCard(
@@ -617,19 +703,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             borderColor: borderColor,
                             textColor: textColor,
                             mutedColor: mutedColor,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => SavedLooksScreen(
-                                    onWearLook: (look) {
-                                      ref.read(curatedOutfitProvider.notifier).modifyCuratedOutfit(look.title);
-                                      PlanYourLookSheet.show(context);
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
+                            onTap: () => context.push('/saved'),
                           ),
                           _QuickActionCard(
                             title: 'Stylist Preset Lab',
@@ -641,12 +715,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             textColor: textColor,
                             mutedColor: mutedColor,
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const InteractiveStylistStudioScreen(),
-                                ),
-                              );
+context.push('/stylist');
                             },
                           ),
                           _QuickActionCard(
@@ -659,12 +728,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             textColor: textColor,
                             mutedColor: mutedColor,
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const GapIntelligenceScreen(),
-                                ),
-                              );
+context.push('/gap-intelligence');
                             },
                           ),
                           _QuickActionCard(
@@ -676,7 +740,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                             borderColor: borderColor,
                             textColor: textColor,
                             mutedColor: mutedColor,
-                            onTap: () => OnboardingSurveyModal.show(context),
+                            onTap: () => context.push('/onboarding/about'),
                           ),
                         ],
                       ),
@@ -705,7 +769,7 @@ class _DailyOtdScreenState extends ConsumerState<DailyOtdScreen> {
                           ],
                         ),
                         TextButton(
-                          onPressed: () => PlanYourLookSheet.show(context),
+                          onPressed: () => context.push('/plan'),
                           child: Text(
                             'See All →',
                             style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.gold),

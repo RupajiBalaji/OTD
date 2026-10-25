@@ -1,4 +1,4 @@
-package com.example.fashion_companion_app
+package com.otd.app
 
 import io.flutter.embedding.android.FlutterActivity
 

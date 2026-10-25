@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/otd_tokens.dart';
 import '../../../shared/models/fashion_models.dart';
+import '../../../shared/widgets/luxury_image.dart';
+import '../../../shared/widgets/otd_button.dart';
+import '../../../shared/widgets/otd_chip.dart';
 import '../wardrobe_repository.dart';
-import 'add_piece_sheet.dart';
 
 class WardrobeScreen extends ConsumerStatefulWidget {
   const WardrobeScreen({super.key});
@@ -17,6 +21,8 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   int? _selectedFormality; // null = all, 1..5
+  bool _isSectionedView = false;
+  bool _isSearchVisible = false;
 
   @override
   void dispose() {
@@ -41,401 +47,544 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
     }
   }
 
-  void _showItemDetail(BuildContext context, WardrobeItem item, bool isDark) {
-    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
-    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
-    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
-    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
-    final mutedColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
+  void _showItemDetail(BuildContext context, WardrobeItem item) {
+    final colors = OtdColors.of(context);
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => Container(
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: const Border(top: BorderSide(color: AppTheme.gold, width: 1.5)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: mutedColor.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
+      builder: (bottomSheetCtx) => Consumer(
+        builder: (context, ref, _) {
+          // Watch the fresh item from repository in case wear count updates
+          final wardrobeAsync = ref.watch(wardrobeProvider);
+          final currentItem = wardrobeAsync.maybeWhen(
+            data: (items) => items.firstWhere((i) => i.id == item.id, orElse: () => item),
+            orElse: () => item,
+          );
+          final currentCostPerWear = currentItem.purchasePrice / (currentItem.timesWorn > 0 ? currentItem.timesWorn : 1);
 
-            // Top action bar: Edit / Delete
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.88,
+            ),
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: colors.accent, width: 1.5)),
+              boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 24, offsetY: -4),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'GARMENT INSPECTION',
-                  style: GoogleFonts.outfit(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                    color: AppTheme.gold,
+                // Drag handle
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colors.textMuted.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFF43F5E)),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        backgroundColor: surfaceColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        title: Text('Delete Garment?', style: GoogleFonts.cormorantGaramond(fontWeight: FontWeight.bold, color: textColor)),
-                        content: Text(
-                          'Are you sure you want to remove "${item.name}" from your digital closet?',
-                          style: GoogleFonts.outfit(fontSize: 13, color: mutedColor),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Top bar: Label & Delete icon
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'GARMENT INSPECTION',
+                              style: OtdTokens.caption(
+                                color: colors.accent,
+                                weight: FontWeight.w700,
+                              ).copyWith(letterSpacing: 1.8),
+                            ),
+                            IconButton(
+                              icon: const Icon(Iconsax.trash, size: 20, color: Color(0xFFF43F5E)),
+                              tooltip: 'Delete Garment',
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    backgroundColor: colors.card,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    title: Text(
+                                      'Delete Garment?',
+                                      style: OtdTokens.headingSmall(color: colors.textPrimary),
+                                    ),
+                                    content: Text(
+                                      'Are you sure you want to remove "${currentItem.name}" from your digital closet?',
+                                      style: OtdTokens.bodyMedium(color: colors.textSecondary),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: Text('Cancel', style: OtdTokens.label(color: colors.textMuted)),
+                                      ),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFF43F5E),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        ),
+                                        onPressed: () {
+                                          ref.read(wardrobeProvider.notifier).deleteItem(currentItem.id);
+                                          Navigator.pop(ctx);
+                                          Navigator.pop(bottomSheetCtx);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Removed ${currentItem.name} from wardrobe.')),
+                                          );
+                                        },
+                                        child: const Text('Delete'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: Text('Cancel', style: GoogleFonts.outfit(color: mutedColor)),
+                        const SizedBox(height: 12),
+
+                        // Large Garment Image
+                        Center(
+                          child: Container(
+                            width: double.infinity,
+                            height: 220,
+                            decoration: BoxDecoration(
+                              color: colors.canvas,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: colors.border),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(19),
+                              child: Hero(
+                                tag: 'closet_item_${currentItem.id}',
+                                child: LuxuryImage(
+                                  imageUrl: currentItem.imageUrl,
+                                  fit: BoxFit.cover,
+                                  fallbackIcon: currentItem.icon,
+                                ),
+                              ),
+                            ),
                           ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
-                            onPressed: () {
-                              ref.read(wardrobeProvider.notifier).deleteItem(item.id);
-                              Navigator.pop(ctx);
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Removed ${item.name} from wardrobe.')),
-                              );
-                            },
-                            child: const Text('Delete'),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Brand & Name
+                        Text(
+                          currentItem.brand.toUpperCase(),
+                          style: OtdTokens.caption(
+                            color: colors.accent,
+                            weight: FontWeight.w700,
+                          ).copyWith(letterSpacing: 1.5),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          currentItem.name,
+                          style: OtdTokens.headingMedium(color: colors.textPrimary, weight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${currentItem.subType} · ${currentItem.color} · ${currentItem.season}',
+                          style: OtdTokens.bodySmall(color: colors.textSecondary),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Wear Analytics Card (Times Worn & Cost per Wear)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: colors.accent.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: colors.accent.withValues(alpha: 0.25)),
                           ),
-                        ],
-                      ),
-                    );
-                  },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    '${currentItem.timesWorn}',
+                                    style: OtdTokens.headingMedium(color: colors.textPrimary, weight: FontWeight.w700),
+                                  ),
+                                  Text('Times Worn', style: OtdTokens.caption(color: colors.textSecondary)),
+                                ],
+                              ),
+                              Container(height: 36, width: 1, color: colors.border),
+                              Column(
+                                children: [
+                                  Text(
+                                    '\$${currentCostPerWear.toStringAsFixed(1)}',
+                                    style: OtdTokens.headingMedium(color: colors.accent, weight: FontWeight.w700),
+                                  ),
+                                  Text('Cost per Wear', style: OtdTokens.caption(color: colors.textSecondary)),
+                                ],
+                              ),
+                              Container(height: 36, width: 1, color: colors.border),
+                              Column(
+                                children: [
+                                  Text(
+                                    '\$${currentItem.purchasePrice.toStringAsFixed(0)}',
+                                    style: OtdTokens.headingMedium(color: colors.textPrimary, weight: FontWeight.w700),
+                                  ),
+                                  Text('Purchase Price', style: OtdTokens.caption(color: colors.textSecondary)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Garment Attributes
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: colors.canvas,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: Column(
+                            children: [
+                              _DetailRow(label: 'Category', value: currentItem.category.name.toUpperCase(), colors: colors),
+                              const Divider(height: 18),
+                              _DetailRow(label: 'Fabric & Material', value: currentItem.fabric.isNotEmpty ? currentItem.fabric : 'Pure Cotton', colors: colors),
+                              const Divider(height: 18),
+                              _DetailRow(label: 'Silhouette Fit', value: currentItem.fit, colors: colors),
+                              const Divider(height: 18),
+                              _DetailRow(
+                                label: 'Formality Tier',
+                                value: 'Tier ${currentItem.formality} (${_getFormalityLabel(currentItem.formality)})',
+                                colors: colors,
+                                isAccent: true,
+                              ),
+                              const Divider(height: 18),
+                              _DetailRow(label: 'Color Palette', value: currentItem.color, colors: colors),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Action Buttons: Mark Worn & Edit
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: OtdButton(
+                                text: 'MARK AS WORN',
+                                icon: const Icon(Iconsax.tick_circle, size: 18, color: Colors.white),
+                                isFullWidth: true,
+                                onPressed: () {
+                                  ref.read(wardrobeProvider.notifier).markWorn(currentItem.id);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Marked "${currentItem.name}" as worn! (Now ${currentItem.timesWorn + 1} wears)')),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: OtdButton(
+                                text: 'EDIT',
+                                variant: OtdButtonVariant.outline,
+                                isFullWidth: true,
+                                onPressed: () {
+                                  _showEditGarmentDialog(context, currentItem);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-
-            // Item Image or Icon
-            Center(
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: elevatedColor,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: AppTheme.gold),
-                ),
-                clipBehavior: Clip.antiAlias,
-                alignment: Alignment.center,
-                child: Image.network(
-                  item.imageUrl,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Text(item.icon, style: const TextStyle(fontSize: 42)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              item.brand.toUpperCase(),
-              style: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.8,
-                color: AppTheme.gold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.name,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-              ),
-            ),
-            Text(
-              '${item.subType} · ${item.color}',
-              style: GoogleFonts.outfit(fontSize: 12, color: mutedColor),
-            ),
-            const SizedBox(height: 18),
-
-            // Attributes Grid for AI
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: elevatedColor,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: borderColor),
-              ),
-              child: Column(
-                children: [
-                  _DetailRow(label: 'Category', value: item.category.name.toUpperCase(), textColor: textColor, mutedColor: mutedColor),
-                  const Divider(height: 16),
-                  _DetailRow(label: 'Silhouette Cut', value: item.fit, textColor: textColor, mutedColor: mutedColor),
-                  const Divider(height: 16),
-                  _DetailRow(
-                    label: 'Formality Tier',
-                    value: 'Tier ${item.formality} (${_getFormalityLabel(item.formality)})',
-                    textColor: AppTheme.gold,
-                    mutedColor: mutedColor,
-                  ),
-                  const Divider(height: 16),
-                  _DetailRow(label: 'Color Family', value: item.color, textColor: textColor, mutedColor: mutedColor),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Styling note
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.gold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'AI STYLING COMPATIBILITY',
-                    style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w700, color: AppTheme.gold, letterSpacing: 1.2),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Eligible for automatic curation in ${_getFormalityLabel(item.formality)} settings. Complements your personal style DNA.',
-                    style: GoogleFonts.outfit(fontSize: 11, color: textColor),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.gold, foregroundColor: AppTheme.noir),
-                onPressed: () => Navigator.pop(context),
-                child: const Text('DONE'),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
+    );
+  }
+
+  void _showEditGarmentDialog(BuildContext context, WardrobeItem item) {
+    final nameCtrl = TextEditingController(text: item.name);
+    final brandCtrl = TextEditingController(text: item.brand);
+    final colorCtrl = TextEditingController(text: item.color);
+    int formality = item.formality;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final colors = OtdColors.of(ctx);
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: colors.card,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text('Edit Garment Attributes', style: OtdTokens.headingSmall(color: colors.textPrimary)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameCtrl,
+                      decoration: const InputDecoration(labelText: 'Garment Name'),
+                      style: OtdTokens.bodyMedium(color: colors.textPrimary),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: brandCtrl,
+                      decoration: const InputDecoration(labelText: 'Brand'),
+                      style: OtdTokens.bodyMedium(color: colors.textPrimary),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: colorCtrl,
+                      decoration: const InputDecoration(labelText: 'Color'),
+                      style: OtdTokens.bodyMedium(color: colors.textPrimary),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Formality Tier', style: OtdTokens.label(color: colors.textSecondary)),
+                        DropdownButton<int>(
+                          value: formality,
+                          dropdownColor: colors.card,
+                          items: [1, 2, 3, 4, 5].map((t) => DropdownMenuItem(value: t, child: Text('Tier $t'))).toList(),
+                          onChanged: (val) {
+                            if (val != null) setDialogState(() => formality = val);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Cancel', style: OtdTokens.label(color: colors.textMuted)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final updated = WardrobeItem(
+                      id: item.id,
+                      name: nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : item.name,
+                      category: item.category,
+                      subType: item.subType,
+                      brand: brandCtrl.text.trim().isNotEmpty ? brandCtrl.text.trim() : item.brand,
+                      color: colorCtrl.text.trim().isNotEmpty ? colorCtrl.text.trim() : item.color,
+                      fabric: item.fabric,
+                      fit: item.fit,
+                      formality: formality,
+                      season: item.season,
+                      imageUrl: item.imageUrl,
+                      icon: item.icon,
+                      timesWorn: item.timesWorn,
+                      purchasePrice: item.purchasePrice,
+                      addedDate: item.addedDate,
+                    );
+                    ref.read(wardrobeProvider.notifier).updateItem(updated);
+                    Navigator.pop(ctx);
+                    Navigator.pop(context); // Close bottom sheet to refresh cleanly
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Updated ${updated.name}')),
+                    );
+                  },
+                  child: Text('Save', style: OtdTokens.label(color: colors.accent)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = OtdColors.of(context);
     final wardrobeAsync = ref.watch(wardrobeProvider);
     final selectedCategory = ref.watch(selectedCategoryProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final bgColor = isDark ? AppTheme.noir : AppTheme.ivorySilk;
-    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
-    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
-    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
-    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
-    final mutedColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
 
     return Scaffold(
-      backgroundColor: bgColor,
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppTheme.gold,
+      backgroundColor: colors.canvas,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: colors.accent,
         foregroundColor: AppTheme.noir,
         elevation: 4,
-        icon: const Icon(Icons.add_a_photo_outlined, size: 20),
-        label: Text(
-          'ADD PIECE',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w700, letterSpacing: 1.0),
-        ),
-        onPressed: () => AddPieceSheet.show(context),
+        shape: const CircleBorder(),
+        onPressed: () => context.push('/closet/add'),
+        child: const Icon(Icons.add, size: 28),
       ),
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Header
+            // Top App Bar: Title, Count, View Mode Switch, Search Icon
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OtdTokens.screenPaddingH,
+                  vertical: 14,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'DIGITAL CLOSET MATRIX',
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2.0,
-                        color: AppTheme.gold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
+                    // Sub-tag and action row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Your Wardrobe', style: Theme.of(context).textTheme.displayMedium),
+                        Text(
+                          'DIGITAL CLOSET MATRIX',
+                          style: OtdTokens.caption(
+                            color: colors.accent,
+                            weight: FontWeight.w700,
+                          ).copyWith(letterSpacing: 2.0),
+                        ),
+                        Row(
+                          children: [
+                            // Search toggle icon
+                            IconButton(
+                              icon: Icon(
+                                _isSearchVisible ? Icons.search_off : Iconsax.search_normal_1,
+                                size: 20,
+                                color: colors.textPrimary,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isSearchVisible = !_isSearchVisible;
+                                  if (!_isSearchVisible) {
+                                    _searchController.clear();
+                                    _searchQuery = '';
+                                  }
+                                });
+                              },
+                            ),
+                            // View Mode Toggle (Grid vs Sectioned)
+                            IconButton(
+                              icon: Icon(
+                                _isSectionedView ? Iconsax.grid_3 : Iconsax.row_vertical,
+                                size: 20,
+                                color: colors.accent,
+                              ),
+                              tooltip: _isSectionedView ? 'Switch to Grid View' : 'Switch to Sectioned View',
+                              onPressed: () {
+                                setState(() => _isSectionedView = !_isSectionedView);
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+
+                    // Main Title & Items Count
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _isSectionedView ? 'Your Closet' : 'Your Digital Closet',
+                          style: OtdTokens.headingMedium(color: colors.textPrimary, weight: FontWeight.w700),
+                        ),
                         wardrobeAsync.maybeWhen(
                           data: (items) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: elevatedColor,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: borderColor),
+                              color: colors.card,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: colors.border),
                             ),
                             child: Text(
                               '${items.length} PIECES',
-                              style: GoogleFonts.outfit(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.gold,
-                              ),
+                              style: OtdTokens.caption(
+                                color: colors.accent,
+                                weight: FontWeight.w700,
+                              ).copyWith(letterSpacing: 1.0),
                             ),
                           ),
                           orElse: () => const SizedBox.shrink(),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Search, filter by tier, or tap any piece for details and styling attributes.',
-                      style: GoogleFonts.outfit(fontSize: 12, color: mutedColor),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Search Omnibar
-                    TextField(
-                      controller: _searchController,
-                      onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
-                      style: GoogleFonts.outfit(fontSize: 13, color: textColor),
-                      decoration: InputDecoration(
-                        hintText: 'Search by brand, garment name, fabric or color...',
-                        hintStyle: GoogleFonts.outfit(fontSize: 12, color: mutedColor.withValues(alpha: 0.6)),
-                        prefixIcon: const Icon(Icons.search, size: 18, color: AppTheme.gold),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 16),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = '');
-                                },
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: elevatedColor,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: borderColor)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: borderColor)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.gold)),
-                      ),
-                    ),
                     const SizedBox(height: 12),
 
-                    // Formality Tier Filter Dropdown Row
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: elevatedColor,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: borderColor),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int?>(
-                              value: _selectedFormality,
-                              isDense: true,
-                              dropdownColor: surfaceColor,
-                              hint: Text('All Formality Tiers', style: GoogleFonts.outfit(fontSize: 11, color: mutedColor)),
-                              items: [
-                                DropdownMenuItem<int?>(
-                                  value: null,
-                                  child: Text('All Formality Tiers', style: GoogleFonts.outfit(fontSize: 11, color: textColor)),
-                                ),
-                                DropdownMenuItem<int?>(
-                                  value: 1,
-                                  child: Text('Tier 1: Casual', style: GoogleFonts.outfit(fontSize: 11, color: textColor)),
-                                ),
-                                DropdownMenuItem<int?>(
-                                  value: 2,
-                                  child: Text('Tier 2: Smart Casual', style: GoogleFonts.outfit(fontSize: 11, color: textColor)),
-                                ),
-                                DropdownMenuItem<int?>(
-                                  value: 3,
-                                  child: Text('Tier 3: Elevated Date', style: GoogleFonts.outfit(fontSize: 11, color: textColor)),
-                                ),
-                                DropdownMenuItem<int?>(
-                                  value: 4,
-                                  child: Text('Tier 4: Sartorial', style: GoogleFonts.outfit(fontSize: 11, color: textColor)),
-                                ),
-                                DropdownMenuItem<int?>(
-                                  value: 5,
-                                  child: Text('Tier 5: Black-Tie', style: GoogleFonts.outfit(fontSize: 11, color: textColor)),
-                                ),
-                              ],
-                              onChanged: (val) => setState(() => _selectedFormality = val),
-                            ),
-                          ),
+                    // Expandable Search Omnibar
+                    if (_isSearchVisible) ...[
+                      TextField(
+                        controller: _searchController,
+                        onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+                        style: OtdTokens.bodyMedium(color: colors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'Search by brand, garment, color...',
+                          prefixIcon: Icon(Iconsax.search_normal_1, size: 18, color: colors.accent),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 16),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: colors.card,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         ),
-                        const SizedBox(width: 8),
-                        if (_selectedFormality != null || _searchQuery.isNotEmpty)
-                          GestureDetector(
-                            onTap: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                                _selectedFormality = null;
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: AppTheme.gold.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'Reset Filters',
-                                style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.gold),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
 
-                    // Category Filter Chips
+                    // Category Chips (All, Tops, Bottoms, Shoes, Accessories, Outerwear)
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       child: Row(
                         children: [
-                          _CategoryFilterChip(
-                            label: 'ALL',
+                          OtdChip(
+                            label: 'All',
                             isSelected: selectedCategory == null,
-                            isDark: isDark,
                             onTap: () => ref.read(selectedCategoryProvider.notifier).state = null,
                           ),
-                          ...GarmentCategory.values.where((c) => c != GarmentCategory.onePiece).map(
-                            (cat) => _CategoryFilterChip(
-                              label: cat.name.toUpperCase(),
-                              isSelected: selectedCategory == cat,
-                              isDark: isDark,
-                              onTap: () => ref.read(selectedCategoryProvider.notifier).state = cat,
-                            ),
+                          const SizedBox(width: 8),
+                          OtdChip(
+                            label: 'Tops',
+                            isSelected: selectedCategory == GarmentCategory.tops,
+                            onTap: () => ref.read(selectedCategoryProvider.notifier).state = GarmentCategory.tops,
+                          ),
+                          const SizedBox(width: 8),
+                          OtdChip(
+                            label: 'Bottoms',
+                            isSelected: selectedCategory == GarmentCategory.bottoms,
+                            onTap: () => ref.read(selectedCategoryProvider.notifier).state = GarmentCategory.bottoms,
+                          ),
+                          const SizedBox(width: 8),
+                          OtdChip(
+                            label: 'Shoes',
+                            isSelected: selectedCategory == GarmentCategory.footwear,
+                            onTap: () => ref.read(selectedCategoryProvider.notifier).state = GarmentCategory.footwear,
+                          ),
+                          const SizedBox(width: 8),
+                          OtdChip(
+                            label: 'Accessories',
+                            isSelected: selectedCategory == GarmentCategory.accessories,
+                            onTap: () => ref.read(selectedCategoryProvider.notifier).state = GarmentCategory.accessories,
+                          ),
+                          const SizedBox(width: 8),
+                          OtdChip(
+                            label: 'Outerwear',
+                            isSelected: selectedCategory == GarmentCategory.outerwear,
+                            onTap: () => ref.read(selectedCategoryProvider.notifier).state = GarmentCategory.outerwear,
                           ),
                         ],
                       ),
@@ -445,13 +594,17 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
               ),
             ),
 
-            // Garments Grid
+            // Content: Either Sectioned View (Screen 16) or 3-Column Grid View (Screen 13)
             wardrobeAsync.when(
               loading: () => const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator(color: AppTheme.gold)),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.gold),
+                ),
               ),
               error: (err, _) => SliverFillRemaining(
-                child: Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
+                child: Center(
+                  child: Text('Error: $err', style: const TextStyle(color: Colors.red)),
+                ),
               ),
               data: (allItems) {
                 var filtered = selectedCategory == null
@@ -469,148 +622,65 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
                   }).toList();
                 }
 
+                // If user toggled Sectioned View and no specific single category is selected
+                if (_isSectionedView && selectedCategory == null && _searchQuery.isEmpty) {
+                  return _buildSectionedView(context, allItems, colors);
+                }
+
+                // Empty state
                 if (filtered.isEmpty) {
                   return SliverFillRemaining(
+                    hasScrollBody: false,
                     child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.checkroom_outlined, size: 48, color: mutedColor),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No garments match your filters',
-                            style: GoogleFonts.cormorantGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Try clearing search keywords or upload a new piece.',
-                            style: GoogleFonts.outfit(fontSize: 12, color: mutedColor),
-                          ),
-                          const SizedBox(height: 14),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.gold, foregroundColor: AppTheme.noir),
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text('Add Garment'),
-                            onPressed: () => AddPieceSheet.show(context),
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Iconsax.folder_open, size: 52, color: colors.textMuted.withValues(alpha: 0.5)),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No pieces found',
+                              style: OtdTokens.headingSmall(color: colors.textPrimary),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Add your first item to build your digital wardrobe.',
+                              textAlign: TextAlign.center,
+                              style: OtdTokens.bodySmall(color: colors.textSecondary),
+                            ),
+                            const SizedBox(height: 20),
+                            OtdButton(
+                              text: 'Add a Piece',
+                              icon: const Icon(Iconsax.add, size: 18, color: Colors.white),
+                              onPressed: () => context.push('/closet/add'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
                 }
 
+                // Screen 13: 3-column Grid View
                 return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.fromLTRB(
+                    OtdTokens.screenPaddingH,
+                    6,
+                    OtdTokens.screenPaddingH,
+                    90,
+                  ),
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 10,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 0.72,
+                      childAspectRatio: 0.62,
                     ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final item = filtered[index];
-                        return GestureDetector(
-                          onTap: () => _showItemDetail(context, item, isDark),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: surfaceColor,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: borderColor),
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      width: 42,
-                                      height: 42,
-                                      decoration: BoxDecoration(
-                                        color: elevatedColor,
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: borderColor),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(item.icon, style: const TextStyle(fontSize: 20)),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.gold.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        'T${item.formality}',
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.gold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Spacer(),
-
-                                Text(
-                                  item.brand.toUpperCase(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.0,
-                                    color: AppTheme.gold,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  item.name,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: textColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${item.color} · ${item.fit}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 10,
-                                    color: mutedColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: elevatedColor,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    _getFormalityLabel(item.formality).toUpperCase(),
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.gold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+                        return _buildClosetGridCard(context, item, colors);
                       },
                       childCount: filtered.length,
                     ),
@@ -623,50 +693,234 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
       ),
     );
   }
-}
 
-class _CategoryFilterChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  const _CategoryFilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  // 3-Column Card item
+  Widget _buildClosetGridCard(BuildContext context, WardrobeItem item, OtdColors colors) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => _showItemDetail(context, item),
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.gold
-              : (isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? AppTheme.gold
-                : (isDark ? AppTheme.borderNoir : AppTheme.borderIvory),
-          ),
+          color: colors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+          boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 8, offsetY: 2),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected
-                ? AppTheme.noir
-                : (isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark),
-          ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Garment Image (Aspect ~ 1:1)
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: LuxuryImage(
+                      imageUrl: item.imageUrl,
+                      fit: BoxFit.cover,
+                      fallbackIcon: item.icon,
+                    ),
+                  ),
+                  // Formality badge in top corner
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'T${item.formality}',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.gold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Card text info
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.brand.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: OtdTokens.caption(
+                      color: colors.accent,
+                      weight: FontWeight.w700,
+                    ).copyWith(fontSize: 8.5, letterSpacing: 0.8),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: OtdTokens.label(
+                      color: colors.textPrimary,
+                      weight: FontWeight.w600,
+                    ).copyWith(fontSize: 11),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.color,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: OtdTokens.caption(
+                      color: colors.textMuted,
+                    ).copyWith(fontSize: 9),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  // Screen 16: Sectioned View with Horizontal rows and "See all"
+  Widget _buildSectionedView(BuildContext context, List<WardrobeItem> items, OtdColors colors) {
+    final tops = items.where((i) => i.category == GarmentCategory.tops).toList();
+    final bottoms = items.where((i) => i.category == GarmentCategory.bottoms).toList();
+    final shoes = items.where((i) => i.category == GarmentCategory.footwear).toList();
+    final outerwear = items.where((i) => i.category == GarmentCategory.outerwear).toList();
+    final accessories = items.where((i) => i.category == GarmentCategory.accessories).toList();
+
+    return SliverPadding(
+      padding: const EdgeInsets.only(bottom: 90),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate([
+          _buildCategorySection(
+            context,
+            title: 'Tops',
+            category: GarmentCategory.tops,
+            items: tops,
+            colors: colors,
+          ),
+          _buildCategorySection(
+            context,
+            title: 'Bottoms',
+            category: GarmentCategory.bottoms,
+            items: bottoms,
+            colors: colors,
+          ),
+          _buildCategorySection(
+            context,
+            title: 'Shoes',
+            category: GarmentCategory.footwear,
+            items: shoes,
+            colors: colors,
+          ),
+          if (outerwear.isNotEmpty)
+            _buildCategorySection(
+              context,
+              title: 'Outerwear',
+              category: GarmentCategory.outerwear,
+              items: outerwear,
+              colors: colors,
+            ),
+          if (accessories.isNotEmpty)
+            _buildCategorySection(
+              context,
+              title: 'Accessories',
+              category: GarmentCategory.accessories,
+              items: accessories,
+              colors: colors,
+            ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildCategorySection(
+    BuildContext context, {
+    required String title,
+    required GarmentCategory category,
+    required List<WardrobeItem> items,
+    required OtdColors colors,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: OtdTokens.screenPaddingH, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    title,
+                    style: OtdTokens.headingSmall(color: colors.textPrimary, weight: FontWeight.w700),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Text(
+                      '${items.length}',
+                      style: OtdTokens.caption(color: colors.accent, weight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () {
+                  ref.read(selectedCategoryProvider.notifier).state = category;
+                  setState(() => _isSectionedView = false);
+                },
+                child: Row(
+                  children: [
+                    Text(
+                      'See all',
+                      style: OtdTokens.label(color: colors.accent, weight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(Icons.chevron_right, size: 16, color: colors.accent),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (items.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: OtdTokens.screenPaddingH, vertical: 8),
+            child: Text('No $title in wardrobe yet', style: OtdTokens.bodySmall(color: colors.textMuted)),
+          )
+        else
+          SizedBox(
+            height: 195,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: OtdTokens.screenPaddingH),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, idx) {
+                final item = items[idx];
+                return SizedBox(
+                  width: 125,
+                  child: _buildClosetGridCard(context, item, colors),
+                );
+              },
+            ),
+          ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 }
@@ -674,14 +928,14 @@ class _CategoryFilterChip extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
-  final Color textColor;
-  final Color mutedColor;
+  final OtdColors colors;
+  final bool isAccent;
 
   const _DetailRow({
     required this.label,
     required this.value,
-    required this.textColor,
-    required this.mutedColor,
+    required this.colors,
+    this.isAccent = false,
   });
 
   @override
@@ -689,8 +943,17 @@ class _DetailRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: GoogleFonts.outfit(fontSize: 11, color: mutedColor)),
-        Text(value, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: textColor)),
+        Text(label, style: OtdTokens.caption(color: colors.textSecondary)),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: OtdTokens.label(
+              color: isAccent ? colors.accent : colors.textPrimary,
+              weight: FontWeight.w600,
+            ),
+          ),
+        ),
       ],
     );
   }

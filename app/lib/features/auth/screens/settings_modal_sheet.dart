@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/otd_tokens.dart';
 import '../../../core/theme/theme_provider.dart';
-import 'auth_modal_sheet.dart';
+import '../../../shared/models/fashion_models.dart';
+import '../../../shared/widgets/otd_button.dart';
+import '../../../shared/widgets/otd_chip.dart';
+import '../../outfits/outfits_repository.dart';
+import '../../wardrobe/wardrobe_repository.dart';
 
 class SettingsModalSheet extends ConsumerStatefulWidget {
   const SettingsModalSheet({super.key});
@@ -26,25 +32,93 @@ class _SettingsModalSheetState extends ConsumerState<SettingsModalSheet> {
   bool _notifyWeather = true;
   bool _notifyOccasions = true;
   bool _notifySuggestions = true;
-  String? _statusMessage;
+
+  Future<void> _confirmClearData(OtdColors colors) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Clear All App Data?',
+          style: OtdTokens.headingSmall(color: colors.textPrimary),
+        ),
+        content: Text(
+          'This will purge all custom wardrobe pieces, wear logs, saved ensembles, and personalized preferences from this device. The wardrobe will reset to the curated starter collection.',
+          style: OtdTokens.bodyMedium(color: colors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: OtdTokens.label(color: colors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF43F5E),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Clear All Data'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      // Reset providers to clean initial state
+      await ref.read(wardrobeProvider.notifier).loadItems();
+      ref.read(savedLooksProvider.notifier).clearAll();
+      ref.read(recentLooksProvider.notifier).clearRecent();
+      await ref.read(userProfileProvider.notifier).updateProfile(
+            const UserProfile(
+              name: 'Alexa',
+              city: 'Mumbai',
+              height: "5'10\" (178 cm)",
+              bodyShape: 'Rectangle',
+              stylePersonas: ['Minimal', 'Smart Casual'],
+              preferredFit: 'Tailored',
+              palettePreferences: ['Black & White', 'Beige & Earth'],
+              gender: 'Female',
+              weightKg: 62.0,
+              goals: ['Everyday Looks', 'Work/Office'],
+            ),
+          );
+
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('All local data cleared and reset to factory defaults.'),
+          backgroundColor: Color(0xFF1C1612),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppTheme.surfaceNoir : AppTheme.surfaceIvory;
-    final elevatedColor = isDark ? AppTheme.elevatedNoir : AppTheme.elevatedIvory;
-    final borderColor = isDark ? AppTheme.borderNoir : AppTheme.borderIvory;
-    final textColor = isDark ? AppTheme.silkWhite : AppTheme.textIvoryDark;
-    final mutedColor = isDark ? AppTheme.mutedSilver : AppTheme.textIvoryMuted;
+    final colors = OtdColors.of(context);
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
 
     return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: const Border(top: BorderSide(color: AppTheme.gold, width: 1.5)),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(top: BorderSide(color: colors.accent, width: 1.5)),
+        boxShadow: OtdTokens.softShadow(isDark: colors.isDark, blur: 24, offsetY: -4),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
       child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,296 +126,214 @@ class _SettingsModalSheetState extends ConsumerState<SettingsModalSheet> {
             // Center drag handle
             Center(
               child: Container(
-                width: 40,
+                width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: mutedColor.withValues(alpha: 0.3),
+                  color: colors.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
 
-            // Header
+            // Header Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
-                        color: AppTheme.gold.withValues(alpha: 0.15),
+                        color: colors.accent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppTheme.gold.withValues(alpha: 0.4)),
+                        border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.tune, size: 16, color: AppTheme.gold),
+                      child: Icon(Iconsax.setting_2, size: 18, color: colors.accent),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'PREFERENCES',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            color: AppTheme.gold,
-                          ),
+                          'STUDIO PREFERENCES',
+                          style: OtdTokens.caption(
+                            color: colors.accent,
+                            weight: FontWeight.w700,
+                          ).copyWith(letterSpacing: 1.5),
                         ),
                         Text(
-                          'Studio Settings',
-                          style: GoogleFonts.cormorantGaramond(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: textColor,
-                          ),
+                          'Settings & Units',
+                          style: OtdTokens.headingSmall(color: colors.textPrimary, weight: FontWeight.w700),
                         ),
                       ],
                     ),
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
-                  color: mutedColor,
+                  icon: Icon(Icons.close, size: 20, color: colors.textMuted),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            if (_statusMessage != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle_outline, size: 16, color: Color(0xFF10B981)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(_statusMessage!, style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF10B981))),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Theme Setting
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: elevatedColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Appearance Mode',
-                        style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700, color: textColor),
-                      ),
-                      Text(
-                        isDark ? 'Obsidian Noir Mode' : 'Haute Ivory Silk Mode',
-                        style: GoogleFonts.outfit(fontSize: 11, color: mutedColor),
-                      ),
-                    ],
-                  ),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.gold),
-                      foregroundColor: AppTheme.gold,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined, size: 15),
-                    label: Text(
-                      isDark ? 'Light' : 'Dark',
-                      style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () {
-                      ref.read(themeModeProvider.notifier).toggleTheme();
-                    },
-                  ),
-                ],
-              ),
+            // Theme Appearance Toggle
+            Text(
+              'APPEARANCE & THEME',
+              style: OtdTokens.caption(color: colors.accent, weight: FontWeight.w700).copyWith(letterSpacing: 1.2),
             ),
-            const SizedBox(height: 12),
-
-            // Units Setting
+            const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: elevatedColor,
+                color: colors.canvas,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor),
+                border: Border.all(color: colors.border),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Measurement System',
-                        style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700, color: textColor),
-                      ),
-                      Text(
-                        'Height, fit sizing & temperature',
-                        style: GoogleFonts.outfit(fontSize: 11, color: mutedColor),
-                      ),
-                    ],
-                  ),
                   Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => setState(() => _unit = 'metric'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: _unit == 'metric' ? AppTheme.gold : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _unit == 'metric' ? AppTheme.gold : borderColor),
-                          ),
-                          child: Text(
-                            'Metric (°C)',
-                            style: GoogleFonts.outfit(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: _unit == 'metric' ? AppTheme.noir : textColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: () => setState(() => _unit = 'imperial'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: _unit == 'imperial' ? AppTheme.gold : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _unit == 'imperial' ? AppTheme.gold : borderColor),
-                          ),
-                          child: Text(
-                            'Imperial (°F)',
-                            style: GoogleFonts.outfit(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: _unit == 'imperial' ? AppTheme.noir : textColor,
-                            ),
-                          ),
-                        ),
+                      Icon(isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined, size: 18, color: colors.accent),
+                      const SizedBox(width: 10),
+                      Text(
+                        isDark ? 'Obsidian Noir (Dark)' : 'Ivory Silk (Light)',
+                        style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w600),
                       ),
                     ],
+                  ),
+                  Switch(
+                    value: isDark,
+                    activeTrackColor: colors.accent,
+                    activeThumbColor: AppTheme.noir,
+                    onChanged: (_) => ref.read(themeModeProvider.notifier).toggleTheme(),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
-            // Notification Toggles
+            // Measurement Units
+            Text(
+              'MEASUREMENT UNITS',
+              style: OtdTokens.caption(color: colors.accent, weight: FontWeight.w700).copyWith(letterSpacing: 1.2),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OtdChip(
+                    label: 'Metric (cm, kg, °C)',
+                    isSelected: _unit == 'metric',
+                    onTap: () => setState(() => _unit = 'metric'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OtdChip(
+                    label: 'Imperial (in, lbs, °F)',
+                    isSelected: _unit == 'imperial',
+                    onTap: () => setState(() => _unit = 'imperial'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Push Notifications Toggles
+            Text(
+              'INTELLIGENCE NOTIFICATIONS',
+              style: OtdTokens.caption(color: colors.accent, weight: FontWeight.w700).copyWith(letterSpacing: 1.2),
+            ),
+            const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: elevatedColor,
+                color: colors.canvas,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor),
+                border: Border.all(color: colors.border),
               ),
               child: Column(
                 children: [
                   SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
                     dense: true,
-                    activeTrackColor: AppTheme.gold,
+                    activeTrackColor: colors.accent,
                     activeThumbColor: AppTheme.noir,
-                    title: Text('Weather & Forecast Alerts', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: textColor)),
-                    subtitle: Text('Contextual updates when temperature shifts', style: GoogleFonts.outfit(fontSize: 10, color: mutedColor)),
+                    title: Text('Weather & Forecast Alerts', style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w600)),
+                    subtitle: Text('Contextual alerts when temperatures fluctuate', style: OtdTokens.caption(color: colors.textSecondary)),
                     value: _notifyWeather,
                     onChanged: (val) => setState(() => _notifyWeather = val),
                   ),
-                  Divider(color: borderColor, height: 12),
+                  Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
                   SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
                     dense: true,
-                    activeTrackColor: AppTheme.gold,
+                    activeTrackColor: colors.accent,
                     activeThumbColor: AppTheme.noir,
-                    title: Text('Occasion & Calendar Reminders', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: textColor)),
-                    subtitle: Text('Upcoming date nights & dinners 2 hours prior', style: GoogleFonts.outfit(fontSize: 10, color: mutedColor)),
+                    title: Text('Occasion & Event Reminders', style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w600)),
+                    subtitle: Text('Scheduled looks for upcoming evening events', style: OtdTokens.caption(color: colors.textSecondary)),
                     value: _notifyOccasions,
                     onChanged: (val) => setState(() => _notifyOccasions = val),
                   ),
-                  Divider(color: borderColor, height: 12),
+                  Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
                   SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
                     dense: true,
-                    activeTrackColor: AppTheme.gold,
+                    activeTrackColor: colors.accent,
                     activeThumbColor: AppTheme.noir,
-                    title: Text('AI Stylist Recommendations', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: textColor)),
-                    subtitle: Text('Morning outfit curations based on current calendar', style: GoogleFonts.outfit(fontSize: 10, color: mutedColor)),
+                    title: Text('AI Stylist Look Suggestions', style: OtdTokens.label(color: colors.textPrimary, weight: FontWeight.w600)),
+                    subtitle: Text('Daily morning curations based on venue', style: OtdTokens.caption(color: colors.textSecondary)),
                     value: _notifySuggestions,
                     onChanged: (val) => setState(() => _notifySuggestions = val),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 24),
 
-            // Account / Sign Out / Reset Cache Actions
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: BorderSide(color: borderColor),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    icon: const Icon(Icons.refresh, size: 16, color: AppTheme.gold),
-                    label: Text(
-                      'Clear Cache',
-                      style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w700, color: textColor),
-                    ),
-                    onPressed: () {
-                      setState(() => _statusMessage = 'Wardrobe & Style cache flushed.');
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: elevatedColor,
-                      foregroundColor: Colors.redAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.3)),
-                      ),
-                    ),
-                    icon: const Icon(Icons.logout, size: 16, color: Colors.redAccent),
-                    label: Text(
-                      'Account / Auth',
-                      style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w700),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      AuthModalSheet.show(context);
-                    },
-                  ),
-                ),
-              ],
+            // Data Management / Purge Data Button
+            Text(
+              'LOCAL STORAGE & CACHE',
+              style: OtdTokens.caption(color: colors.accent, weight: FontWeight.w700).copyWith(letterSpacing: 1.2),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: colors.canvas,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colors.border),
+              ),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF43F5E).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Iconsax.trash, size: 18, color: Color(0xFFF43F5E)),
+                ),
+                title: Text(
+                  'Clear All Local App Data',
+                  style: OtdTokens.label(color: const Color(0xFFF43F5E), weight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  'Purge local wardrobe items, wear logs & saved outfits',
+                  style: OtdTokens.caption(color: colors.textMuted),
+                ),
+                trailing: const Icon(Icons.chevron_right, size: 16, color: Color(0xFFF43F5E)),
+                onTap: () => _confirmClearData(colors),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Done Button
+            OtdButton(
+              text: 'DONE',
+              isFullWidth: true,
+              onPressed: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),

@@ -23,3 +23,11 @@ build/
 Thumbs.db
 .idea/
 *.iml
+
+# Keystores & sensitive signing credentials
+key.properties
+**/key.properties
+*.jks
+*.keystore
+**/*.jks
+**/*.keystore
