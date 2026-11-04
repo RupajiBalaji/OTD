@@ -146,7 +146,16 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
   const effectiveFaceUrl = isCustomPhoto && profile?.customModelPhotoUrl ? profile.customModelPhotoUrl : demoModel.faceUrl;
   const skinToneHex = normalizeSkinToneHex(profile?.skinTone, demoModel.defaultSkinToneHex);
   const modelSilhouette = normalizeModelSilhouette(profile?.bodyShape, demoModel.defaultBodyShape);
-  const activeBodyPreset = getBodyShapePreset(modelSilhouette);
+  const activeBodyPreset = getBodyShapePreset(modelSilhouette) || {
+    id: 'runway_tall' as const,
+    label: 'Runway Supermodel',
+    shortDesc: 'Elongated vertical line, lean waist & balanced shoulders',
+    shoulderScale: 1.0,
+    chestScale: 1.0,
+    waistScale: 1.0,
+    hipScale: 1.0,
+    armScale: 1.0,
+  };
 
   // =========================================================================
   // FASHION RESEARCH ENGINE: Natural Language Semantic Profiler
