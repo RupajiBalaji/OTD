@@ -1903,84 +1903,8 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                   </div>
                 </div>
 
-                  {/* Interactive Real-Time Neural Landmarks HUD */}
-                  {showNeuralLandmarks && (
-                    <div className="absolute inset-0 pointer-events-auto">
-                      
-                      {/* Landmark 0: Facial Alignment */}
-                      <div
-                        onClick={() => setActiveLandmark(activeLandmark === 'face' ? null : 'face')}
-                        className="absolute top-[8%] left-[24%] sm:left-[30%] flex items-center gap-1.5 cursor-pointer group"
-                      >
-                        <div className="w-3.5 h-3.5 rounded-full border border-amber-400 bg-amber-500/30 flex items-center justify-center animate-pulse">
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        </div>
-                        <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-black/75 text-amber-300 text-[9px] font-mono shadow-xs backdrop-blur-xs">
-                          Face: {isUsingCustomPhoto ? 'Custom Twin' : (DEMOGRAPHIC_PERSONA_MODELS[activePersona] || DEMOGRAPHIC_PERSONA_MODELS.women).modelName} · {skinToneHex}
-                        </span>
-                      </div>
-
-                      {/* Landmark 1: Shoulder Breadth */}
-                      <div
-                        onClick={() => setActiveLandmark(activeLandmark === 'shoulder' ? null : 'shoulder')}
-                        className="absolute top-[26%] left-[20%] sm:left-[26%] flex items-center gap-1.5 cursor-pointer group"
-                      >
-                        <div className="w-3.5 h-3.5 rounded-full border border-emerald-400 bg-emerald-500/30 flex items-center justify-center animate-pulse">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        </div>
-                        <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-black/75 text-emerald-300 text-[9px] font-mono shadow-xs backdrop-blur-xs">
-                          Shoulder: {activeBodyPreset.label} · Tailored Drape
-                        </span>
-                      </div>
-
-                      {/* Landmark 2: Chest & Fabric Drape */}
-                      <div
-                        onClick={() => setActiveLandmark(activeLandmark === 'chest' ? null : 'chest')}
-                        className="absolute top-[38%] right-[18%] sm:right-[24%] flex items-center gap-1.5 cursor-pointer group"
-                      >
-                        <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-black/75 text-amber-300 text-[9px] font-mono shadow-xs backdrop-blur-xs">
-                          Drape: {effectiveTop?.material || 'Fluid Weave'}
-                        </span>
-                        <div className="w-3.5 h-3.5 rounded-full border border-amber-400 bg-amber-500/30 flex items-center justify-center animate-pulse">
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        </div>
-                      </div>
-
-                      {/* Landmark 3: Waistline Alignment */}
-                      {!isWearingOnePiece && (
-                        <div
-                          onClick={() => setActiveLandmark(activeLandmark === 'waist' ? null : 'waist')}
-                          className="absolute top-[52%] left-[22%] sm:left-[28%] flex items-center gap-1.5 cursor-pointer group"
-                        >
-                          <div className="w-3.5 h-3.5 rounded-full border border-blue-400 bg-blue-500/30 flex items-center justify-center animate-pulse">
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                          </div>
-                          <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-black/75 text-blue-300 text-[9px] font-mono shadow-xs backdrop-blur-xs">
-                            Waistline: {tuckStyle.replace('_', ' ').toUpperCase()} · {effectiveBottom?.name}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Landmark 4: Inseam Quarter Break / Feet */}
-                      <div
-                        onClick={() => setActiveLandmark(activeLandmark === 'inseam' ? null : 'inseam')}
-                        className="absolute bottom-[22%] right-[22%] sm:right-[28%] flex items-center gap-1.5 cursor-pointer group"
-                      >
-                        <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-black/75 text-purple-300 text-[9px] font-mono shadow-xs backdrop-blur-xs">
-                          Base: {effectiveFootwear ? effectiveFootwear.name : 'Natural Bare Foot · Grounded'}
-                        </span>
-                        <div className="w-3.5 h-3.5 rounded-full border border-purple-400 bg-purple-500/30 flex items-center justify-center animate-pulse">
-                          <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                        </div>
-                      </div>
-
-                    </div>
-                  )}
-
-                </div>
-
                 {/* Floating Bottom Atelier Styling Bar */}
-                <div className="mt-1 w-full max-w-xl p-2.5 rounded-2xl bg-white/95 border border-amber-300/60 shadow-lg backdrop-blur-md flex flex-wrap items-center justify-between gap-2 z-20">
+                <div className="mt-3 w-full max-w-xl p-2.5 rounded-2xl bg-white/95 dark:bg-neutral-900/95 border border-amber-300/60 dark:border-amber-500/40 shadow-lg backdrop-blur-md flex flex-wrap items-center justify-between gap-2 z-20">
                   
                   {/* Tuck Styling Controls */}
                   {!isWearingOnePiece && (
