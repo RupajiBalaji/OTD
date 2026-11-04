@@ -14,6 +14,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
   const [bodyShape, setBodyShape] = useState(profile.bodyShape);
   const [selectedStyles, setSelectedStyles] = useState<string[]>(profile.stylePersonas);
   const [fit, setFit] = useState(profile.preferredFit);
+  const [avoidedColors, setAvoidedColors] = useState<string[]>(profile.avoidedColors || ['Neon Green', 'Hot Pink']);
+  const [dislikedElements, setDislikedElements] = useState<string[]>(profile.dislikedElements || ['Skinny Fits', 'Polyester Blends']);
   const [saved, setSaved] = useState(false);
 
   if (!isOpen) return null;
@@ -26,13 +28,31 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
     }
   };
 
+  const toggleAvoidedColor = (col: string) => {
+    if (avoidedColors.includes(col)) {
+      setAvoidedColors(avoidedColors.filter(c => c !== col));
+    } else {
+      setAvoidedColors([...avoidedColors, col]);
+    }
+  };
+
+  const toggleDislikedElement = (elem: string) => {
+    if (dislikedElements.includes(elem)) {
+      setDislikedElements(dislikedElements.filter(e => e !== elem));
+    } else {
+      setDislikedElements([...dislikedElements, elem]);
+    }
+  };
+
   const handleSave = () => {
     updateProfile({
       name,
       height,
       bodyShape,
       stylePersonas: selectedStyles,
-      preferredFit: fit
+      preferredFit: fit,
+      avoidedColors,
+      dislikedElements
     });
     setSaved(true);
     setTimeout(() => {
@@ -172,6 +192,77 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   {fitOption}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Avoided Colors */}
+          <div>
+            <label className="block text-[11px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mb-2 flex items-center justify-between">
+              <span>Avoided Colors (Blacklist)</span>
+              <span className="text-[10px] text-rose-500 font-normal">Filtered by AI Stylist</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { name: 'Neon Green', hex: '#39FF14' },
+                { name: 'Hot Pink', hex: '#FF69B4' },
+                { name: 'Loud Yellow', hex: '#FFFF00' },
+                { name: 'Bright Orange', hex: '#FF5F1F' },
+                { name: 'Lime Green', hex: '#32CD32' },
+                { name: 'Purple', hex: '#800080' },
+                { name: 'Red', hex: '#DC2626' }
+              ].map(col => {
+                const isAvoided = avoidedColors.includes(col.name);
+                return (
+                  <button
+                    key={col.name}
+                    type="button"
+                    onClick={() => toggleAvoidedColor(col.name)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${
+                      isAvoided
+                        ? 'border-rose-500 bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/30'
+                        : 'border-[var(--border-card)] bg-[var(--bg-card-inner)] text-[var(--text-muted)] hover:border-rose-400'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full border border-black/20" style={{ backgroundColor: col.hex }} />
+                    <span className={isAvoided ? 'line-through decoration-rose-500' : ''}>{col.name}</span>
+                    {isAvoided && <span className="text-xs text-rose-400 font-bold ml-0.5">✕</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Disliked Elements */}
+          <div>
+            <label className="block text-[11px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mb-2">
+              Disliked Cuts & Fabrics
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                'Skinny Fits',
+                'Polyester Blends',
+                'Heavy Branding',
+                'Deep Necklines',
+                'Distressed Fabrics',
+                'Synthetic Linings'
+              ].map(elem => {
+                const isSelected = dislikedElements.includes(elem);
+                return (
+                  <button
+                    key={elem}
+                    type="button"
+                    onClick={() => toggleDislikedElement(elem)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'border-[var(--gold-primary)] bg-[var(--gold-primary)]/15 text-[var(--gold-primary)] font-semibold'
+                        : 'border-[var(--border-card)] bg-[var(--bg-card-inner)] text-[var(--text-muted)] hover:border-[var(--border-gold)]'
+                    }`}
+                  >
+                    {isSelected && <span className="text-rose-400 font-bold">⊘</span>}
+                    <span>{elem}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

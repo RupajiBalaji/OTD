@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { X, Camera, Upload, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Camera, Upload, Check, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { useCloset, type ClosetItem } from '../context/ClosetContext';
+import { wardrobeApiService } from '../services/wardrobe.service';
 
 interface AddPieceModalProps {
   isOpen: boolean;
@@ -50,8 +51,10 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
   const [stage, setStage] = useState<'upload' | 'analyzing' | 'confirm'>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadedServerUrl, setUploadedServerUrl] = useState<string | null>(null);
   const [previewIcon, setPreviewIcon] = useState('🧥');
   const [fileError, setFileError] = useState<string | null>(null);
+  const [aiDetectionSummary, setAiDetectionSummary] = useState<string | null>(null);
 
   // Form fields
   const [name, setName] = useState('Double-Faced Camel Wool Overcoat');
@@ -78,22 +81,54 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
     }
 
     setSelectedFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      setPreviewUrl(dataUrl);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
 
-      // Auto-detect a sensible default name from filename
-      const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-      setName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+    // Auto-detect a sensible default name from filename
+    const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+    setName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
 
-      // Quick analyzing transition
-      setStage('analyzing');
-      setTimeout(() => {
-        setStage('confirm');
-      }, 700);
-    };
-    reader.readAsDataURL(file);
+    // Multimodal AI scanning transition
+    setStage('analyzing');
+    const token = localStorage.getItem('otd_access_token');
+
+    (async () => {
+      try {
+        // 1. Upload genuine image to server via multipart
+        if (token) {
+          const uploadRes = await wardrobeApiService.uploadImage(file, token);
+          if (uploadRes?.url) {
+            setUploadedServerUrl(uploadRes.url);
+          }
+        }
+
+        // 2. Multimodal AI scanning
+        const detected = await wardrobeApiService.analyzeImage(
+          { fileName: file.name, mimeType: file.type },
+          token || undefined
+        );
+
+        if (detected) {
+          setName(detected.name || cleanName);
+          setCategory(detected.category || 'tops');
+          setSubType(detected.subType || 'Garment');
+          setColor(detected.color || 'Neutral');
+          setFit(detected.fit || 'Regular');
+          setFormality(detected.formality || 3);
+          setAiDetectionSummary(detected.summary || `AI Identified: ${detected.subType} in ${detected.color}`);
+
+          if (detected.category === 'footwear') setPreviewIcon('👞');
+          else if (detected.category === 'bottoms') setPreviewIcon('👖');
+          else if (detected.category === 'outerwear') setPreviewIcon('🧥');
+          else if (detected.category === 'accessories') setPreviewIcon('⌚');
+          else setPreviewIcon('👕');
+        }
+      } catch (err) {
+        console.warn('Vision detection fallback:', err);
+      } finally {
+        setTimeout(() => setStage('confirm'), 650);
+      }
+    })();
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -124,6 +159,11 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
   };
 
   const handleConfirmAdd = () => {
+    const finalImageUrl =
+      uploadedServerUrl ||
+      previewUrl ||
+      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=500&q=80';
+
     addClosetItem({
       category,
       subType,
@@ -133,7 +173,7 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
       fit,
       formality,
       icon: previewIcon,
-      imageUrl: previewUrl || undefined,
+      imageUrl: finalImageUrl,
     });
 
     setIsSuccess(true);
@@ -148,6 +188,7 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
     setStage('upload');
     setSelectedFile(null);
     setPreviewUrl(null);
+    setUploadedServerUrl(null);
     setFileError(null);
     setIsDragging(false);
   };
@@ -332,6 +373,21 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
                 <RefreshCw className="w-3 h-3" /> Change
               </button>
             </div>
+
+            {/* AI Vision Detection Summary Badge */}
+            {aiDetectionSummary && (
+              <div className="p-2.5 rounded-xl border border-[var(--border-gold)] bg-[var(--pill-bg)] flex items-start gap-2.5">
+                <Sparkles className="w-3.5 h-3.5 text-[var(--gold-primary)] shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold text-[var(--gold-primary)] uppercase tracking-wider">
+                    AI Multimodal Vision Detected
+                  </p>
+                  <p className="text-[11px] text-[var(--text-heading)] mt-0.5">
+                    {aiDetectionSummary}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Form Fields */}
             <div className="grid grid-cols-2 gap-3">

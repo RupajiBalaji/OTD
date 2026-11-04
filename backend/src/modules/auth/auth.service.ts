@@ -26,13 +26,34 @@ export class AuthService {
   }
 
   public static async login(data: { email: string; password: string }) {
-    const user = await User.findOne({ email: data.email });
+    let user = await User.findOne({ email: data.email.toLowerCase() });
+
+    // Client Demo: If user is one of the 4 demo accounts (Women, Man, Boy, Girl) and not yet seeded, provision automatically
+    const DEMO_ACCOUNTS: Record<string, { name: string; email: string }> = {
+      'women@otd.com': { name: 'Sophia Sharma', email: 'women@otd.com' },
+      'man@otd.com': { name: 'Mustafa Khan', email: 'man@otd.com' },
+      'boy@otd.com': { name: 'Aarav Patel', email: 'boy@otd.com' },
+      'girl@otd.com': { name: 'Ananya Reddy', email: 'girl@otd.com' },
+    };
+
     if (!user) {
-      throw new ApiError(401, 'Invalid email or password');
+      const demo = DEMO_ACCOUNTS[data.email.toLowerCase()];
+      if (demo) {
+        const hashedPassword = await PasswordUtil.hash('Password123!');
+        user = await User.create({
+          name: demo.name,
+          email: demo.email,
+          password: hashedPassword,
+        });
+      } else {
+        throw new ApiError(401, 'Invalid email or password');
+      }
     }
 
     const isMatch = await PasswordUtil.compare(data.password, user.password);
-    if (!isMatch) {
+    // Allow demo password fallback for seamless client presentation
+    const isDemoAccount = !!DEMO_ACCOUNTS[data.email.toLowerCase()];
+    if (!isMatch && (!isDemoAccount || data.password !== 'Password123!')) {
       throw new ApiError(401, 'Invalid email or password');
     }
 

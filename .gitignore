@@ -23,6 +23,8 @@ build/
 Thumbs.db
 .idea/
 *.iml
+.vscode/
+.agents/
 
 # Keystores & sensitive signing credentials
 key.properties

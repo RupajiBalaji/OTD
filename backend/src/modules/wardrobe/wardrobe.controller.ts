@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { WardrobeService } from './wardrobe.service';
+import { VisionRecognitionService } from '../ai/vision-recognition.service';
 import { ApiResponse } from '../../utils/ApiResponse';
 import { asyncHandler } from '../../utils/asyncHandler';
 
@@ -15,6 +16,12 @@ export class WardrobeController {
     const userId = req.user!.userId;
     const item = await WardrobeService.addItem(userId, req.body);
     res.status(201).json(new ApiResponse(201, item, 'Garment added to wardrobe'));
+  });
+
+  public static analyzeGarment = asyncHandler(async (req: Request, res: Response) => {
+    const { imageUrl, fileName, mimeType } = req.body;
+    const detected = await VisionRecognitionService.analyzeGarment({ imageUrl, fileName, mimeType });
+    res.status(200).json(new ApiResponse(200, detected, 'Garment attributes analyzed by AI Vision'));
   });
 
   public static getItem = asyncHandler(async (req: Request, res: Response) => {

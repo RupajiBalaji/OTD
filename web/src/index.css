@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     /* LIGHT MODE (Ivory Couture / Logo Match #F7EFE0) */

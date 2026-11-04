@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Download, Menu, X, Sun, Moon, User, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Menu, X, Sun, Moon, ArrowRight, Sparkles, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
@@ -10,6 +10,8 @@ interface NavbarProps {
   onOpenOnboarding?: () => void;
   onOpenAuth?: () => void;
   onLaunchStudio?: () => void;
+  isAuthenticated?: boolean;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -20,6 +22,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenOnboarding,
   onOpenAuth,
   onLaunchStudio,
+  isAuthenticated = false,
+  onLogout,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -29,155 +33,156 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Logo with the Official OTD Artwork */}
-          <a href="#" className="flex items-center gap-3 shrink-0 group">
-            <div className="h-12 w-10 sm:h-13 sm:w-11 rounded-lg overflow-hidden border border-[var(--border-gold)] shadow-sm bg-[#F7EFE0] flex items-center justify-center p-0.5 group-hover:scale-105 transition-all duration-300">
+          {/* Brand Mark: OTD Atelier */}
+          <a href="#" className="flex items-center gap-3.5 shrink-0 group">
+            <div className="h-11 w-10 sm:h-12 sm:w-11 rounded-lg overflow-hidden border border-[var(--border-gold)] shadow-sm bg-[#F7EFE0] flex items-center justify-center p-0.5 group-hover:scale-105 transition-all duration-300">
               <img
                 src="/otd_logo.png"
-                alt="OTD - Outfit of the Day Haute Couture Logo"
+                alt="OTD Atelier Logo"
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="flex flex-col whitespace-nowrap">
-              <div className="flex items-center gap-1.5">
-                <span className="font-cinzel text-lg sm:text-xl tracking-[0.22em] font-bold text-[var(--text-heading)]">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="font-cinzel text-lg sm:text-xl tracking-[0.25em] font-bold text-[var(--text-heading)]">
                   OTD
                 </span>
-                <span className="text-[var(--gold-primary)] text-xs">✦</span>
+                <span className="text-[10px] tracking-[0.3em] font-mono uppercase text-[var(--gold-primary)] font-semibold border-l border-[var(--border-gold)] pl-2">
+                  ATELIER
+                </span>
               </div>
-              <span className="text-[10px] tracking-[0.22em] uppercase text-[var(--gold-primary)] font-mono font-semibold">
-                Outfit Of The Day
+              <span className="text-[9px] tracking-[0.22em] uppercase text-[var(--text-muted)] font-mono">
+                Haute Sartorial Intelligence
               </span>
             </div>
           </a>
 
-          {/* Desktop Navigation Links (Matching Screenshot 1) */}
-          <nav className="hidden lg:flex items-center space-x-8 text-[12px] font-semibold text-[var(--text-body)]">
-            <a
-              href="#"
-              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative font-bold text-[var(--text-heading)]"
-            >
-              <span>Home</span>
-              <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-black dark:bg-white" />
-            </a>
-            <a
-              href="#pillars"
-              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group"
-            >
-              <span>Features</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
-            </a>
+          {/* Desktop Editorial Navigation Links */}
+          <nav className="hidden lg:flex items-center space-x-9 text-[11px] font-medium tracking-[0.14em] uppercase text-[var(--text-body)]">
             <button
+              type="button"
               onClick={onExploreDemo}
-              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group text-left cursor-pointer"
+              className="hover:text-[var(--text-heading)] transition-colors py-1 relative group font-semibold cursor-pointer uppercase"
             >
-              <span>How it Works</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
+              <span>The Atelier</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
             </button>
             <a
-              href="#lookbook"
-              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group"
+              href="#pillars"
+              className="hover:text-[var(--text-heading)] transition-colors py-1 relative group"
             >
-              <span>Community</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
+              <span>Architecture</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
             </a>
             <a
               href="#wardrobe"
-              className="whitespace-nowrap hover:text-black dark:hover:text-white transition-colors py-1 relative group"
+              className="hover:text-[var(--text-heading)] transition-colors py-1 relative group"
             >
-              <span>About</span>
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-black dark:bg-white group-hover:w-full transition-all duration-300" />
+              <span>Wardrobe & Closet</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
+            </a>
+            <a
+              href="#gap-analysis"
+              className="hover:text-[var(--text-heading)] transition-colors py-1 relative group"
+            >
+              <span>Gap Engine</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
+            </a>
+            <a
+              href="#lookbook"
+              className="hover:text-[var(--text-heading)] transition-colors py-1 relative group"
+            >
+              <span>Lookbook</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[var(--gold-primary)] group-hover:w-full transition-all duration-300" />
             </a>
           </nav>
 
-          {/* Right Action Buttons + Theme Toggle */}
-          <div className="hidden sm:flex items-center gap-3 shrink-0">
+          {/* Right Action Cluster: Clean, Elevated, Restrained */}
+          <div className="hidden sm:flex items-center gap-4 shrink-0">
             
-            {/* Elegant Light / Dark Mode Toggle Button */}
+            {/* Theme Mode Toggle */}
             <button
               onClick={toggleTheme}
               title={theme === 'dark' ? 'Switch to Ivory Light Mode' : 'Switch to Obsidian Dark Mode'}
               aria-label="Toggle theme mode"
-              className="p-2.5 rounded-full border border-[var(--border-gold)] bg-[var(--bg-card)] hover:border-[var(--gold-primary)] text-[var(--gold-primary)] transition-all duration-300 cursor-pointer shadow-sm hover:scale-105"
+              className="p-2.5 rounded-full border border-[var(--border-card)] bg-[var(--bg-card)] hover:border-[var(--gold-primary)] text-[var(--gold-primary)] transition-all duration-200 cursor-pointer shadow-sm"
             >
               {theme === 'dark' ? (
-                <Sun className="w-4 h-4 transition-transform rotate-0 hover:rotate-90 duration-300 text-[#F7E7A9]" />
+                <Sun className="w-4 h-4 text-[#F7E7A9]" />
               ) : (
-                <Moon className="w-4 h-4 transition-transform -rotate-12 hover:rotate-0 duration-300 text-[#A67C1E]" />
+                <Moon className="w-4 h-4 text-[#A67C1E]" />
               )}
             </button>
 
-            {onOpenProfile && (
-              <button
-                onClick={onOpenProfile}
-                className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-3.5 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer flex items-center gap-1.5"
-                title="Calibrate My Style Profile"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>My Style</span>
-              </button>
+            {/* Auth Actions: Sign Out (if authenticated) or Sign In */}
+            {isAuthenticated ? (
+              onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="text-[11px] uppercase tracking-[0.16em] font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700 px-2 py-1 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Sign out of Atelier session"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              )
+            ) : (
+              (onOpenAuth || onOpenOnboarding) && (
+                <button
+                  type="button"
+                  onClick={onOpenAuth || onOpenOnboarding}
+                  className="text-[11px] uppercase tracking-[0.18em] font-medium text-[var(--text-body)] hover:text-[var(--text-heading)] px-2 py-1 transition-colors cursor-pointer"
+                >
+                  Sign In
+                </button>
+              )
             )}
 
-            {onOpenAddPiece && (
-              <button
-                onClick={onOpenAddPiece}
-                className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-3.5 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer flex items-center gap-1.5"
-                title="Upload Garment to Digital Closet"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ Piece</span>
-              </button>
-            )}
-
-            {onLaunchStudio && (
+            {/* Primary Action Button: Enter Atelier Studio */}
+            {onLaunchStudio ? (
               <button
                 onClick={onLaunchStudio}
-                className="whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-[var(--gold-primary)] hover:text-[var(--text-heading)] px-3.5 py-2 rounded-full border border-[var(--border-gold)] hover:bg-[var(--pill-bg)] transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm"
-                title="Launch Web Studio & AI Stylist"
+                className="gold-btn px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider flex items-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                <span>✦ Web Studio</span>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Enter Studio</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            )}
-
-            {/* Official Sign In Button (Matching Image 1) */}
-            {(onOpenAuth || onOpenOnboarding) && (
+            ) : (
               <button
-                onClick={onOpenAuth || onOpenOnboarding}
-                className="px-5 py-2.5 rounded-full bg-black text-white text-xs font-bold hover:bg-neutral-800 flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105 transition-all"
+                onClick={onOpenDownload}
+                className="gold-btn px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider flex items-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] transition-all"
               >
-                <span>Sign In</span>
-                <span className="text-sm">→</span>
+                <Download className="w-3.5 h-3.5" />
+                <span>Download APK</span>
               </button>
             )}
-
-            <button
-              onClick={onOpenDownload}
-              className="gold-btn whitespace-nowrap px-4 py-2.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <Download className="w-3.5 h-3.5 shrink-0" />
-              <span>APK</span>
-            </button>
           </div>
 
-          {/* Mobile hamburger & Theme button */}
-          <div className="lg:hidden flex items-center gap-2">
+          {/* Mobile Controls */}
+          <div className="lg:hidden flex items-center gap-2.5">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full border border-[var(--border-gold)] text-[var(--gold-primary)] bg-[var(--bg-card)]"
+              className="p-2 rounded-full border border-[var(--border-card)] text-[var(--gold-primary)] bg-[var(--bg-card)]"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-[#F7E7A9]" /> : <Moon className="w-4 h-4 text-[#A67C1E]" />}
             </button>
-            <button
-              onClick={onOpenDownload}
-              className="gold-btn px-3 py-1.5 rounded-full text-[10px] font-semibold flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <Download className="w-3 h-3" />
-              <span>APK</span>
-            </button>
+            
+            {onLaunchStudio && (
+              <button
+                onClick={onLaunchStudio}
+                className="gold-btn px-3.5 py-1.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5"
+              >
+                <span>Studio</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            )}
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-[var(--gold-primary)] hover:bg-[var(--pill-bg)] transition-colors"
+              className="p-2 rounded-lg text-[var(--text-heading)] hover:bg-[var(--pill-bg)] transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -189,80 +194,64 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[var(--bg-card-elevated)] border-b border-[var(--border-gold)] px-6 py-6 space-y-4 backdrop-blur-2xl animate-in slide-in-from-top-2 duration-200">
+        <div className="lg:hidden bg-[var(--bg-card-elevated)] border-b border-[var(--border-card)] px-6 py-6 space-y-4 backdrop-blur-2xl animate-in slide-in-from-top-2 duration-200">
           <a
             href="#atelier"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--gold-primary)] py-1 font-medium"
+            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-heading)] font-semibold py-1.5"
           >
-            Atelier Simulation
+            The Atelier
           </a>
           <a
             href="#pillars"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--gold-primary)] py-1 font-medium"
+            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--text-heading)] py-1.5"
           >
-            Core Intelligence
+            Architecture
           </a>
           <a
             href="#wardrobe"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--gold-primary)] py-1 font-medium"
+            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--text-heading)] py-1.5"
           >
-            Smart Closet Matrix
+            Wardrobe & Closet
           </a>
           <a
             href="#gap-analysis"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--gold-primary)] py-1 font-medium"
+            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--text-heading)] py-1.5"
           >
-            Wardrobe Gaps
+            Gap Engine
           </a>
           <a
             href="#lookbook"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--gold-primary)] py-1 font-medium"
+            className="block text-xs tracking-[0.18em] uppercase text-[var(--text-body)] hover:text-[var(--text-heading)] py-1.5"
           >
-            Haute Lookbook
+            Editorial Lookbook
           </a>
 
-          {onOpenProfile && (
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenProfile();
-              }}
-              className="w-full text-left flex items-center gap-2 text-xs tracking-[0.18em] uppercase text-[var(--gold-primary)] py-1 font-semibold"
-            >
-              <User className="w-4 h-4" />
-              <span>Calibrate Style DNA Profile</span>
-            </button>
-          )}
-
-          {onOpenAddPiece && (
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenAddPiece();
-              }}
-              className="w-full text-left flex items-center gap-2 text-xs tracking-[0.18em] uppercase text-[var(--gold-primary)] py-1 font-semibold"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Upload Garment (Photo & AI)</span>
-            </button>
-          )}
-          <div className="pt-3 border-t border-[var(--border-card)] space-y-2.5">
-            {(onOpenAuth || onOpenOnboarding) && (
+          <div className="pt-4 border-t border-[var(--border-card)] space-y-2.5">
+            {onOpenProfile && (
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  if (onOpenAuth) onOpenAuth();
-                  else if (onOpenOnboarding) onOpenOnboarding();
+                  onOpenProfile();
                 }}
-                className="w-full py-3 rounded-full bg-black text-white text-xs font-bold hover:bg-neutral-800 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                className="w-full text-left text-xs uppercase tracking-wider py-1.5 text-[var(--text-body)]"
               >
-                <span>Sign In to OTD</span>
-                <span className="text-sm">→</span>
+                Style DNA Calibration
+              </button>
+            )}
+            {onOpenAddPiece && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAddPiece();
+                }}
+                className="w-full text-left text-xs uppercase tracking-wider py-1.5 text-[var(--text-body)]"
+              >
+                Upload Wardrobe Piece
               </button>
             )}
             <button
@@ -270,11 +259,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setMobileMenuOpen(false);
                 onOpenDownload();
               }}
-              className="gold-btn w-full py-3 rounded-full text-xs font-semibold flex items-center justify-center gap-2"
+              className="w-full text-left text-xs uppercase tracking-wider py-1.5 text-[var(--gold-primary)] font-semibold"
             >
-              <Download className="w-4 h-4" />
-              <span>Download Android APK (150 MB)</span>
+              Download Android APK (v1.0)
             </button>
+
+            {isAuthenticated && onLogout && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onLogout();
+                }}
+                className="w-full text-left text-xs uppercase tracking-wider py-1.5 text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-2 border-t border-[var(--border-card)] pt-2 mt-2"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out of Atelier</span>
+              </button>
+            )}
           </div>
         </div>
       )}

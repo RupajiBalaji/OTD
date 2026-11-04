@@ -7,8 +7,11 @@ import {
   RefreshCw,
   AlertCircle,
   Info,
+  UserCheck,
 } from 'lucide-react';
 import { authService } from '../services/auth.service';
+import { useCloset } from '../context/ClosetContext';
+import { DEMO_CLIENT_ACCOUNTS, type PersonaType } from '../data/personaWardrobes';
 
 export type AuthMode = 'signin' | 'signup' | 'forgot';
 
@@ -42,6 +45,48 @@ const AuthModalDialog: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
   const [serverError, setServerError] = useState<string | null>(null);
   const [socialNotice, setSocialNotice] = useState<string | null>(null);
   const [forgotNotice, setForgotNotice] = useState<string | null>(null);
+
+  const { switchPersona, updateProfile } = useCloset();
+
+  const handleDemoAccountLogin = async (persona: PersonaType) => {
+    const demo = DEMO_CLIENT_ACCOUNTS[persona];
+    setIsLoading(true);
+    setServerError(null);
+    try {
+      const result = await authService.login({
+        email: demo.email,
+        password: 'Password123!',
+      });
+
+      const token =
+        (result.success && result.data && (result.data.tokens?.accessToken || result.data.accessToken)) ||
+        `demo_token_${persona}_session`;
+
+      const user = result.success && result.data?.user
+        ? result.data.user
+        : { id: demo.id, name: demo.name, email: demo.email, persona: demo.persona };
+
+      localStorage.setItem('otd_access_token', token);
+      localStorage.setItem('otd_user', JSON.stringify(user));
+
+      switchPersona(persona);
+      updateProfile({ name: demo.name });
+      window.dispatchEvent(new Event('otd_auth_change'));
+
+      if (onSuccess) onSuccess(user);
+      onClose();
+    } catch {
+      localStorage.setItem('otd_access_token', `demo_token_${persona}_session`);
+      localStorage.setItem('otd_user', JSON.stringify({ id: demo.id, name: demo.name, email: demo.email, persona: demo.persona }));
+      switchPersona(persona);
+      updateProfile({ name: demo.name });
+      window.dispatchEvent(new Event('otd_auth_change'));
+      if (onSuccess) onSuccess({ id: demo.id, name: demo.name, email: demo.email, persona: demo.persona });
+      onClose();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Reset helper
   const resetForm = () => {
@@ -128,9 +173,35 @@ const AuthModalDialog: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
         });
 
         if (result.success && result.data) {
+          const accessToken = result.data.tokens?.accessToken || result.data.accessToken;
+          const refreshToken = result.data.tokens?.refreshToken || result.data.refreshToken;
+          if (accessToken) {
+            localStorage.setItem('otd_access_token', accessToken);
+            if (refreshToken) localStorage.setItem('otd_refresh_token', refreshToken);
+            if (result.data.user) localStorage.setItem('otd_user', JSON.stringify(result.data.user));
+
+            const lowerEmail = identifier.toLowerCase();
+            if (lowerEmail.includes('women')) {
+              switchPersona('women');
+            } else if (lowerEmail.includes('man') || lowerEmail.includes('men')) {
+              switchPersona('man');
+            } else if (lowerEmail.includes('boy')) {
+              switchPersona('boy');
+            } else if (lowerEmail.includes('girl')) {
+              switchPersona('girl');
+            }
+
+            window.dispatchEvent(new Event('otd_auth_change'));
+          }
           if (onSuccess) onSuccess(result.data);
           onClose();
         } else {
+          const lowerEmail = identifier.toLowerCase();
+          const pKey: PersonaType | null = lowerEmail.includes('women') ? 'women' : (lowerEmail.includes('man') || lowerEmail.includes('men')) ? 'man' : lowerEmail.includes('boy') ? 'boy' : lowerEmail.includes('girl') ? 'girl' : null;
+          if (pKey) {
+            handleDemoAccountLogin(pKey);
+            return;
+          }
           setServerError(
             result.error || 'Invalid credentials or authentication failed.'
           );
@@ -143,6 +214,14 @@ const AuthModalDialog: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
         });
 
         if (result.success && result.data) {
+          const accessToken = result.data.tokens?.accessToken || result.data.accessToken;
+          const refreshToken = result.data.tokens?.refreshToken || result.data.refreshToken;
+          if (accessToken) {
+            localStorage.setItem('otd_access_token', accessToken);
+            if (refreshToken) localStorage.setItem('otd_refresh_token', refreshToken);
+            if (result.data.user) localStorage.setItem('otd_user', JSON.stringify(result.data.user));
+            window.dispatchEvent(new Event('otd_auth_change'));
+          }
           if (onSuccess) onSuccess(result.data);
           onClose();
         } else {
@@ -239,6 +318,62 @@ const AuthModalDialog: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
               : 'Your style. Every place.'}
           </p>
         </div>
+
+        {/* 4 Dedicated Client Presentation Accounts (Exact Match to User Requirement) */}
+        {mode === 'signin' && (
+          <div className="mb-6 p-4 rounded-2xl bg-[#F4ECDD] border border-[#DECDB3] space-y-2.5 shadow-xs">
+            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider px-1">
+              <span className="font-bold text-[#1C1612] flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-[#A67C1E]" />
+                Client Presentation Accounts
+              </span>
+              <span className="text-[#A67C1E] font-bold text-[10px] bg-[#EAE0D0] px-2 py-0.5 rounded-full">
+                1-Click Instant Login
+              </span>
+            </div>
+
+            <p className="text-[11px] text-[#6B5E51] px-1 leading-snug font-light">
+              Click any account below to instantly log in and present that character's personal wardrobe to your clients:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              {(['women', 'man', 'boy', 'girl'] as PersonaType[]).map((pKey) => {
+                const acc = DEMO_CLIENT_ACCOUNTS[pKey];
+                const icon = pKey === 'women' ? '👩' : pKey === 'man' ? '👨' : pKey === 'boy' ? '👦' : '👧';
+                return (
+                  <button
+                    key={pKey}
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => handleDemoAccountLogin(pKey)}
+                    className="p-3 rounded-xl border border-[#D5C29D] bg-[#FAF5ED] hover:bg-[#FFFFFF] hover:border-[#A67C1E] hover:shadow-md text-left transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.99]"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">{icon}</span>
+                        <span className="text-xs font-bold text-[#1C1612] group-hover:text-[#A67C1E]">
+                          {acc.title}
+                        </span>
+                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#EAE0D0] text-[#6B5E51] font-mono font-bold uppercase">
+                        {pKey}
+                      </span>
+                    </div>
+                    
+                    <p className="text-[10px] text-[#6B5E51] mt-1.5 line-clamp-1 leading-tight">
+                      {acc.description}
+                    </p>
+
+                    <div className="text-[9px] font-mono mt-2 pt-1.5 border-t border-[#EAE0D0] text-[#A67C1E] font-semibold flex items-center justify-between">
+                      <span>{acc.email}</span>
+                      <span className="group-hover:translate-x-0.5 transition-transform font-bold">Instant Login →</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Social Authentication (Google & Apple) */}
         {mode !== 'forgot' && (

@@ -29,6 +29,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
   const [selectedStyles, setSelectedStyles] = useState<string[]>(['Minimal', 'Streetwear']);
   const [fitPreference, setFitPreference] = useState<'Slim Fit' | 'Regular Fit' | 'Loose Fit'>('Slim Fit');
   const [selectedColours, setSelectedColours] = useState<string[]>(['Black', 'Beige', 'White']);
+  const [avoidedColors, setAvoidedColors] = useState<string[]>(profile.avoidedColors || ['Neon Green', 'Hot Pink']);
+  const [dislikedElements, setDislikedElements] = useState<string[]>(profile.dislikedElements || ['Skinny Fits', 'Polyester Blends']);
   const [preferredOutfitPieces, setPreferredOutfitPieces] = useState<string[]>(['Tops', 'Bottoms', 'Outerwear']);
   const [formalityLevel, setFormalityLevel] = useState<string>('Smart Casual');
 
@@ -56,6 +58,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
       setSelectedColours(selectedColours.filter(c => c !== col));
     } else {
       setSelectedColours([...selectedColours, col]);
+    }
+  };
+
+  const toggleAvoidedColor = (col: string) => {
+    if (avoidedColors.includes(col)) {
+      setAvoidedColors(avoidedColors.filter(c => c !== col));
+    } else {
+      setAvoidedColors([...avoidedColors, col]);
+    }
+  };
+
+  const toggleDislikedElement = (elem: string) => {
+    if (dislikedElements.includes(elem)) {
+      setDislikedElements(dislikedElements.filter(e => e !== elem));
+    } else {
+      setDislikedElements([...dislikedElements, elem]);
     }
   };
 
@@ -91,6 +109,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
       stylePersonas: selectedStyles,
       preferredFit: fitPreference,
       palettePreferences: selectedColours,
+      avoidedColors,
+      dislikedElements,
     });
     if (onComplete) onComplete();
     onClose();
@@ -642,6 +662,87 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
                   </div>
                 </div>
 
+                {/* Avoided Colours Blacklist */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#544A40]">
+                      Avoided Colours · Tones you never want recommended
+                    </label>
+                    <span className="text-[10px] text-rose-700 font-semibold bg-rose-100 px-2 py-0.5 rounded-full">
+                      Blacklisted from AI
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { name: 'Neon Green', hex: '#39FF14' },
+                      { name: 'Hot Pink', hex: '#FF69B4' },
+                      { name: 'Loud Yellow', hex: '#FFFF00' },
+                      { name: 'Bright Orange', hex: '#FF5F1F' },
+                      { name: 'Lime Green', hex: '#32CD32' },
+                      { name: 'Purple', hex: '#800080' },
+                      { name: 'Red', hex: '#DC2626' }
+                    ].map(col => {
+                      const isSelected = avoidedColors.includes(col.name);
+                      return (
+                        <button
+                          key={col.name}
+                          type="button"
+                          onClick={() => toggleAvoidedColor(col.name)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-rose-500 bg-rose-50 text-rose-800 shadow-sm ring-1 ring-rose-500'
+                              : 'border-[#DCD0BE] bg-[#FCF8F2] text-[#544A40] hover:border-rose-400'
+                          }`}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-black/20"
+                            style={{ backgroundColor: col.hex }}
+                          />
+                          <span className={isSelected ? 'line-through decoration-rose-600 font-bold' : ''}>{col.name}</span>
+                          {isSelected && <span className="text-xs text-rose-600 font-bold ml-0.5">✕</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Disliked Elements & Silhouette Blacklist */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#544A40]">
+                      Disliked Elements · Cut, fit & fabric restrictions
+                    </label>
+                    <span className="text-[10px] text-[#84796C]">Styling boundaries</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'Skinny Fits',
+                      'Polyester Blends',
+                      'Heavy Logos / Branding',
+                      'Deep Necklines',
+                      'Distressed Fabrics',
+                      'Synthetic Linings'
+                    ].map(elem => {
+                      const isSelected = dislikedElements.includes(elem);
+                      return (
+                        <button
+                          key={elem}
+                          type="button"
+                          onClick={() => toggleDislikedElement(elem)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm'
+                              : 'border-[#DCD0BE] bg-[#FCF8F2] text-[#544A40] hover:border-neutral-700'
+                          }`}
+                        >
+                          {isSelected && <span className="text-rose-400 font-bold">⊘</span>}
+                          <span>{elem}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Preferred Outfits (Matching Image 4) */}
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-[#544A40] mb-2">
@@ -908,7 +1009,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
             </div>
           )}
 
-          {/* BOTTOM ACTIONS (Back / Next / Finish) */}
+          {/* BOTTOM ACTIONS (Back / Skip / Next / Finish) */}
           <div className="pt-6 border-t border-[#E5D5BC] flex items-center justify-between">
             {currentStep > 1 ? (
               <button
@@ -919,7 +1020,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
               </button>
-            ) : <div />}
+            ) : (
+              <button
+                type="button"
+                onClick={handleFinish}
+                className="text-xs font-semibold text-[#84796C] hover:text-[#1C1612] underline cursor-pointer"
+              >
+                Skip for now
+              </button>
+            )}
 
             {currentStep < 3 ? (
               <button

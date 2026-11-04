@@ -25,6 +25,10 @@ export interface AuthSuccessData {
   user: AuthUser;
   accessToken?: string;
   refreshToken?: string;
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+  };
 }
 
 export interface ApiResponse<T = unknown> {

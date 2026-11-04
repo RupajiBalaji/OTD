@@ -16,6 +16,19 @@ export class OutfitsController {
     res.status(201).json(new ApiResponse(201, outfit, 'New outfit synthesized by AI'));
   });
 
+  public static modifyOutfit = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const { instruction } = req.body;
+    const outfit = await OutfitsService.modifyOutfit(userId, req.params.id as string, instruction);
+    res.status(200).json(new ApiResponse(200, outfit, 'Outfit modified successfully'));
+  });
+
+  public static getSavedOutfits = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const outfits = await OutfitsService.getSavedOutfits(userId);
+    res.status(200).json(new ApiResponse(200, outfits, 'Saved outfits fetched'));
+  });
+
   public static logAsWorn = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.userId;
     const outfit = await OutfitsService.logAsWorn(userId, req.params.id as string);

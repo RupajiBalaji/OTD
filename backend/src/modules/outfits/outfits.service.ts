@@ -1,53 +1,39 @@
 import { Outfit, IOutfit } from '../../models/Outfit';
 import { WardrobeItem } from '../../models/WardrobeItem';
 import { ApiError } from '../../utils/ApiError';
+import { OutfitGenerationEngine, OutfitGenerationCriteria } from './outfit-generation.service';
 
 export class OutfitsService {
   public static async getDailyRecommendations(userId: string) {
-    let saved = await Outfit.find({ userId }).populate('items').sort({ createdAt: -1 }).limit(5);
+    let saved = await Outfit.find({ userId }).populate('items').sort({ createdAt: -1 }).limit(10);
 
-    // If no outfits generated yet, synthesize initial AI recommendations
+    // If no outfits generated yet, synthesize initial AI recommendation from closet
     if (saved.length === 0) {
       const wardrobe = await WardrobeItem.find({ userId });
       if (wardrobe.length >= 2) {
-        const outfit = await Outfit.create({
-          userId,
-          title: 'The Parisian Minimalist',
-          description: 'Understated elegance balancing structured wool tailoring with soft fluid silk.',
-          items: wardrobe.slice(0, Math.min(3, wardrobe.length)).map((w) => w._id),
-          occasion: 'casual',
-          vibe: 'minimalist',
-          aiMatchScore: 0.98,
-          weatherFitReason: 'Optimized for mild transitional weather. Layered composition allows effortless temperature modulation.',
+        const initialOutfit = await OutfitGenerationEngine.synthesizeOutfit(userId, {
+          occasion: 'Evening Social',
+          venue: 'Olive Bistro, Jubilee Hills',
+          vibe: 'Clean Minimalist',
+          weather: '26°C Breezy',
         });
-        saved = [await outfit.populate('items')];
+        saved = [initialOutfit as any];
       }
     }
 
     return saved;
   }
 
-  public static async generateOutfit(userId: string, criteria: { occasion: string; vibe: string; weatherSummary?: string }) {
-    const wardrobe = await WardrobeItem.find({ userId });
-    if (wardrobe.length < 2) {
-      throw new ApiError(400, 'Need at least 2 wardrobe items to synthesize an outfit');
-    }
+  public static async generateOutfit(userId: string, criteria: OutfitGenerationCriteria) {
+    return OutfitGenerationEngine.synthesizeOutfit(userId, criteria);
+  }
 
-    // Select random top, bottom, outerwear from available items
-    const selected = wardrobe.sort(() => 0.5 - Math.random()).slice(0, Math.min(3, wardrobe.length));
+  public static async modifyOutfit(userId: string, outfitId: string, instruction: string) {
+    return OutfitGenerationEngine.modifyOutfit(userId, outfitId, instruction);
+  }
 
-    const outfit = await Outfit.create({
-      userId,
-      title: `Curated ${criteria.vibe.toUpperCase()} Look`,
-      description: `Algorithmically styled for ${criteria.occasion} occasions with ${criteria.vibe} aesthetic harmony.`,
-      items: selected.map((s) => s._id),
-      occasion: criteria.occasion,
-      vibe: criteria.vibe,
-      aiMatchScore: +(0.92 + Math.random() * 0.07).toFixed(2),
-      weatherFitReason: criteria.weatherSummary || 'Harmonized for comfortable thermal regulation and movement.',
-    });
-
-    return outfit.populate('items');
+  public static async getSavedOutfits(userId: string) {
+    return Outfit.find({ userId, isBookmarked: true }).populate('items').sort({ updatedAt: -1 });
   }
 
   public static async logAsWorn(userId: string, outfitId: string) {
@@ -59,13 +45,16 @@ export class OutfitsService {
     outfit.isWornToday = true;
     await outfit.save();
 
-    // Increment wear counts on all items
+    // Increment wear counts on all items and update lastWorn timestamp
     await WardrobeItem.updateMany(
       { _id: { $in: outfit.items } },
-      { $inc: { timesWorn: 1 } }
+      {
+        $inc: { timesWorn: 1 },
+        $set: { lastWorn: new Date() },
+      }
     );
 
-    return outfit;
+    return outfit.populate('items');
   }
 
   public static async toggleBookmark(userId: string, outfitId: string) {
@@ -76,6 +65,6 @@ export class OutfitsService {
 
     outfit.isBookmarked = !outfit.isBookmarked;
     await outfit.save();
-    return outfit;
+    return outfit.populate('items');
   }
 }

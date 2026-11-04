@@ -1,4 +1,5 @@
-import { ArrowUpRight } from 'lucide-react';
+import React from 'react';
+import { ArrowUpRight, Wine, Mountain, Building2 } from 'lucide-react';
 
 export const Lookbook: React.FC = () => {
   const editorialLooks = [
@@ -8,7 +9,7 @@ export const Lookbook: React.FC = () => {
       palette: ['#0B1325', '#FAFAFA', '#D4AF37'],
       caption: 'Double-breasted barathea wool paired with silk grosgrain collar and evening velvet slippers.',
       model: 'Lookbook Edition IV · Milan',
-      icon: '🍸'
+      icon: Wine
     },
     {
       title: 'Alpine Cashmere Monolith',
@@ -16,7 +17,7 @@ export const Lookbook: React.FC = () => {
       palette: ['#8E5A3C', '#DED5C4', '#2D3A2F'],
       caption: 'Undyed 6-ply Scottish cashmere layered beneath Spanish entrefino shearling with brushed corduroy.',
       model: 'Lookbook Edition VII · St. Moritz',
-      icon: '🏔️'
+      icon: Mountain
     },
     {
       title: 'Architectural Shadowplay',
@@ -24,7 +25,7 @@ export const Lookbook: React.FC = () => {
       palette: ['#111113', '#4A4D55', '#E6E4DD'],
       caption: 'Unstructured wool crepe draped with seamless mock-neck and fluid Japanese triacetate.',
       model: 'Lookbook Edition IX · Tokyo Aoyama',
-      icon: '🏛️'
+      icon: Building2
     }
   ];
 
@@ -62,7 +63,9 @@ export const Lookbook: React.FC = () => {
                   <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--gold-primary)] font-medium">
                     {look.model}
                   </span>
-                  <span className="text-2xl">{look.icon}</span>
+                  <div className="w-8 h-8 rounded-lg bg-[var(--bg-card-inner)] border border-[var(--border-card)] flex items-center justify-center">
+                    <look.icon className="w-4 h-4 text-[var(--gold-primary)]" />
+                  </div>
                 </div>
 
                 {/* Aesthetic Tag */}

@@ -1,395 +1,465 @@
-import { useState } from 'react';
-import { Sparkles, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Heart, Layers, Shirt, Compass, Tag, CheckCircle2, AlertTriangle, Zap, UserCheck } from 'lucide-react';
+import { useCloset } from '../context/ClosetContext';
+import { PERSONA_WARDROBES, type PersonaType, type PersonaMatchingSet, type PersonaMismatchingSet } from '../data/personaWardrobes';
 
+const PERSONA_CONFIG: { id: PersonaType; label: string; badge: string; desc: string }[] = [
+  { id: 'women', label: 'Women', badge: 'Haute Editorial', desc: 'Silk slip dresses, Saint Laurent tailoring & fluid drapery' },
+  { id: 'man', label: 'Man', badge: 'Sartorial Heritage', desc: 'Savile Row suiting, undyed cashmere & Barbour outerwear' },
+  { id: 'boy', label: 'Boy', badge: 'Academy Prep', desc: 'Nautical Breton knits, linen suits & British cricket sweaters' },
+  { id: 'girl', label: 'Girl', badge: 'Whimsical Elegance', desc: 'Smocked gingham sundresses, floral voile & velvet partywear' },
+];
 
-interface OutfitPiece {
-  category: string;
-  name: string;
-  color: string;
-  fabric: string;
-  icon: string;
-  vibe: string;
-}
-
-interface CuratedLook {
-  title: string;
-  harmonyScore: number;
-  formality: string;
-  pieces: OutfitPiece[];
-  colorPalette: { name: string; hex: string }[];
-  stylistRationale: string;
-  accessoryNote: string;
-}
-
-const PRESETS: Record<string, Record<string, CuratedLook>> = {
-  'boardroom': {
-    'old-money': {
-      title: 'The Sovereign Executive',
-      harmonyScore: 99.2,
-      formality: 'High Executive Sartorial',
-      pieces: [
-        { category: 'Outerwear / Tailoring', name: 'Savile Row Double-Breasted Wool Chalk-Stripe Suit', color: 'Charcoal Grey', fabric: 'Super 150s Merino Wool', icon: '🧥', vibe: 'Power & Structure' },
-        { category: 'Shirt', name: 'Hand-Finished Sea Island Cotton Poplin Shirt', color: 'Crisp French Blue', fabric: 'Sea Island Cotton 200/2', icon: '👔', vibe: 'Breathable Crisp' },
-        { category: 'Tie / Accent', name: 'Ancient Madder Hand-Rolled 7-Fold Silk Tie', color: 'Burnt Burgundy', fabric: 'Hand-Printed English Silk', icon: '🎗️', vibe: 'Textured Depth' },
-        { category: 'Footwear', name: 'Oxford Cap-Toe Shoes in Antique Museum Calf', color: 'Deep Oxblood', fabric: 'Full-Grain French Calfskin', icon: '👞', vibe: 'Goodyear Welted' },
-        { category: 'Horology', name: 'Ultra-Thin Mechanical Rose Gold Dress Watch', color: 'Eggshell Dial', fabric: 'Alligator Leather Strap', icon: '⌚', vibe: 'Subtle Prestige' },
-      ],
-      colorPalette: [
-        { name: 'Charcoal', hex: '#2A2D34' },
-        { name: 'French Blue', hex: '#779ECB' },
-        { name: 'Burnt Burgundy', hex: '#631B26' },
-        { name: 'Oxblood', hex: '#4A1521' }
-      ],
-      stylistRationale: 'The charcoal chalk stripe establishes commanding presence without the harshness of solid black. The French blue poplin softens facial contrast, while the Madder silk tie introduces tactile warmth under boardroom halogen and daylight alike.',
-      accessoryNote: 'Pocket square in white linen with hand-rolled burgundy piping, television fold.'
-    },
-    'minimalist': {
-      title: 'The Modernist Architect',
-      harmonyScore: 98.7,
-      formality: 'Contemporary Professional',
-      pieces: [
-        { category: 'Tailoring', name: 'Unstructured Milano-Stitch Virgin Wool Single-Breasted Jacket', color: 'Jet Black', fabric: 'High-Twist Wool Crepe', icon: '🧥', vibe: 'Clean Lines' },
-        { category: 'Base Knit', name: 'Seamless 18-Gauge Silk-Cashmere Mock-Neck', color: 'Slate Heather', fabric: '70% Silk / 30% Cashmere', icon: '👕', vibe: 'Featherlight' },
-        { category: 'Trousers', name: 'Relaxed Tapered Pleated Trousers with Side Tabs', color: 'Deep Charcoal', fabric: 'Worsted Tropical Wool', icon: '👖', vibe: 'Fluid Motion' },
-        { category: 'Footwear', name: 'Minimalist Venetian Calfskin Slip-On Loafers', color: 'Matte Obsidian', fabric: 'Italian Box Calf', icon: '👞', vibe: 'Hardware-Free' },
-      ],
-      colorPalette: [
-        { name: 'Jet Black', hex: '#111113' },
-        { name: 'Slate', hex: '#4A4D55' },
-        { name: 'Deep Charcoal', hex: '#23242A' },
-        { name: 'Bone White', hex: '#E6E4DD' }
-      ],
-      stylistRationale: 'A hardware-free, monochromatic palette communicates razor-sharp focus and intellectual restraint. Removing the traditional tie in favor of a silk-cashmere mock neck modernizes the silhouette without sacrificing decorum.',
-      accessoryNote: 'Matte titanium fountain pen & minimalist leather document folio in grain calf.'
-    }
-  },
-  'soiree': {
-    'old-money': {
-      title: 'Monaco Nocturne Black-Tie',
-      harmonyScore: 99.8,
-      formality: 'Formal Eveningwear',
-      pieces: [
-        { category: 'Dinner Jacket', name: 'Midnight Blue Mohair-Barathea Tuxedo with Silk Grosgrain Lapels', color: 'Midnight Noir', fabric: '70% Wool / 30% Kid Mohair', icon: '🧥', vibe: 'Luminous Under Light' },
-        { category: 'Evening Shirt', name: 'Pleated Marcella Bib Dress Shirt with Mother-of-Pearl Studs', color: 'Pure Optical White', fabric: 'Swiss Cotton Voile', icon: '👔', vibe: 'Crisp Stiff Front' },
-        { category: 'Trousers', name: 'Tuxedo Trousers with Grosgrain Side Braid', color: 'Midnight Navy', fabric: 'Matching Barathea Weave', icon: '👖', vibe: 'Seamless Line' },
-        { category: 'Footwear', name: 'Velvet Evening Slippers with Monogram Bullion Embroidery', color: 'Black Onyx', fabric: 'Quilted Silk Lining', icon: '👞', vibe: 'Aristocratic Ease' },
-      ],
-      colorPalette: [
-        { name: 'Midnight', hex: '#0B1325' },
-        { name: 'Silk Black', hex: '#050507' },
-        { name: 'Marcella White', hex: '#FAFAFA' },
-        { name: 'Champagne', hex: '#D4AF37' }
-      ],
-      stylistRationale: 'Under evening chandelier luminescence, true Midnight Blue reads richer and deeper than black, which can appear dull or grayish. The grosgrain trim adds refined tactile contrast against the crisp Swiss cotton Marcella bib.',
-      accessoryNote: 'Cufflinks in Onyx set in 18k yellow gold with matching dress studs.'
-    },
-    'minimalist': {
-      title: 'The Gallery Vernissage',
-      harmonyScore: 97.9,
-      formality: 'Creative Black Tie',
-      pieces: [
-        { category: 'Jacket', name: 'Asymmetrical Draped Raw Silk Evening Kimono-Coat', color: 'Smoked Obsidian', fabric: 'Handloomed Slub Silk', icon: '🧥', vibe: 'Sculptural Silhouette' },
-        { category: 'Knit', name: 'Sheer Wool-Cashmere Open-Collar Polo', color: 'Caviar Black', fabric: 'Featherweight Gauze', icon: '👕', vibe: 'Effortless Drape' },
-        { category: 'Trousers', name: 'Wide-Leg Fluid Japanese Triacetate Trousers', color: 'Deep Anthracite', fabric: 'Architectural Drape Fabric', icon: '👖', vibe: 'High Motion Volume' },
-        { category: 'Footwear', name: 'Square-Toe Polished Chelsea Boots with Concealed Zip', color: 'Ebony Black', fabric: 'Glazed Calfskin', icon: '👢', vibe: 'Architectural Edge' },
-      ],
-      colorPalette: [
-        { name: 'Smoked Obsidian', hex: '#161619' },
-        { name: 'Caviar', hex: '#222227' },
-        { name: 'Anthracite', hex: '#34363F' },
-        { name: 'Palladium', hex: '#A8ABB5' }
-      ],
-      stylistRationale: 'Playing with silhouette volume rather than chromatic color creates an intensely magnetic, high-fashion statement. The wide-leg fluid drape creates sculptural flow when in motion.',
-      accessoryNote: 'Single architectural silver ear cuff or platinum architectural pinky ring.'
-    }
-  },
-  'weekend': {
-    'old-money': {
-      title: 'St. Moritz Fireside Leisure',
-      harmonyScore: 98.9,
-      formality: 'Alpine Luxury Casual',
-      pieces: [
-        { category: 'Outerwear', name: 'Shearling-Lined Suede Field Jacket in Toasted Hazelnut', color: 'Hazelnut Suede', fabric: 'Spanish Entrefino Lambskin', icon: '🧥', vibe: 'Rugged Warmth' },
-        { category: 'Knitwear', name: 'Heavy Cable-Knit Fisherman Turtleneck in Undyed Cashmere', color: 'Oatmeal Heather', fabric: '6-Ply Scottish Cashmere', icon: '🧶', vibe: 'Pure Softness' },
-        { category: 'Pants', name: 'Garment-Dyed Brushed Cotton Corduroy Trousers', color: 'Forest Pine', fabric: '500g Heavywale Italian Corduroy', icon: '👖', vibe: 'Tactile Comfort' },
-        { category: 'Boots', name: 'Handcrafted Norwegian-Welted Mountain Hiker Boots', color: 'Cognac Waxed Leather', fabric: 'Vibram Commando Lug Sole', icon: '🥾', vibe: 'Weatherproof Grip' },
-      ],
-      colorPalette: [
-        { name: 'Hazelnut', hex: '#8E5A3C' },
-        { name: 'Oatmeal', hex: '#DED5C4' },
-        { name: 'Forest Pine', hex: '#2D3A2F' },
-        { name: 'Cognac', hex: '#633A18' }
-      ],
-      stylistRationale: 'Rich tactile juxtaposition: the velvety grain of shearling suede against chunky cable-knit cashmere and heavywale corduroy creates a masterclass in tonal warmth and alpine comfort.',
-      accessoryNote: 'Cashmere-lined peccary leather gloves in caramel brown.'
-    },
-    'minimalist': {
-      title: 'Riviera Harbor Stroll',
-      harmonyScore: 98.4,
-      formality: 'Resort Chic',
-      pieces: [
-        { category: 'Overshirt', name: 'Unlined Washed Linen-Silk Overshirt with Horn Buttons', color: 'Sand Dune', fabric: 'Irish Linen & Mulberry Silk', icon: '🧥', vibe: 'Breezy Elegance' },
-        { category: 'Tee', name: 'Mercerized Pima Cotton Crewneck with French Seams', color: 'Chalk White', fabric: 'Extra-Long Staple Cotton', icon: '👕', vibe: 'Silky Sheen' },
-        { category: 'Shorts/Pants', name: 'Drawstring Tailored Gurkha Trousers in Light Hemp-Tencel', color: 'Terracotta Clay', fabric: 'Breathable Eco-Weave', icon: '👖', vibe: 'Relaxed Tailoring' },
-        { category: 'Footwear', name: 'Unlined Suede Belgian Loafers with Leather Piping', color: 'Taupe Nubuck', fabric: 'Handmade Soft Sole', icon: '👞', vibe: 'Barefoot Comfort' },
-      ],
-      colorPalette: [
-        { name: 'Sand Dune', hex: '#D9C8B4' },
-        { name: 'Chalk White', hex: '#F5F5F3' },
-        { name: 'Terracotta', hex: '#9E5B42' },
-        { name: 'Taupe', hex: '#877B73' }
-      ],
-      stylistRationale: 'Natural open-weave fibers allow sea breezes to circulate while retaining sartorial structure. The warm terracotta grounds the sun-bleached sand tones with Mediterranean sophistication.',
-      accessoryNote: 'Handmade acetate tortoiseshell sunglasses with dark green polarized lenses.'
-    }
+const renderCategoryIcon = (category: string) => {
+  const cat = category.toLowerCase();
+  if (cat.includes('dress') || cat.includes('gown') || cat.includes('slip') || cat.includes('top') || cat.includes('shirt') || cat.includes('knit') || cat.includes('tee')) {
+    return <Shirt className="w-4 h-4 text-[var(--gold-primary)]" />;
   }
+  if (cat.includes('jacket') || cat.includes('blazer') || cat.includes('coat') || cat.includes('outerwear') || cat.includes('layer') || cat.includes('cape')) {
+    return <Layers className="w-4 h-4 text-[var(--gold-primary)]" />;
+  }
+  if (cat.includes('trouser') || cat.includes('pant') || cat.includes('bottom') || cat.includes('short') || cat.includes('skirt')) {
+    return <Compass className="w-4 h-4 text-[var(--gold-primary)]" />;
+  }
+  if (cat.includes('shoe') || cat.includes('footwear') || cat.includes('sandal') || cat.includes('boot') || cat.includes('pump') || cat.includes('loafer')) {
+    return <Compass className="w-4 h-4 text-[var(--gold-primary)]" />;
+  }
+  return <Tag className="w-4 h-4 text-[var(--gold-primary)]" />;
 };
 
 export const InteractiveStylist: React.FC = () => {
-  const [occasion, setOccasion] = useState<string>('boardroom');
-  const [aesthetic, setAesthetic] = useState<string>('old-money');
+  const { activePersona, switchPersona } = useCloset();
+  const [mode, setMode] = useState<'matching' | 'mismatching'>('matching');
+  const [selectedSetIndex, setSelectedSetIndex] = useState<number>(0);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [savedCount, setSavedCount] = useState(142);
+  const [savedCount, setSavedCount] = useState(184);
   const [hasLiked, setHasLiked] = useState(false);
 
-  const currentLook = PRESETS[occasion]?.[aesthetic] || PRESETS['boardroom']['old-money'];
+  const personaData = PERSONA_WARDROBES[activePersona] || PERSONA_WARDROBES.women;
+  const currentSets = mode === 'matching' ? personaData.matchingSets : personaData.mismatchingSets;
+  const activeSet = currentSets[selectedSetIndex] || currentSets[0];
 
-  const handleOccasionChange = (key: string) => {
+  const handlePersonaSelect = (persona: PersonaType) => {
     setIsGenerating(true);
-    setOccasion(key);
-    setTimeout(() => setIsGenerating(false), 350);
+    switchPersona(persona);
+    setSelectedSetIndex(0);
+    setTimeout(() => setIsGenerating(false), 220);
   };
 
-  const handleAestheticChange = (key: string) => {
+  const handleModeChange = (newMode: 'matching' | 'mismatching') => {
     setIsGenerating(true);
-    setAesthetic(key);
-    setTimeout(() => setIsGenerating(false), 350);
+    setMode(newMode);
+    setSelectedSetIndex(0);
+    setTimeout(() => setIsGenerating(false), 220);
   };
+
+  const handleSetChange = (idx: number) => {
+    setIsGenerating(true);
+    setSelectedSetIndex(idx);
+    setTimeout(() => setIsGenerating(false), 180);
+  };
+
+  const isMatching = mode === 'matching';
+  const matchingSet = isMatching ? (activeSet as PersonaMatchingSet) : null;
+  const mismatchingSet = !isMatching ? (activeSet as PersonaMismatchingSet) : null;
 
   return (
     <section id="atelier" className="py-20 md:py-28 relative bg-[var(--bg-canvas-subtle)] border-y border-[var(--border-card)] transition-colors duration-300">
-      {/* Background decorations */}
-      <div className="absolute inset-0 bg-[radial-gradient(var(--gold-primary)_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.04] pointer-events-none" />
+      {/* Background fine grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(var(--gold-primary)_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.03] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-[var(--border-gold)] bg-[var(--pill-bg)]">
             <Sparkles className="w-3.5 h-3.5 text-[var(--gold-primary)]" />
             <span className="text-[11px] tracking-[0.2em] uppercase font-semibold text-[var(--gold-primary)] font-mono">
-              LIVE ATELIER SIMULATOR
+              CURATED ENSEMBLE ATELIER
             </span>
           </div>
 
           <h2 className="font-serif-luxury text-3xl sm:text-5xl font-normal text-[var(--text-heading)]">
-            Experience Real-Time <br />
-            <span className="italic font-light gold-gradient-text">Algorithmic Curation</span>
+            Explore 4 Wardrobes: <br />
+            <span className="italic font-light gold-gradient-text">Matching Harmony vs. High-Tension Clash</span>
           </h2>
 
           <p className="text-sm sm:text-base text-[var(--text-body)] font-light">
-            Select your scenario and aesthetic profile. Watch the OTD stylist engine cross-reference 
-            chromatic harmony, silhouettes, and fabric weights in milliseconds.
+            Toggle between Women, Man, Boy, and Girl capsules. Experience 4 perfectly harmonized matching sets 
+            alongside 4 high-contrast mismatching ensembles with professional editorial sartorial critique.
           </p>
         </div>
 
-        {/* Interactive Controls Bar */}
-        <div className="glass-card rounded-2xl p-4 sm:p-6 mb-10 max-w-4xl mx-auto border border-[var(--border-card)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Occasion Selector */}
-            <div>
-              <label className="block text-[11px] uppercase tracking-[0.18em] font-semibold text-[var(--text-heading)] mb-2.5">
-                1. Select Occasion & Setting
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'boardroom', label: 'Executive Board', icon: '🏛️' },
-                  { id: 'soiree', label: 'Evening Soirée', icon: '🍸' },
-                  { id: 'weekend', label: 'Leisure Retreat', icon: '🏔️' },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleOccasionChange(item.id)}
-                    className={`p-3 rounded-xl text-left border transition-all duration-200 cursor-pointer ${
-                      occasion === item.id
-                        ? 'border-[var(--gold-primary)] bg-[var(--pill-bg)] text-[var(--text-heading)] shadow-md'
-                        : 'border-[var(--border-card)] bg-[var(--bg-card-inner)] text-[var(--text-muted)] hover:border-[var(--gold-primary)] hover:text-[var(--text-heading)]'
-                    }`}
-                  >
-                    <span className="text-base block mb-1">{item.icon}</span>
-                    <span className="text-xs font-semibold block truncate">{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* 1. Persona Selector Bar */}
+        <div className="mb-6 max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-2.5 px-1">
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-semibold text-[var(--text-muted)] flex items-center gap-1.5">
+              <UserCheck className="w-3.5 h-3.5 text-[var(--gold-primary)]" />
+              01 / Select Character Wardrobe
+            </span>
+            <span className="text-xs font-mono text-[var(--gold-primary)]">
+              4 Distinct Capsules
+            </span>
+          </div>
 
-            {/* Aesthetic Selector */}
-            <div>
-              <label className="block text-[11px] uppercase tracking-[0.18em] font-semibold text-[var(--text-heading)] mb-2.5">
-                2. Select Style DNA
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'old-money', label: 'Old Money Heritage', desc: 'Loro Piana, Savile Row, Cashmere' },
-                  { id: 'minimalist', label: 'Architectural Pure', desc: 'Monochrome, Jil Sander, Clean' },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleAestheticChange(item.id)}
-                    className={`p-3 rounded-xl text-left border transition-all duration-200 cursor-pointer ${
-                      aesthetic === item.id
-                        ? 'border-[var(--gold-primary)] bg-[var(--pill-bg)] text-[var(--text-heading)] shadow-md'
-                        : 'border-[var(--border-card)] bg-[var(--bg-card-inner)] text-[var(--text-muted)] hover:border-[var(--gold-primary)] hover:text-[var(--text-heading)]'
-                    }`}
-                  >
-                    <span className="text-xs font-semibold block text-[var(--gold-primary)]">{item.label}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] block mt-0.5 truncate">{item.desc}</span>
-                  </button>
-                ))}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {PERSONA_CONFIG.map((p) => {
+              const isSelected = activePersona === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => handlePersonaSelect(p.id)}
+                  className={`p-3.5 rounded-2xl border text-left transition-all duration-300 cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-[var(--gold-primary)] bg-[var(--pill-bg)] shadow-md ring-1 ring-[var(--gold-primary)]/30'
+                      : 'border-[var(--border-card)] bg-[var(--bg-card)] hover:border-[var(--gold-primary)]/60 text-[var(--text-body)]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-semibold text-[var(--text-heading)]">
+                      {p.label}
+                    </span>
+                    <span className={`text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full font-bold ${
+                      isSelected
+                        ? 'bg-[var(--gold-primary)] text-black'
+                        : 'bg-[var(--bg-card-inner)] text-[var(--gold-primary)] border border-[var(--border-gold)]/40'
+                    }`}>
+                      {isSelected ? 'Active' : p.badge}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-muted)] leading-snug line-clamp-2">
+                    {p.desc}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. Mode Selector: Harmonious Matching vs. High-Contrast Mismatching */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <div className="glass-card rounded-2xl p-2 border border-[var(--border-card)] grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-md">
+            
+            {/* Matching Mode Button */}
+            <button
+              onClick={() => handleModeChange('matching')}
+              className={`p-3.5 rounded-xl text-left transition-all duration-300 cursor-pointer flex items-center gap-3.5 ${
+                isMatching
+                  ? 'bg-gradient-to-r from-[var(--gold-primary)]/20 via-[var(--gold-primary)]/10 to-transparent border border-[var(--gold-primary)] text-[var(--text-heading)] shadow-sm'
+                  : 'text-[var(--text-body)] hover:bg-[var(--bg-card-inner)] border border-transparent'
+              }`}
+            >
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                isMatching ? 'bg-[var(--gold-primary)] text-black shadow-md' : 'bg-[var(--bg-card-inner)] text-[var(--gold-primary)]'
+              }`}>
+                <CheckCircle2 className="w-5 h-5" />
               </div>
-            </div>
+              <div>
+                <div className="text-xs font-semibold flex items-center gap-1.5">
+                  <span>✦ Curated Matching Sets</span>
+                  <span className="text-[10px] font-mono text-[var(--gold-primary)] font-bold">98%+ Harmony</span>
+                </div>
+                <div className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                  Chromatic balance, synchronized textiles & tonal symmetry
+                </div>
+              </div>
+            </button>
+
+            {/* Mismatching Mode Button */}
+            <button
+              onClick={() => handleModeChange('mismatching')}
+              className={`p-3.5 rounded-xl text-left transition-all duration-300 cursor-pointer flex items-center gap-3.5 ${
+                !isMatching
+                  ? 'bg-gradient-to-r from-rose-500/20 via-amber-500/10 to-transparent border border-rose-400 text-[var(--text-heading)] shadow-sm'
+                  : 'text-[var(--text-body)] hover:bg-[var(--bg-card-inner)] border border-transparent'
+              }`}
+            >
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                !isMatching ? 'bg-rose-500 text-white shadow-md' : 'bg-[var(--bg-card-inner)] text-rose-400'
+              }`}>
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold flex items-center gap-1.5">
+                  <span>⚡ High-Contrast Mismatching Sets</span>
+                  <span className="text-[10px] font-mono text-rose-400 font-bold">Tension & Clash</span>
+                </div>
+                <div className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                  Textural friction, clashing formalities & sartorial critique
+                </div>
+              </div>
+            </button>
 
           </div>
         </div>
 
-        {/* Live Output Canvas */}
+        {/* 3. Ensemble Set Picker Tabs */}
+        <div className="max-w-5xl mx-auto mb-8 flex flex-wrap items-center justify-center gap-2">
+          {currentSets.map((set, idx) => {
+            const isCurrent = selectedSetIndex === idx;
+            return (
+              <button
+                key={set.id}
+                onClick={() => handleSetChange(idx)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center gap-2 ${
+                  isCurrent
+                    ? isMatching
+                      ? 'gold-btn shadow-md ring-1 ring-[var(--gold-primary)]/40'
+                      : 'bg-rose-500 text-white shadow-md ring-1 ring-rose-400'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:border-[var(--gold-primary)] border border-[var(--border-card)]'
+                }`}
+              >
+                <span className="font-mono text-[10px] opacity-75">0{idx + 1}</span>
+                <span className="truncate max-w-[200px]">{set.title}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 4. Live Output Showcase */}
         <div className={`transition-opacity duration-300 ${isGenerating ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
-          <div className="glass-card rounded-3xl p-6 sm:p-10 border border-[var(--border-card)] max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
+          <div className="glass-card rounded-3xl p-6 sm:p-10 border border-[var(--border-card)] max-w-6xl mx-auto shadow-2xl relative overflow-hidden">
             
-            {/* Golden Ribbon Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[var(--border-card)] gap-4">
+            {/* Top Spec Sheet Banner */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-[var(--border-card)] gap-4">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] tracking-[0.2em] uppercase font-semibold text-[var(--gold-primary)]">
-                    SYNTHESIZED BESPOKE ENSEMBLE
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className={`text-[10px] font-mono tracking-[0.25em] uppercase font-bold px-2.5 py-0.5 rounded-md ${
+                    isMatching
+                      ? 'bg-[var(--gold-primary)]/15 text-[var(--gold-primary)] border border-[var(--border-gold)]'
+                      : 'bg-rose-500/15 text-rose-400 border border-rose-400/40'
+                  }`}>
+                    {isMatching ? '✦ HARMONIOUS CHROMATIC ENSEMBLE' : '⚡ HIGH-TENSION SARTORIAL CLASH'}
                   </span>
-                  <span className="text-xs text-[var(--text-muted)]">·</span>
-                  <span className="text-xs font-mono text-[var(--text-muted)]">{currentLook.formality}</span>
+                  <span className="text-xs text-[var(--border-card)]">·</span>
+                  <span className="text-xs font-mono text-[var(--text-muted)]">
+                    {personaData.displayName} Wardrobe · {activeSet.formality}
+                  </span>
                 </div>
                 <h3 className="font-serif-luxury text-2xl sm:text-4xl font-normal text-[var(--text-heading)]">
-                  {currentLook.title}
+                  {activeSet.title}
                 </h3>
+                <p className="text-xs sm:text-sm text-[var(--text-body)] mt-1 font-light italic">
+                  Theme: {activeSet.theme}
+                </p>
               </div>
 
-              {/* Score & Metrics */}
-              <div className="flex items-center gap-4">
+              {/* Score Metric Badge */}
+              <div className="flex items-center gap-4 self-start lg:self-center">
                 <div className="text-right">
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Chromatic Harmony</div>
-                  <div className="text-xl sm:text-2xl font-serif-luxury font-bold text-[var(--gold-primary)]">
-                    {currentLook.harmonyScore}%
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
+                    {isMatching ? 'Chromatic Harmony' : 'Sartorial Friction Index'}
+                  </div>
+                  <div className={`text-2xl sm:text-3xl font-serif-luxury font-bold ${
+                    isMatching ? 'gold-gradient-text' : 'text-rose-400'
+                  }`}>
+                    {isMatching ? `${matchingSet?.harmonyScore}%` : `${mismatchingSet?.tensionScore}%`}
                   </div>
                 </div>
 
-                <div className="w-12 h-12 rounded-2xl bg-[var(--gold-btn-bg)] p-[1px] shadow-lg">
-                  <div className="w-full h-full bg-[var(--bg-card-inner)] rounded-2xl flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-[var(--gold-primary)]" />
-                  </div>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border ${
+                  isMatching
+                    ? 'bg-[var(--bg-card-inner)] border-[var(--border-gold)] text-[var(--gold-primary)]'
+                    : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                }`}>
+                  {isMatching ? <Sparkles className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
                 </div>
               </div>
             </div>
 
-            {/* Pieces Grid */}
-            <div className="py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {currentLook.pieces.slice(0, 4).map((piece, idx) => (
-                <div
-                  key={idx}
-                  className="bg-[var(--bg-card-inner)] rounded-2xl p-5 border border-[var(--border-card)] hover:border-[var(--gold-primary)] transition-all duration-300 group flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] uppercase font-mono tracking-wider text-[var(--text-muted)]">
-                        Layer 0{idx + 1}
-                      </span>
-                      <span className="text-2xl group-hover:scale-110 transition-transform">{piece.icon}</span>
-                    </div>
-
-                    <div className="text-[11px] font-semibold tracking-wider text-[var(--gold-primary)] uppercase mb-1">
-                      {piece.category}
-                    </div>
-
-                    <h4 className="text-xs font-medium text-[var(--text-heading)] group-hover:text-[var(--gold-primary)] line-clamp-2 mb-2">
-                      {piece.name}
-                    </h4>
-                  </div>
-
-                  <div className="pt-3 border-t border-[var(--border-card)] space-y-1">
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-[var(--text-muted)]">Tone:</span>
-                      <span className="text-[var(--text-heading)] font-medium">{piece.color}</span>
-                    </div>
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-[var(--text-muted)]">Textile:</span>
-                      <span className="text-[var(--text-body)] truncate max-w-[110px]">{piece.fabric}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Editorial Stylist Rationale + Palette Footer */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t border-[var(--border-card)] items-center">
+            {/* Main Content Layout: High-Res Editorial Photography (Left) + Pieces Breakdown (Right) */}
+            <div className="py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
-              {/* Palette */}
-              <div className="lg:col-span-4">
-                <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] block mb-2 font-medium">
-                  Extracted Palette
-                </span>
-                <div className="flex items-center gap-2">
-                  {currentLook.colorPalette.map((col, idx) => (
-                    <div key={idx} className="group relative">
-                      <div
-                        className="w-9 h-9 rounded-xl border border-black/10 dark:border-white/10 shadow-md transition-transform group-hover:scale-110"
-                        style={{ backgroundColor: col.hex }}
-                      />
-                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] bg-[var(--bg-card-elevated)] text-[var(--text-heading)] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-card)] shadow-md">
-                        {col.name}
+              {/* Left Column: High-Res Fashion Photography Card (5 cols) */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card-inner)] overflow-hidden shadow-xl relative group">
+                  <div className="aspect-[3/4] w-full overflow-hidden bg-black/5 relative">
+                    <img
+                      src={activeSet.imageUrl}
+                      alt={activeSet.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
+                    
+                    {/* Floating Overlay Info */}
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <span className={`text-[10px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full font-bold backdrop-blur-md mb-2 inline-block ${
+                        isMatching ? 'bg-black/60 text-[var(--gold-primary)] border border-[var(--gold-primary)]/40' : 'bg-rose-950/80 text-rose-300 border border-rose-400/50'
+                      }`}>
+                        {isMatching ? 'Verified Harmony' : 'Editorial Friction'}
                       </span>
+                      <h4 className="text-base font-serif-luxury font-semibold text-white drop-shadow-md">
+                        {activeSet.title}
+                      </h4>
+                      <p className="text-xs text-stone-300 line-clamp-1 mt-0.5">
+                        {personaData.displayName} · {activeSet.formality}
+                      </p>
                     </div>
-                  ))}
+                  </div>
+                </div>
+
+                {/* Harmonized / Clashing Color Spectrum Palette */}
+                <div className="p-4 rounded-2xl bg-[var(--bg-card-inner)] border border-[var(--border-card)]">
+                  <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] block mb-3 font-semibold">
+                    {isMatching ? 'Synchronized Palette Spectrum' : 'Dissonant Color Intersections'}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    {activeSet.palette.map((col, idx) => (
+                      <div key={idx} className="group relative">
+                        <div
+                          className="w-10 h-10 rounded-xl border border-black/10 dark:border-white/15 shadow-sm transition-transform group-hover:scale-110 cursor-pointer"
+                          style={{ backgroundColor: col.hex }}
+                        />
+                        <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] bg-[var(--bg-card-elevated)] text-[var(--text-heading)] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-card)] shadow-md font-mono z-30">
+                          {col.name} ({col.hex})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Rationale Quote */}
-              <div className="lg:col-span-8 bg-[var(--bg-card-inner)] p-4 rounded-2xl border border-[var(--border-card)]">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[var(--pill-bg)] flex items-center justify-center shrink-0 border border-[var(--border-gold)] text-[var(--gold-primary)] text-xs font-serif-luxury font-bold">
-                    OTD
+              {/* Right Column: Piece-by-Piece Analysis & Stylist Rationale (7 cols) */}
+              <div className="lg:col-span-7 space-y-6">
+                
+                {/* Pieces Specification Grid */}
+                <div>
+                  <div className="text-[11px] font-mono uppercase tracking-widest text-[var(--text-muted)] mb-3 font-semibold flex items-center justify-between">
+                    <span>Ensemble Composition & Layering</span>
+                    <span>{activeSet.pieces.length} Tailored Elements</span>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-[var(--text-body)] italic leading-relaxed">
-                      "{currentLook.stylistRationale}"
-                    </p>
-                    <p className="text-[11px] text-[var(--text-muted)]">
-                      <strong className="text-[var(--gold-primary)]">Accoutrement:</strong> {currentLook.accessoryNote}
-                    </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {activeSet.pieces.map((piece, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-[var(--bg-card-inner)] rounded-2xl p-4 border border-[var(--border-card)] hover:border-[var(--gold-primary)] transition-all duration-300 group flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[9px] uppercase font-mono tracking-widest text-[var(--text-muted)]">
+                              Layer 0{idx + 1} · {piece.category}
+                            </span>
+                            <div className="w-6 h-6 rounded-lg bg-[var(--bg-card)] border border-[var(--border-card)] flex items-center justify-center">
+                              {renderCategoryIcon(piece.category)}
+                            </div>
+                          </div>
+
+                          <h4 className="text-xs font-semibold text-[var(--text-heading)] group-hover:text-[var(--gold-primary)] line-clamp-2 mb-1.5 leading-snug">
+                            {piece.name}
+                          </h4>
+
+                          <p className="text-[11px] text-[var(--text-body)] italic line-clamp-2 mb-2 font-light">
+                            "{piece.note}"
+                          </p>
+                        </div>
+
+                        <div className="pt-2.5 border-t border-[var(--border-card)] space-y-1 text-[10px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--text-muted)]">Color:</span>
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full border border-black/20"
+                                style={{ backgroundColor: piece.hex }}
+                              />
+                              <span className="text-[var(--text-heading)] font-medium font-mono">{piece.color}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--text-muted)]">Textile:</span>
+                            <span className="text-[var(--text-body)] truncate max-w-[130px] font-mono">{piece.fabric}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
+
+                {/* Stylist Rationale & Contrast Factor Section */}
+                <div className="space-y-3.5">
+                  {/* Stylist Rationale Box */}
+                  <div className={`p-5 rounded-2xl border ${
+                    isMatching
+                      ? 'bg-[var(--bg-card-inner)] border-[var(--border-card)]'
+                      : 'bg-rose-500/5 border-rose-500/20'
+                  }`}>
+                    <div className="flex items-start gap-3.5">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-serif-luxury font-bold border ${
+                        isMatching
+                          ? 'bg-[var(--pill-bg)] border-[var(--border-gold)] text-[var(--gold-primary)]'
+                          : 'bg-rose-500/20 border-rose-400 text-rose-400'
+                      }`}>
+                        OTD
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-bold">
+                          {isMatching ? 'Editorial Stylist Rationale' : 'Sartorial Collision Critique'}
+                        </div>
+                        <p className="text-xs text-[var(--text-body)] italic leading-relaxed">
+                          "{activeSet.stylistRationale}"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contrast & Clash Factor (Mismatching Only) */}
+                  {!isMatching && mismatchingSet?.contrastFactor && (
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs">
+                      <div className="flex items-center gap-2 mb-1 text-amber-500 font-mono font-bold text-[10px] uppercase tracking-wider">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Architectural Conflict Factor</span>
+                      </div>
+                      <p className="text-[11px] text-[var(--text-body)] leading-relaxed">
+                        {mismatchingSet.contrastFactor}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Matching Occasions (Matching Only) */}
+                  {isMatching && matchingSet?.occasions && (
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] mr-1">
+                        Recommended Venues:
+                      </span>
+                      {matchingSet.occasions.map((occ, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[var(--pill-bg)] border border-[var(--border-gold)]/40 text-[var(--gold-primary)]"
+                        >
+                          {occ}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                </div>
+
               </div>
 
             </div>
 
-            {/* Like & Interaction Bar */}
-            <div className="mt-6 flex items-center justify-between text-xs text-[var(--text-muted)] pt-4 border-t border-[var(--border-card)]">
+            {/* Bottom Interaction & Verification Bar */}
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-[var(--text-muted)] pt-4 border-t border-[var(--border-card)] gap-3">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
                     setHasLiked(!hasLiked);
                     setSavedCount(hasLiked ? savedCount - 1 : savedCount + 1);
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
                     hasLiked
                       ? 'border-[#E11D48] bg-[#E11D48]/15 text-[#E11D48]'
                       : 'border-[var(--border-card)] hover:border-[var(--gold-primary)] text-[var(--text-heading)]'
                   }`}
                 >
                   <Heart className={`w-3.5 h-3.5 ${hasLiked ? 'fill-current text-[#E11D48]' : ''}`} />
-                  <span>{savedCount} Curators Saved</span>
+                  <span className="text-[11px] font-medium">{savedCount} Curators Saved</span>
                 </button>
               </div>
 
-              <div className="text-[11px] font-mono text-[var(--gold-primary)] font-medium">
-                AI Confidence: 99.7% · Weather Synchronized
+              <div className="text-[10px] font-mono text-[var(--gold-primary)] font-semibold tracking-wider uppercase">
+                Grounded Fashion Intelligence · Pinterest & Runway Curated
               </div>
             </div>
 
@@ -400,4 +470,3 @@ export const InteractiveStylist: React.FC = () => {
     </section>
   );
 };
-
