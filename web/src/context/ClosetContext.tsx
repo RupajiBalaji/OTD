@@ -142,7 +142,7 @@ const INITIAL_SAVED_LOOKS: OutfitRecommendation[] = [
   }
 ];
 
-const OTD_STORAGE_VERSION = 'v10_true_user_garments_and_ai_engine';
+const OTD_STORAGE_VERSION = 'v12_curated_footwear_men_boys';
 
 const getInitialCloset = (persona: PersonaType): ClosetItem[] => {
   const canonical = PERSONA_WARDROBES[persona]?.closetItems || INITIAL_CLOSET;
@@ -670,50 +670,60 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (isBeach) {
         const shirt = findById('b13') || findById('b14') || findByCategory('tops')[0];
         const cargo = findById('b23') || findByCategory('bottoms')[0];
+        const footwear = findById('b28') || findById('b29') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (cargo) pieces.push(cargo);
-        title = 'Light Blue Botanical Resort Shirt & Sand Cargoes';
-        venueAlignment = `Engine-calibrated for ${context.venue}: open camp collar botanical slub cotton paired with utilitarian khaki cargoes.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Light Blue Botanical Resort Shirt, Sand Cargoes & Crocs Slides';
+        venueAlignment = `Engine-calibrated for ${context.venue}: open camp collar botanical slub cotton paired with utilitarian khaki cargoes and ergonomic white slides.`;
         weatherComfort = `At ${temp}°C, slub cotton weave maximizes active airflow, ideal for sunny outdoor recreation.`;
-        paletteHarmony = 'Denim Sky Blue botanical print against Warm Sand Khaki.';
+        paletteHarmony = 'Denim Sky Blue botanical print against Warm Sand Khaki and pure white slides.';
         harmonyScore = 99.2;
       } else if (isBrunch) {
         const shirt = findById('b14') || findById('b22') || findByCategory('tops')[0];
         const denim = findById('b24') || findByCategory('bottoms')[0];
+        const footwear = findById('b29') || findById('b28') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (denim) pieces.push(denim);
-        title = 'Terracotta Daisy Linen Camp Shirt & Straight Denim';
-        venueAlignment = `Curated for brunch at ${context.venue}: washed terracotta linen with natural wood buttons and vintage light-wash denim.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Terracotta Daisy Linen Shirt, Straight Denim & Adidas Slides';
+        venueAlignment = `Curated for brunch at ${context.venue}: washed terracotta linen with natural wood buttons, vintage light-wash denim, and striped slides.`;
         weatherComfort = `Washed linen-cotton blend delivers exceptional thermal relief in ${temp}°C outdoor seating.`;
-        paletteHarmony = 'Earth-toned terracotta daisy print against classic light wash indigo denim.';
+        paletteHarmony = 'Earth-toned terracotta daisy print against classic light wash indigo denim and monochrome slides.';
         harmonyScore = 99.0;
       } else if (isStreetwear) {
         const shirt = findById('b15') || findById('b17') || findByCategory('tops')[0];
         const pants = findById('b23') || findById('b24') || findByCategory('bottoms')[0];
+        const footwear = findById('b30') || findById('b31') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (pants) pieces.push(pants);
-        title = 'White & Steel-Blue Oversized Floral Shirt & Cargoes';
-        venueAlignment = `Youth street-style statement for ${context.venue}: oversized slate-blue daisy prints with reinforced khaki cargo pockets.`;
+        if (footwear) pieces.push(footwear);
+        title = 'White & Steel-Blue Oversized Floral Shirt, Cargoes & Chunky Trainers';
+        venueAlignment = `Youth street-style statement for ${context.venue}: oversized slate-blue daisy prints with reinforced khaki cargo pockets and high-traction chunky trainers.`;
         weatherComfort = `Silky touch poplin cotton keeps body temperature balanced at ${temp}°C.`;
-        paletteHarmony = 'Optic white with architectural slate blue floral graphics against earthy khaki.';
+        paletteHarmony = 'Optic white with architectural slate blue floral graphics against earthy khaki and graphic monochrome footwear.';
         harmonyScore = 98.8;
       } else if (isFestive || isFormal) {
         const shirt = findById('b16') || findById('b17') || findByCategory('tops')[0];
         const trousers = findById('b25') || findByCategory('bottoms')[0];
+        const footwear = findById('b32') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (trousers) pieces.push(trousers);
-        title = 'Forest Green Japanese Crane Jacquard & Tailored Trousers';
-        venueAlignment = `Synthesized for evening gala at ${context.venue}: textured jacquard with silk-embroidered cranes commands heritage prestige.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Forest Green Japanese Crane Jacquard, Tailored Trousers & Chelsea Boots';
+        venueAlignment = `Synthesized for evening gala at ${context.venue}: textured jacquard with silk-embroidered cranes over sharp black trousers anchored by polished leather Chelsea boots.`;
         weatherComfort = `Textured cotton jacquard and crease-resistant dress trousers ensure breathable evening comfort at ${temp}°C.`;
-        paletteHarmony = 'Deep Forest Green against Jet Black Noir.';
+        paletteHarmony = 'Deep Forest Green against Jet Black Noir and polished leather.';
         harmonyScore = 99.4;
       } else if (isExecutive) {
         const shirt = findById('b18') || findByCategory('tops')[0];
         const trousers = findById('b27') || findById('b26') || findByCategory('bottoms')[0];
+        const footwear = findById('b32') || findById('b30') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (trousers) pieces.push(trousers);
-        title = 'Classic White Oxford Polo & Mocha Tailored Trousers';
-        venueAlignment = `Tailored for honors presentation at ${context.venue}: crisp Oxford button-down polo over Italian mocha camel brown gabardine trousers.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Classic White Oxford Polo, Mocha Trousers & Chelsea Boots';
+        venueAlignment = `Tailored for honors presentation at ${context.venue}: crisp Oxford button-down polo over Italian mocha camel brown gabardine trousers and clean Chelsea boots.`;
         weatherComfort = `Calibrated for climate-controlled auditorium interiors at ${temp}°C.`;
         paletteHarmony = 'Optical White and Mocha Camel Brown create iconic prep academy prestige.';
         harmonyScore = 99.6;
@@ -721,12 +731,14 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Default: Smart casual outing / Birthday
         const shirt = findById('b18') || findById('b21') || findByCategory('tops')[0];
         const trousers = findById('b26') || findById('b27') || findByCategory('bottoms')[0];
+        const footwear = findById('b30') || findById('b32') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (trousers) pieces.push(trousers);
-        title = 'Classic White Oxford Polo & Pleated Gurkha Trousers';
-        venueAlignment = `Elevated outing to ${context.venue}: heavy Oxford cotton polo with navy pony logo tucked into high-rise pleated Gurkha trousers.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Classic White Oxford Polo, Pleated Gurkha Trousers & Chunky Trainers';
+        venueAlignment = `Elevated outing to ${context.venue}: heavy Oxford cotton polo with navy pony logo tucked into high-rise pleated Gurkha trousers and clean streetwear sneakers.`;
         weatherComfort = `High-twist 100% Oxford cotton weave ensures crisp structure and all-day comfort at ${temp}°C.`;
-        paletteHarmony = 'Pure optical white framed by warm ivory cream.';
+        paletteHarmony = 'Pure optical white framed by warm ivory cream and graphic monochrome trainers.';
         harmonyScore = 99.3;
       }
     }
@@ -736,63 +748,75 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (isExecutive) {
         const shirt = findById('m18') || findById('m21') || findByCategory('tops')[0];
         const trousers = findById('m27') || findById('m25') || findByCategory('bottoms')[0];
+        const footwear = findById('m32') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (trousers) pieces.push(trousers);
-        title = 'Classic White Oxford Polo & Mocha Tailored Trousers';
-        venueAlignment = `Executive smart casual suiting at ${context.venue}: heavy Oxford cotton button-down polo tucked into Italian mocha gabardine trousers.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Classic White Oxford Polo, Mocha Trousers & Chelsea Boots';
+        venueAlignment = `Executive smart casual suiting at ${context.venue}: heavy Oxford cotton button-down polo tucked into Italian mocha gabardine trousers with calfskin Chelsea boots.`;
         weatherComfort = `High-twist Oxford weave engineered for climate-controlled boardroom temperature at ${temp}°C.`;
-        paletteHarmony = 'Optical White with Mocha Camel Brown establishes effortless quiet luxury.';
+        paletteHarmony = 'Optical White with Mocha Camel Brown and polished black leather establishes quiet luxury.';
         harmonyScore = 99.8;
       } else if (isFormal || isFestive) {
         const shirt = findById('m16') || findById('m18') || findByCategory('tops')[0];
         const trousers = findById('m25') || findByCategory('bottoms')[0];
+        const footwear = findById('m32') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (trousers) pieces.push(trousers);
-        title = 'Forest Green Japanese Crane Jacquard & Jet Black Trousers';
-        venueAlignment = `Curated for evening celebration at ${context.venue}: silk-embroidered cranes over sharp jet-black trousers.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Forest Green Japanese Crane Jacquard, Jet Black Trousers & Chelsea Boots';
+        venueAlignment = `Curated for evening celebration at ${context.venue}: silk-embroidered cranes over sharp jet-black trousers and formal leather Chelsea boots.`;
         weatherComfort = `Textured cotton jacquard provides breathable evening comfort under ${temp}°C conditions.`;
-        paletteHarmony = 'Deep Forest Green against Jet Black Noir.';
+        paletteHarmony = 'Deep Forest Green against Jet Black Noir and lustrous black leather.';
         harmonyScore = 99.7;
       } else if (isBrunch) {
         const shirt = findById('m14') || findById('m22') || findByCategory('tops')[0];
         const trousers = findById('m26') || findByCategory('bottoms')[0];
+        const footwear = findById('m29') || findById('m28') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (trousers) pieces.push(trousers);
-        title = 'Terracotta Daisy Linen Shirt & Ivory Gurkha Trousers';
-        venueAlignment = `Italian Riviera sprezzatura for ${context.venue}: open washed terracotta linen shirt with extended-tab forward-pleated Gurkha trousers.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Terracotta Daisy Linen Shirt, Ivory Gurkha Trousers & Adidas Slides';
+        venueAlignment = `Italian Riviera sprezzatura for ${context.venue}: open washed terracotta linen shirt with extended-tab forward-pleated Gurkha trousers and comfort slides.`;
         weatherComfort = `At ${temp}°C, pure Belgian linen releases body heat rapidly for effortless sunlit dining.`;
-        paletteHarmony = 'Terracotta rust against warm ivory cream.';
+        paletteHarmony = 'Terracotta rust against warm ivory cream and monochrome sport slides.';
         harmonyScore = 99.2;
       } else if (isBeach) {
         const shirt = findById('m13') || findByCategory('tops')[0];
         const cargo = findById('m23') || findByCategory('bottoms')[0];
+        const footwear = findById('m28') || findById('m29') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (cargo) pieces.push(cargo);
-        title = 'Light Blue Abstract Botanical Shirt & Utility Cargoes';
-        venueAlignment = `Luxury resort leisure at ${context.venue}: slub cotton botanical camp collar shirt paired with tailored utility cargo pants.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Light Blue Abstract Botanical Shirt, Utility Cargoes & Crocs Slides';
+        venueAlignment = `Luxury resort leisure at ${context.venue}: slub cotton botanical camp collar shirt paired with tailored utility cargo pants and breathable Crocs slides.`;
         weatherComfort = `Slub cotton weave provides high airflow at ${temp}°C coastal settings.`;
-        paletteHarmony = 'Sky blue and sand khaki create effortless maritime harmony.';
+        paletteHarmony = 'Sky blue and sand khaki create effortless maritime harmony with crisp white slip-ons.';
         harmonyScore = 99.1;
       } else if (isStreetwear) {
         const shirt = findById('m15') || findById('m17') || findByCategory('tops')[0];
         const jeans = findById('m24') || findByCategory('bottoms')[0];
+        const footwear = findById('m30') || findById('m31') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (jeans) pieces.push(jeans);
-        title = 'White & Slate Floral Resort Shirt & Vintage Denim';
-        venueAlignment = `Sophisticated casual outing to ${context.venue}: oversized graphic floral poplin over relaxed vintage denim.`;
+        if (footwear) pieces.push(footwear);
+        title = 'White & Slate Floral Resort Shirt, Vintage Denim & Chunky Trainers';
+        venueAlignment = `Sophisticated casual outing to ${context.venue}: oversized graphic floral poplin over relaxed vintage denim anchored by sculpted futuristic sneakers.`;
         weatherComfort = `Lightweight poplin cotton balances warmth and movement at ${temp}°C.`;
-        paletteHarmony = 'White and slate blue grounded by bleached vintage indigo.';
+        paletteHarmony = 'White and slate blue grounded by bleached vintage indigo and tech trainers.';
         harmonyScore = 98.9;
       } else {
         // Default: Evening dinner / Smart Outing
         const shirt = findById('m18') || findById('m16') || findByCategory('tops')[0];
         const trousers = findById('m26') || findById('m25') || findByCategory('bottoms')[0];
+        const footwear = findById('m32') || findById('m30') || findByCategory('footwear')[0];
         if (shirt) pieces.push(shirt);
         if (trousers) pieces.push(trousers);
-        title = 'Classic White Oxford Polo & Ivory Gurkha Trousers';
-        venueAlignment = `Tailored outing at ${context.venue}: crisp Oxford cotton tucked into sharp Italian gabardine trousers.`;
+        if (footwear) pieces.push(footwear);
+        title = 'Classic White Oxford Polo, Ivory Gurkha Trousers & Chelsea Boots';
+        venueAlignment = `Tailored outing at ${context.venue}: crisp Oxford cotton tucked into sharp Italian gabardine trousers with calfskin Chelsea boots.`;
         weatherComfort = `At ${temp}°C, breathable cotton offers elevated tactile comfort without overheating.`;
-        paletteHarmony = 'Optical White against Warm Ivory Cream.';
+        paletteHarmony = 'Optical White against Warm Ivory Cream and lustrous black leather.';
         harmonyScore = 99.3;
       }
     }

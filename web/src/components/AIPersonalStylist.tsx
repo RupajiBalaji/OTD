@@ -383,7 +383,7 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
       season: ['All'],
     };
 
-    const allowFootwear = activePersona === 'girl' && footwear.length > 0;
+    const allowFootwear = activePersona !== 'women' && footwear.length > 0;
     const targetTier = researchProfile.formalityTier;
     const isIndianWedding = researchProfile.culturalContext === 'indian_festive';
 
@@ -568,7 +568,7 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
   }, [isOnePieceDressOrSaree, customWornBottom, activeOutfit, closet]);
 
   const selectedFootwear = useMemo<ClosetItem | null>(() => {
-    if (activePersona !== 'girl') return null;
+    if (activePersona === 'women') return null;
     if (footwearPreference === 'barefoot') return null;
     if (customWornFootwear && closet.some((i) => i.id === customWornFootwear.id)) return customWornFootwear;
     if (!activeOutfit) return null;
@@ -1661,12 +1661,12 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
 
                   {/* 4. Grounded Base on Pedestal */}
                   <div className="relative -mt-2 z-25 flex items-center justify-center">
-                    {activePersona === 'girl' && selectedFootwear ? (
+                    {selectedFootwear ? (
                       <div className="flex flex-col items-center">
                         <img
                           src={selectedFootwear.imageUrl || ''}
                           alt={selectedFootwear.name}
-                          className="max-h-[36px] w-auto object-contain filter drop-shadow-md"
+                          className="max-h-[46px] sm:max-h-[50px] w-auto object-contain filter drop-shadow-md"
                         />
                         <div className="w-24 h-2.5 rounded-[100%] bg-black/25 blur-xs -mt-1 pointer-events-none" />
                       </div>
@@ -1838,7 +1838,7 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
                       { id: 'dresses', label: '👗 Sarees & Dresses' },
                       { id: 'tops', label: '👕 Tops' },
                       { id: 'bottoms', label: '👖 Pants' },
-                      ...(activePersona === 'girl' ? [{ id: 'footwear', label: '👡 Shoes' }] : []),
+                      ...(activePersona !== 'women' ? [{ id: 'footwear', label: '👟 Shoes' }] : []),
                     ].map((tab) => (
                       <button
                         key={tab.id}
@@ -1919,7 +1919,7 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
                     ))}
                   </div>
 
-                  {activePersona === 'girl' && (
+                  {activePersona !== 'women' && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] font-bold">
                         Footwear:

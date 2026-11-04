@@ -576,13 +576,15 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
   }, [isWearingOnePiece, wornBottom, closet, activePersona]);
 
   const effectiveFootwear = useMemo<ClosetItem | null>(() => {
+    if (activePersona === 'women') return null;
     if (wornFootwear && closet.some((i) => i.id === wornFootwear.id)) return wornFootwear;
     if (footwearMode === 'slippers') {
-      return DEFAULT_ATELIER_SLIPPERS;
+      const firstSlide = closet.find((i) => i.category === 'footwear');
+      return firstSlide || DEFAULT_ATELIER_SLIPPERS;
     }
     // Barefoot mode: returns null so the natural tone-matched anatomical feet render
     return null;
-  }, [wornFootwear, closet, footwearMode]);
+  }, [activePersona, wornFootwear, closet, footwearMode]);
 
   // Dynamic Lighting Tone-Mapping Filter Applied Across Whole Human Composite
   const lightingFilterStyle = useMemo(() => {
@@ -1003,100 +1005,112 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
         }
       }
 
-      // 2. BOY PERSONA (ZERO FOOTWEAR)
+      // 2. BOY PERSONA (CURATED WITH USER-PROVIDED FOOTWEAR)
       else if (activePersona === 'boy') {
-        nextFootwear = null;
         if (isOcc('beach', 'resort', 'coastal', 'holiday', 'vacation', 'summer', 'pool')) {
           nextTop = findById('b13') || tops[0];
           nextBottom = findById('b23') || bottoms[0] || null;
-          lookTitle = 'Light Blue Abstract Botanical Camp Collar Shirt & Sand Khaki Cargoes';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: breathable 100% slub cotton botanical textures ensure continuous airflow, paired with relaxed straight utility cargo trousers.`;
+          nextFootwear = findById('b28') || footwear[0] || null;
+          lookTitle = 'Light Blue Botanical Shirt, Utility Cargoes & Crocs Slides';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: breathable 100% slub cotton botanical textures ensure continuous airflow, paired with relaxed utility cargo trousers and ergonomic white slides.`;
           calculatedHarmony = 99.4;
         } else if (isOcc('brunch', 'cafe', 'sunday', 'afternoon', 'terracotta')) {
           nextTop = findById('b14') || tops[0];
           nextBottom = findById('b26') || bottoms[0] || null;
-          lookTitle = 'Terracotta Daisy Floral Linen Shirt & Ivory Pleated Gurkha Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: washed Italian Riviera terracotta linen with natural wood buttons meets Savile Row double-forward pleats for effortless youth sprezzatura.`;
+          nextFootwear = findById('b29') || footwear[0] || null;
+          lookTitle = 'Terracotta Daisy Linen Shirt, Gurkha Trousers & Adidas Slides';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: washed Italian Riviera terracotta linen with natural wood buttons meets Savile Row double-forward pleats and comfortable striped slides.`;
           calculatedHarmony = 99.2;
         } else if (isOcc('sangeet', 'traditional_wedding', 'wedding', 'festive_diwali', 'gala', 'formal', 'ceremony')) {
           nextTop = findById('b16') || tops[0];
           nextBottom = findById('b25') || bottoms[0] || null;
-          lookTitle = 'Forest Green Japanese Crane Jacquard Shirt & Jet Black Tailored Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep emerald jacquard with silk-embroidered cranes commands celebratory presence over sharp crease-resistant jet-black trousers.`;
+          nextFootwear = findById('b32') || footwear[0] || null;
+          lookTitle = 'Forest Green Crane Jacquard Shirt, Black Trousers & Chelsea Boots';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep emerald jacquard with silk-embroidered cranes commands celebratory presence over sharp black trousers and calfskin Chelsea boots.`;
           calculatedHarmony = 99.6;
         } else if (isOcc('casual_outing', 'casual', 'streetwear', 'hangout', 'weekend', 'friends')) {
           nextTop = findById('b17') || tops[0];
           nextBottom = findById('b24') || bottoms[0] || null;
-          lookTitle = 'Navy Blue Calligraphy Swirl Graphic Shirt & Vintage Straight Denim';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg ring-spun denim delivers contemporary youth cool.`;
+          nextFootwear = findById('b30') || footwear[0] || null;
+          lookTitle = 'Navy Blue Swirl Graphic Shirt, Straight Denim & Chunky Trainers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg denim and high-traction futuristic chunky trainers.`;
           calculatedHarmony = 99.1;
         } else if (isOcc('school', 'presentation', 'honors', 'academy', 'interview')) {
           nextTop = findById('b21') || findById('b18') || tops[0];
           nextBottom = findById('b27') || findById('b26') || bottoms[0] || null;
-          lookTitle = 'Sky Blue Oxford Button-Down Polo & Mocha Camel Tailored Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy Oxford cotton polo with button-down collar anchored by tailored Italian mocha camel trousers.`;
+          nextFootwear = findById('b32') || footwear[0] || null;
+          lookTitle = 'Sky Blue Oxford Polo, Mocha Camel Trousers & Chelsea Boots';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy Oxford cotton polo with button-down collar anchored by tailored mocha camel trousers and polished Chelsea boots.`;
           calculatedHarmony = 99.3;
         } else if (isOcc('dinner', 'evening', 'night', 'date')) {
           nextTop = findById('b20') || tops[0];
           nextBottom = findById('b25') || bottoms[0] || null;
-          lookTitle = 'Jet Black Oxford Button-Down Polo & Jet Black Tailored Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: monochromatic Obsidian Noir delivers sleek high-contrast confidence with tailored black trousers.`;
+          nextFootwear = findById('b31') || footwear[0] || null;
+          lookTitle = 'Jet Black Oxford Polo, Black Trousers & Cyber Tech Sneakers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: monochromatic Obsidian Noir delivers sleek high-contrast confidence with tailored black trousers and gold-accented cyber sneakers.`;
           calculatedHarmony = 99.5;
         } else {
           // Default / Birthday
           nextTop = findById('b18') || tops[0];
           nextBottom = findById('b26') || bottoms[0] || null;
-          lookTitle = 'Classic Pure White Oxford Polo & Ivory Pleated Gurkha Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy optical white Oxford cotton polo tucked into high-rise double-pleated Gurkha dress trousers provides smart, clean youth elegance.`;
+          nextFootwear = findById('b30') || footwear[0] || null;
+          lookTitle = 'Classic Pure White Oxford Polo, Gurkha Trousers & Chunky Trainers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy optical white Oxford cotton polo tucked into high-rise double-pleated Gurkha dress trousers with clean modern trainers.`;
           calculatedHarmony = 99.3;
         }
       }
 
-      // 3. MAN PERSONA (ZERO FOOTWEAR)
+      // 3. MAN PERSONA (CURATED WITH USER-PROVIDED FOOTWEAR)
       else if (activePersona === 'man') {
-        nextFootwear = null;
         if (isOcc('beach', 'resort', 'coastal', 'holiday', 'vacation', 'summer', 'pool', 'yacht')) {
           nextTop = findById('m13') || tops[0];
           nextBottom = findById('m23') || bottoms[0] || null;
-          lookTitle = 'Light Blue Abstract Botanical Camp Collar Shirt & Sand Khaki Utility Cargoes';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: breathable 100% slub cotton botanical textures ensure continuous natural airflow, paired with structured sand khaki cotton twill utility cargoes.`;
+          nextFootwear = findById('m28') || footwear[0] || null;
+          lookTitle = 'Light Blue Botanical Camp Shirt, Utility Cargoes & Crocs Slides';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: breathable 100% slub cotton botanical textures ensure continuous natural airflow, paired with sand khaki utility cargoes and white Crocs slides.`;
           calculatedHarmony = 99.4;
         } else if (isOcc('brunch', 'cafe', 'sunday', 'afternoon', 'terracotta')) {
           nextTop = findById('m14') || tops[0];
           nextBottom = findById('m26') || bottoms[0] || null;
-          lookTitle = 'Terracotta Daisy Floral Linen Shirt & Ivory Pleated Gurkha Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: washed Italian Riviera terracotta linen with natural wood buttons meets Savile Row double-forward pleats for effortless sartorial sprezzatura.`;
+          nextFootwear = findById('m29') || footwear[0] || null;
+          lookTitle = 'Terracotta Daisy Linen Shirt, Gurkha Trousers & Adidas Slides';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: washed Italian Riviera terracotta linen with wood buttons meets Savile Row double-forward pleats and Cloudfoam Adidas stripe slides.`;
           calculatedHarmony = 99.2;
         } else if (isOcc('sangeet', 'traditional_wedding', 'wedding', 'festive_diwali', 'gala', 'formal', 'ceremony')) {
           nextTop = findById('m16') || tops[0];
           nextBottom = findById('m25') || bottoms[0] || null;
-          lookTitle = 'Forest Green Japanese Crane Jacquard Shirt & Jet Black Tailored Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep emerald jacquard with silk-embroidered cranes commands presence and sartorial distinction over sharp crease-resistant jet-black trousers.`;
+          nextFootwear = findById('m32') || footwear[0] || null;
+          lookTitle = 'Forest Green Crane Jacquard Shirt, Black Trousers & Chelsea Boots';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep emerald jacquard with silk-embroidered cranes commands presence over sharp jet-black trousers and lustrous calfskin Chelsea boots.`;
           calculatedHarmony = 99.6;
         } else if (isOcc('dinner', 'evening', 'night', 'date', 'lounge', 'cocktail')) {
           nextTop = findById('m20') || tops[0];
           nextBottom = findById('m25') || bottoms[0] || null;
-          lookTitle = 'Jet Black Oxford Button-Down Polo & Jet Black Tailored Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: monochromatic Obsidian Noir delivers sleek high-contrast confidence and athletic shoulder structure with tailored black trousers.`;
+          nextFootwear = findById('m31') || footwear[0] || null;
+          lookTitle = 'Jet Black Oxford Polo, Tailored Black Trousers & Cyber Sneakers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: monochromatic Obsidian Noir delivers athletic shoulder structure with tailored black trousers and all-black cyber sneakers.`;
           calculatedHarmony = 99.6;
         } else if (isOcc('job_interview', 'interview', 'meeting', 'office', 'corporate', 'presentation', 'honors', 'academy')) {
           nextTop = findById('m18') || findById('m19') || tops[0];
           nextBottom = findById('m26') || findById('m27') || bottoms[0] || null;
-          lookTitle = 'Classic Pure White Oxford Polo & Ivory Pleated Gurkha Trousers';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy optic white Oxford cotton tucked into double-pleated Gurkha dress trousers provides Savile Row quiet luxury and intellectual poise.`;
+          nextFootwear = findById('m32') || footwear[0] || null;
+          lookTitle = 'Classic White Oxford Polo, Gurkha Trousers & Chelsea Boots';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy optic white Oxford cotton tucked into double-pleated Gurkha dress trousers anchored by Savile Row leather Chelsea boots.`;
           calculatedHarmony = 99.5;
         } else if (isOcc('casual_outing', 'casual', 'streetwear', 'hangout', 'weekend', 'friends')) {
           nextTop = findById('m17') || tops[0];
           nextBottom = findById('m24') || bottoms[0] || null;
-          lookTitle = 'Navy Blue Calligraphy Swirl Graphic Shirt & Vintage Straight Denim';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg ring-spun denim delivers contemporary urban cool.`;
+          nextFootwear = findById('m30') || footwear[0] || null;
+          lookTitle = 'Navy Blue Swirl Graphic Shirt, Vintage Denim & Chunky Trainers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg denim and futuristic chunky sneakers.`;
           calculatedHarmony = 99.1;
         } else {
           // Default / Birthday Party
           nextTop = findById('m15') || findById('m18') || tops[0];
           nextBottom = findById('m24') || findById('m26') || bottoms[0] || null;
-          lookTitle = 'White & Slate Floral Resort Shirt & Vintage Denim Jeans';
-          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: silky poplin floral placement shirt creates camera-ready charisma balanced by vintage straight-leg denim.`;
+          nextFootwear = findById('m30') || footwear[0] || null;
+          lookTitle = 'White & Slate Floral Resort Shirt, Vintage Denim & Chunky Trainers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: silky poplin floral placement shirt creates camera-ready charisma balanced by vintage denim and chunky trainers.`;
           calculatedHarmony = 99.2;
         }
       }
@@ -1871,40 +1885,20 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                   }`}
                 >
                   
-                  {/* Real Photorealistic Human Model Runway Stage */}
+                  {/* Luxury Studio Atelier Mannequin Dressing Canvas */}
                   <div 
-                    className="relative z-20 w-full max-w-[370px] h-full rounded-3xl overflow-hidden shadow-2xl border-2 border-amber-300/60 bg-gradient-to-b from-black/80 via-black/40 to-black/80 transition-all duration-500"
+                    className="relative z-20 flex flex-col items-center justify-between w-full max-w-[380px] h-full transition-all duration-500 rounded-3xl overflow-hidden shadow-2xl border border-amber-300/40 bg-gradient-to-b from-[#FDFBF7] via-[#F8F5EE] to-[#EFE8DC] p-3 pt-4 pb-3"
                     style={{ filter: lightingFilterStyle }}
                   >
-                    {/* The Full-Body Model Photograph */}
-                    <img
-                      src={resolvedDrape.modelPhotoUrl}
-                      alt={resolvedDrape.lookTitle}
-                      className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
-                    />
-
-                    {/* Seamless Face Swap / Digital Twin Overlay if user clicked "Try on My Face" */}
-                    {isUsingCustomPhoto && customPhotoUrl && (
-                      <div
-                        className="absolute top-[3%] left-1/2 -translate-x-1/2 w-20 h-24 sm:w-24 sm:h-28 rounded-full overflow-hidden shadow-lg z-30 border border-white/20"
-                        style={{
-                          WebkitMaskImage: 'radial-gradient(ellipse at center, black 68%, transparent 100%)',
-                          maskImage: 'radial-gradient(ellipse at center, black 68%, transparent 100%)',
-                        }}
-                      >
-                        <img
-                          src={effectiveFaceUrl}
-                          alt="Personal Digital Twin"
-                          className="w-full h-full object-cover object-top"
-                        />
-                      </div>
-                    )}
-
-                    {/* Gradient Rim & Studio Ambient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                    {/* Arched Studio Mirror Halo Backdrop */}
+                    <div className="absolute inset-y-3 inset-x-4 rounded-t-full border border-amber-300/40 bg-gradient-to-b from-white/95 via-amber-50/25 to-amber-100/35 shadow-inner pointer-events-none" />
+                    
+                    {/* Marble Pedestal at Base */}
+                    <div className="absolute bottom-4 w-72 h-10 rounded-[100%] bg-gradient-to-r from-amber-200/70 via-white/90 to-amber-200/70 border border-amber-300/70 shadow-md pointer-events-none" />
+                    <div className="absolute bottom-2.5 w-60 h-5 rounded-[100%] bg-amber-950/15 blur-xs pointer-events-none" />
 
                     {/* Top Floating Model Identity Pill */}
-                    <div className="absolute top-3 inset-x-3 flex items-center justify-between z-30 pointer-events-auto">
+                    <div className="relative inset-x-0 w-full flex items-center justify-between z-30 px-1">
                       <div className="px-3 py-1 rounded-full bg-black/85 backdrop-blur-md text-amber-300 border border-amber-400/40 text-[10px] font-mono font-bold shadow-md flex items-center gap-1.5">
                         <span>{isUsingCustomPhoto ? '📸' : activePersona === 'boy' ? '👦' : activePersona === 'girl' ? '👧' : activePersona === 'women' ? '👩' : '👨'}</span>
                         <span className="truncate max-w-[150px]">{isUsingCustomPhoto ? 'My Personal Digital Twin' : `${effectiveFaceName} (Default Model Face)`}</span>
@@ -1932,8 +1926,113 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* The Full Atelier Mannequin & Dressed Ensemble Column */}
+                    <div className="relative z-20 flex flex-col items-center justify-center my-auto w-full max-w-[280px]">
+                      
+                      {/* 1. Head / Face Contour */}
+                      <div className="relative z-30 -mb-2 flex flex-col items-center">
+                        {isUsingCustomPhoto && customPhotoUrl ? (
+                          <div className="w-16 h-18 sm:w-18 sm:h-20 rounded-full overflow-hidden shadow-lg border-2 border-amber-400/60 bg-white">
+                            <img
+                              src={effectiveFaceUrl}
+                              alt="Personal Twin"
+                              className="w-full h-full object-cover object-top"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            {/* Stylized high-fashion silhouette head */}
+                            <div 
+                              className="w-13 h-16 rounded-[45%] shadow-md border border-amber-300/40 flex items-center justify-center relative overflow-hidden"
+                              style={{
+                                background: `radial-gradient(ellipse at 40% 30%, ${skinToneHex}, ${adjustHexBrightness(skinToneHex, -22)})`,
+                              }}
+                            >
+                              <div className="absolute top-1 inset-x-2 h-4 rounded-t-full bg-black/20 blur-[1px]" />
+                            </div>
+                            {/* Slender neck */}
+                            <div 
+                              className="w-5 h-4 -mt-1 shadow-inner"
+                              style={{
+                                background: `linear-gradient(to bottom, ${skinToneHex}, ${adjustHexBrightness(skinToneHex, -14)})`,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 2. Upper Garment (User's Uploaded Piece!) */}
+                      {effectiveTop && (
+                        <div 
+                          className={`relative z-20 flex flex-col items-center transition-all duration-300 ${
+                            tuckStyle === 'full_tuck' ? 'z-10' : 'z-20'
+                          }`}
+                          style={{
+                            transform: fitSilhouette === 'oversized' ? 'scale(1.05)' : fitSilhouette === 'tailored' ? 'scale(0.96)' : 'scale(1)',
+                          }}
+                        >
+                          <img
+                            src={effectiveTop.imageUrl || ''}
+                            alt={effectiveTop.name}
+                            className={`w-auto object-contain filter drop-shadow-[0_12px_18px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105 ${
+                              isWearingOnePiece ? 'max-h-[300px] sm:max-h-[320px]' : 'max-h-[165px] sm:max-h-[175px]'
+                            }`}
+                          />
+                        </div>
+                      )}
+
+                      {/* 3. Lower Garment (User's Uploaded Piece! Only when not One-Piece) */}
+                      {!isWearingOnePiece && effectiveBottom && (
+                        <div 
+                          className={`relative flex flex-col items-center transition-all duration-300 ${
+                            tuckStyle === 'untucked' ? '-mt-6 z-10' : tuckStyle === 'french_tuck' ? '-mt-4 z-15' : '-mt-3 z-20'
+                          }`}
+                          style={{
+                            transform: fitSilhouette === 'oversized' ? 'scale(1.04)' : fitSilhouette === 'tailored' ? 'scale(0.96)' : 'scale(1)',
+                          }}
+                        >
+                          <img
+                            src={effectiveBottom.imageUrl || ''}
+                            alt={effectiveBottom.name}
+                            className="w-auto max-h-[195px] sm:max-h-[210px] object-contain filter drop-shadow-[0_10px_16px_rgba(0,0,0,0.15)] transition-transform duration-300 hover:scale-105"
+                          />
+                        </div>
+                      )}
+
+                      {/* 4. Grounded Base on Pedestal */}
+                      <div className="relative -mt-2 z-25 flex items-center justify-center">
+                        {effectiveFootwear ? (
+                          <div className="flex flex-col items-center">
+                            <img
+                              src={effectiveFootwear.imageUrl || ''}
+                              alt={effectiveFootwear.name}
+                              className="max-h-[46px] sm:max-h-[50px] w-auto object-contain filter drop-shadow-md"
+                            />
+                            <div className="w-24 h-2.5 rounded-[100%] bg-black/25 blur-xs -mt-1 pointer-events-none" />
+                          </div>
+                        ) : (
+                          /* Tone-Matched Natural Feet on Marble */
+                          <div className="flex items-center gap-6">
+                            <div 
+                              className="w-4 h-6 rounded-t-full shadow-inner border-b border-black/10"
+                              style={{
+                                background: `linear-gradient(to bottom, ${skinToneHex}, ${adjustHexBrightness(skinToneHex, -15)})`,
+                              }}
+                            />
+                            <div 
+                              className="w-4 h-6 rounded-t-full shadow-inner border-b border-black/10"
+                              style={{
+                                background: `linear-gradient(to bottom, ${skinToneHex}, ${adjustHexBrightness(skinToneHex, -15)})`,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+
                     {/* Bottom Floating Ensemble Tag */}
-                    <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-30 pointer-events-none">
+                    <div className="relative inset-x-0 w-full flex items-center justify-between z-30 pointer-events-none px-1">
                       <div className="px-3 py-1.5 rounded-2xl bg-black/85 backdrop-blur-md border border-white/20 text-white text-xs font-semibold shadow-lg max-w-[72%]">
                         <span className="text-[9px] font-mono uppercase tracking-widest text-amber-400 block font-bold truncate">
                           Photorealistic AI VTON
@@ -2086,8 +2185,8 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Footwear vs Bare Foot Controls (Girl Only) */}
-                  {activePersona === 'girl' && (
+                  {/* Footwear vs Bare Foot Controls */}
+                  {activePersona !== 'women' && (
                     <div className="flex items-center gap-1 text-[10px] font-mono">
                       <span className="text-neutral-500 font-bold flex items-center gap-1">
                         <span>Foot:</span>
@@ -2252,8 +2351,8 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Footwear Card (Girl Only) */}
-                  {activePersona === 'girl' && effectiveFootwear && (
+                  {/* Footwear Card */}
+                  {effectiveFootwear && (
                     <div className="p-3.5 rounded-2xl bg-white/90 border border-amber-300/60 shadow-sm space-y-2 flex flex-col justify-between">
                       <div>
                         <div className="w-full h-32 rounded-xl bg-neutral-50 flex items-center justify-center p-2 overflow-hidden border border-amber-100">
@@ -2370,7 +2469,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                   { id: 'dresses', label: '👗 Sarees & Dresses' },
                   { id: 'tops', label: '👕 Shirts & Tops' },
                   { id: 'bottoms', label: '👖 Pants' },
-                  ...(activePersona === 'girl' ? [{ id: 'footwear', label: '👡 Shoes & Slides' }] : []),
+                  ...(activePersona !== 'women' ? [{ id: 'footwear', label: '👟 Shoes & Slides' }] : []),
                 ].map((tab) => (
                   <button
                     key={tab.id}
