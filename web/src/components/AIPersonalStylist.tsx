@@ -531,37 +531,6 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
     return activeOutfit.pieces.find((p) => p.category === 'footwear') || null;
   }, [activeOutfit, footwearPreference]);
 
-  // Photorealistic Full-Body Real Human Model Photo Resolver
-  const activeModelPhotoUrl = useMemo(() => {
-    const topName = (selectedTop?.name || '').toLowerCase();
-    const topSub = (selectedTop?.subType || '').toLowerCase();
-
-    if (activePersona === 'women') {
-      if (topSub.includes('saree') || topName.includes('saree') || topSub.includes('silk')) {
-        return '/wardrobe/women/rose_pink_saree_model.jpg';
-      }
-      if (topSub.includes('corset') || topSub.includes('dress') || topName.includes('dress')) {
-        return 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1000&q=85';
-      }
-      return 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=85';
-    } else if (activePersona === 'man') {
-      if (topName.includes('botanical') || topName.includes('daisy') || topName.includes('resort')) {
-        return 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=85';
-      }
-      if (topName.includes('crane') || topName.includes('jacquard')) {
-        return 'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=1000&q=85';
-      }
-      return 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=1000&q=85';
-    } else if (activePersona === 'boy') {
-      return 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1000&q=85';
-    } else {
-      // girl
-      if (topSub.includes('saree') || topName.includes('saree')) {
-        return '/wardrobe/girl/rose_pink_saree_model.jpg';
-      }
-      return 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1000&q=85';
-    }
-  }, [activePersona, selectedTop]);
 
   // =========================================================================
   // MULTI-ENGINE HIGH FASHION PROMPT SYNTHESIZER

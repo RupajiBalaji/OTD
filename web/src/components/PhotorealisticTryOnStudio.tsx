@@ -18,6 +18,8 @@ import {
   Upload,
   Camera,
   Check,
+  Bookmark,
+  Copy,
 } from 'lucide-react';
 import { useCloset, type ClosetItem, type OutfitRecommendation } from '../context/ClosetContext';
 import type { PersonaType } from '../data/personaWardrobes';
@@ -359,7 +361,7 @@ export const DEFAULT_ATELIER_SLIPPERS: ClosetItem = {
 };
 
 /** Shading helper to naturally darken/lighten skin tone hex values for realistic contouring */
-function adjustHexBrightness(hex: string, percent: number): string {
+export function adjustHexBrightness(hex: string, percent: number): string {
   const safeHex = normalizeSkinToneHex(hex, '#E0B088');
   const cleanHex = safeHex.replace('#', '');
   const num = parseInt(cleanHex.length === 3 ? cleanHex.split('').map((c) => c + c).join('') : cleanHex, 16);
@@ -424,8 +426,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
   const [studioViewMode, setStudioViewMode] = useState<'atelier_fit' | 'editorial_flatlay' | 'garment_dna'>('atelier_fit');
   const [tuckStyle, setTuckStyle] = useState<'untucked' | 'french_tuck' | 'full_tuck'>('untucked');
   const [fitSilhouette, setFitSilhouette] = useState<'relaxed' | 'tailored' | 'oversized'>('relaxed');
-  const [showNeuralLandmarks, setShowNeuralLandmarks] = useState<boolean>(false);
-  const [activeLandmark, setActiveLandmark] = useState<string | null>(null);
 
   // Digital Twin & Anatomical Calibration State
   const [isUsingCustomPhoto, setIsUsingCustomPhoto] = useState<boolean>(() => {
@@ -1688,19 +1688,13 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 pointer-events-auto">
-                {studioViewMode === 'atelier_fit' && (
-                  <button
-                    onClick={() => setShowNeuralLandmarks(!showNeuralLandmarks)}
-                    className={`px-3 py-1.5 rounded-full text-[10px] font-mono font-bold border transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
-                      showNeuralLandmarks
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40'
-                        : 'bg-white/80 text-[var(--text-muted)] border-[var(--border-card)]'
-                    }`}
-                  >
-                    <Activity className="w-3 h-3 text-emerald-500" />
-                    <span>Telemetry {showNeuralLandmarks ? 'ON' : 'OFF'}</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => setShowPitchModal(true)}
+                  className="px-3 py-1.5 rounded-full text-[10px] font-mono font-bold border border-amber-300/60 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span>VTON Briefing</span>
+                </button>
                 <button
                   onClick={handleSaveLook}
                   className="px-3.5 py-1.5 rounded-full bg-black text-white hover:bg-neutral-800 text-[11px] font-bold shadow-md transition-all cursor-pointer"
@@ -1765,7 +1759,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                         }}
                       >
                         <img
-                          src={customPhotoUrl}
+                          src={effectiveFaceUrl}
                           alt="Personal Digital Twin"
                           className="w-full h-full object-cover object-top"
                         />
