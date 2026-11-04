@@ -142,7 +142,7 @@ const INITIAL_SAVED_LOOKS: OutfitRecommendation[] = [
   }
 ];
 
-const OTD_STORAGE_VERSION = 'v8_pure_user_uploaded_wardrobe_only';
+const OTD_STORAGE_VERSION = 'v10_true_user_garments_and_ai_engine';
 
 const getInitialCloset = (persona: PersonaType): ClosetItem[] => {
   const canonical = PERSONA_WARDROBES[persona]?.closetItems || INITIAL_CLOSET;

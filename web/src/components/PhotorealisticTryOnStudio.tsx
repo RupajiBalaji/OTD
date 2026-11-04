@@ -19,7 +19,6 @@ import {
   Camera,
   Check,
   Bookmark,
-  Copy,
 } from 'lucide-react';
 import { useCloset, type ClosetItem, type OutfitRecommendation } from '../context/ClosetContext';
 import type { PersonaType } from '../data/personaWardrobes';
@@ -257,17 +256,17 @@ export const DEFAULT_ATELIER_TOPS: Record<PersonaType, ClosetItem> = {
     season: ['All'],
   },
   women: {
-    id: 'default_women_tshirt',
+    id: 'default_women_dress',
     category: 'tops',
-    subType: 'Atelier Tee',
-    name: 'Ivory Pure Cotton Atelier T-Shirt',
-    brand: 'OTD Studio Essentials',
-    color: 'Ivory White',
+    subType: 'Silk Saree',
+    name: 'Rose Pink Ombre Shimmer Organza Saree Set',
+    brand: 'Raw Mango Atelier',
+    color: 'Rose Pink Ombre & Silver Border',
     fit: 'Regular',
-    formality: 1,
-    icon: '👕',
-    imageUrl: '/wardrobe/man/man_oxford_white_polo.png',
-    material: '100% Pima Cotton Jersey (180 GSM)',
+    formality: 5,
+    icon: '🥻',
+    imageUrl: '/wardrobe/women/women_rose_pink_saree.png',
+    material: 'Pure Organza Silk with Metallic Shimmer',
     season: ['All'],
   },
   man: {
@@ -386,14 +385,16 @@ interface OccasionPreset {
 }
 
 const OCCASION_PRESETS: OccasionPreset[] = [
-  { id: 'beach', name: 'Beach / Resort Holiday', icon: '🏖️', vibe: 'Coastal Riviera & Sunlit Promenade', recommendedCategory: 'casual', targetFormality: 2, keywords: ['beach', 'resort', 'coastal', 'holiday', 'sea', 'summer', 'sun'] },
-  { id: 'brunch', name: 'Sunday Cafe Brunch', icon: '☕', vibe: 'Relaxed Elegance & Terrace Dining', recommendedCategory: 'casual', targetFormality: 2, keywords: ['brunch', 'cafe', 'sunday', 'coffee', 'terrace', 'daytime'] },
-  { id: 'birthday', name: 'Birthday Party', icon: '🎂', vibe: 'Smart Celebration & Clean Poise', recommendedCategory: 'dress', targetFormality: 3, keywords: ['birthday', 'party', 'celebration', 'gathering', 'friends'] },
-  { id: 'sangeet', name: 'Sangeet / Festive Gala', icon: '✨', vibe: 'Heritage Couture & Golden Glow', recommendedCategory: 'traditional', targetFormality: 5, keywords: ['sangeet', 'wedding', 'festive', 'gala', 'traditional', 'celebration'] },
-  { id: 'streetwear', name: 'Weekend Streetwear Hangout', icon: '🛹', vibe: 'Contemporary Urban & Statement Graphic', recommendedCategory: 'casual', targetFormality: 1, keywords: ['streetwear', 'hangout', 'weekend', 'casual', 'urban', 'denim'] },
-  { id: 'photoshoot', name: 'High-Fashion Editorial', icon: '📸', vibe: 'Architectural Silhouettes & Texture Play', recommendedCategory: 'formal', targetFormality: 4, keywords: ['photoshoot', 'editorial', 'fashion', 'magazine', 'avant-garde'] },
-  { id: 'formal', name: 'Dinner Gala / Evening Soirée', icon: '🍷', vibe: 'Sartorial Power & Sharp Tailoring', recommendedCategory: 'formal', targetFormality: 4, keywords: ['dinner', 'gala', 'formal', 'soirée', 'evening', 'black-tie'] },
-  { id: 'school', name: 'Academy Honors / Presentation', icon: '🎓', vibe: 'Academic Prep & Confident Smart Casual', recommendedCategory: 'formal', targetFormality: 3, keywords: ['academy', 'school', 'presentation', 'honors', 'meeting', 'interview'] },
+  { id: 'college_farewell', name: 'College Farewell Party', icon: '🎓', vibe: 'Chic Contemporary Flair & Camera-Ready Poise', recommendedCategory: 'dress', targetFormality: 4, keywords: ['farewell', 'graduation', 'college', 'party', 'academic'] },
+  { id: 'traditional_wedding', name: 'Traditional Indian Wedding', icon: '💍', vibe: 'Heritage Couture & Golden Glow', recommendedCategory: 'traditional', targetFormality: 5, keywords: ['wedding', 'traditional', 'marriage', 'shaadi', 'reception', 'festive'] },
+  { id: 'wedding_reception', name: 'Wedding Reception Gala', icon: '🥂', vibe: 'High-Society Evening Luminescence & Scalloped Zardozi', recommendedCategory: 'traditional', targetFormality: 5, keywords: ['reception', 'gala', 'cocktail', 'banquet', 'sangeet'] },
+  { id: 'birthday', name: 'Birthday Celebration', icon: '🎂', vibe: 'Smart Celebration & Clean Poise', recommendedCategory: 'dress', targetFormality: 3, keywords: ['birthday', 'party', 'celebration', 'gathering', 'friends'] },
+  { id: 'job_interview', name: 'Job Interview / Meeting', icon: '💼', vibe: 'Savile Row Sartorial Quiet Luxury', recommendedCategory: 'formal', targetFormality: 4, keywords: ['interview', 'office', 'presentation', 'meeting', 'corporate', 'executive'] },
+  { id: 'casual_outing', name: 'Casual Outing with Friends', icon: '☕', vibe: 'Relaxed Urban Denim & Contemporary Ease', recommendedCategory: 'casual', targetFormality: 1, keywords: ['casual', 'outing', 'friends', 'hangout', 'weekend', 'streetwear'] },
+  { id: 'date_night', name: 'Romantic Date Night', icon: '🕯️', vibe: 'Poetic Evening Charm & Romantic Silhouette', recommendedCategory: 'dress', targetFormality: 4, keywords: ['date', 'dinner', 'night', 'romantic', 'anniversary'] },
+  { id: 'beach', name: 'Beach / Resort Vacation', icon: '🏖️', vibe: 'Coastal Riviera & Sunlit Promenade', recommendedCategory: 'casual', targetFormality: 2, keywords: ['beach', 'resort', 'coastal', 'holiday', 'sea', 'summer', 'sun'] },
+  { id: 'festive_diwali', name: 'Traditional Festival (Diwali/Eid)', icon: '🪔', vibe: 'Festive Luster & Embroidered Splendor', recommendedCategory: 'traditional', targetFormality: 5, keywords: ['festive', 'diwali', 'eid', 'puja', 'cultural'] },
+  { id: 'brunch', name: 'Sunday Cafe Brunch', icon: '🥐', vibe: 'Relaxed Elegance & Terrace Dining', recommendedCategory: 'casual', targetFormality: 2, keywords: ['brunch', 'cafe', 'sunday', 'coffee', 'terrace', 'daytime'] },
 ];
 
 export const PhotorealisticTryOnStudio: React.FC = () => {
@@ -501,14 +502,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     return demo.modelName;
   }, [isUsingCustomPhoto, customPhotoUrl, profile?.name, activePersona]);
 
-  const effectiveDemographicLabel = useMemo(() => {
-    if (isUsingCustomPhoto && customPhotoUrl) {
-      return 'Custom User Portrait';
-    }
-    const demo = DEMOGRAPHIC_PERSONA_MODELS[activePersona] || DEMOGRAPHIC_PERSONA_MODELS.women;
-    return demo.demographicLabel;
-  }, [isUsingCustomPhoto, customPhotoUrl, activePersona]);
-
   // Derive Chosen Worn Items
   const wornTop = useMemo(() => {
     if (selectedTop && closet.some((i) => i.id === selectedTop.id)) return selectedTop;
@@ -607,32 +600,20 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     }
   }, [studioLighting]);
 
-  // Master Prompt for Photorealistic AI VTON Generation
-  const activeVtonPrompt = useMemo(() => {
-    const topName = effectiveTop?.name || 'Curated Upper Piece';
-    const bottomName = effectiveBottom?.name || 'Curated Lower Piece';
-    const topMat = effectiveTop?.material || 'Cotton Slub';
-    const bottomMat = effectiveBottom?.material || 'Cotton Twill';
-    const footwearDesc = effectiveFootwear
-      ? `wearing ${effectiveFootwear.name}`
-      : `barefoot with natural tone-matched ${skinToneHex} feet grounded on studio marble pedestal`;
-    const faceDesc = isUsingCustomPhoto
-      ? `photorealistic customized digital twin model with ${skinToneHex} skin tone and ${modelSilhouette.replace('_', ' ')} body silhouette`
-      : `${effectiveFaceName} (${effectiveDemographicLabel}) with authentic ${skinToneHex} complexion and ${modelSilhouette.replace('_', ' ')} anatomical proportions`;
-
-    return `Ultra-photorealistic commercial studio catalog fashion photograph of ${faceDesc} wearing ${topName} (${topMat}), ${isWearingOnePiece ? 'full-length silhouette' : `${bottomName} (${bottomMat})`}, and ${footwearDesc}. Natural human dressing with precise collar fit, contoured neckline, realistic fabric micro-texture, and authentic drape physics. Seamless white cyclorama studio background with ${studioLighting.replace('_', ' ')} lighting and floor contact shadows. 8K resolution, Masterpiece.`;
-  }, [effectiveTop, effectiveBottom, isWearingOnePiece, effectiveFootwear, isUsingCustomPhoto, skinToneHex, modelSilhouette, effectiveFaceName, effectiveDemographicLabel, studioLighting]);
-
   // =========================================================================
   // PHOTOREALISTIC FULL-BODY MODEL DRAPE RESOLVER
-  // Delivers one continuous human body wearing the ensemble (Zero paper-doll stacking)
+  // Evaluates the user's actual uploaded clothes with real fashion intelligence
   // =========================================================================
   const resolvedDrape = useMemo(() => {
-    const topName = (effectiveTop?.name || '').toLowerCase();
+    const topId = (effectiveTop?.id || '').toLowerCase();
+    const topName = effectiveTop?.name || 'Curated Upper Piece';
     const topSub = (effectiveTop?.subType || '').toLowerCase();
-    const bottomName = (effectiveBottom?.name || '').toLowerCase();
+    const bottomName = effectiveBottom?.name || 'Tailored Trousers';
 
-    let modelPhotoUrl = '';
+    const occPreset = OCCASION_PRESETS.find((p) => p.id === selectedOccasion);
+    const effectiveOccasionName = customOccasion.trim() || occPreset?.name || 'Outing';
+
+    let modelPhotoUrl = effectiveTop?.imageUrl || '';
     let lookTitle = '';
     let verdict = '';
     let complexionFit = '';
@@ -641,105 +622,242 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     let harmonyScore = 99.4;
 
     if (activePersona === 'women') {
-      if (topSub.includes('saree') || topName.includes('saree') || topSub.includes('silk')) {
-        modelPhotoUrl = '/wardrobe/women/rose_pink_saree_model.jpg';
+      // 1. Mauve & Ivory Ombre Mirror Saree
+      if (topId === 'w16' || topName.toLowerCase().includes('mauve') || topName.toLowerCase().includes('mirror') || topSub.includes('mirror')) {
+        lookTitle = effectiveTop?.name || 'Mauve & Ivory Ombre Scalloped Mirror Saree Set';
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: this hand-embroidered scalloped mirror-work saree creates candlelit luminescence, while the vertical ivory-to-mauve ombre visually elongates your silhouette with royal poise.`;
+        complexionFit = `Dusty mauve and ivory tones with delicate reflective mirrors add a radiant glow to ${skinToneHex} skin tones under celebratory spotlights.`;
+        silhouetteFit = 'Hand-sewn scalloped borders create a graceful curved drape around the waist, flattering an hourglass line.';
+        stylingTips = [
+          'Pin the pallu 2 inches behind the shoulder seam to showcase the mirror scallops',
+          'Opt for delicate diamond drop earrings to balance the neck border',
+          'Bare feet on marble completes the pure couture aesthetic',
+        ];
+        harmonyScore = 99.7;
+      }
+      // 2. Rose Pink Organza Saree Set
+      else if (topId === 'w11' || topName.toLowerCase().includes('rose pink') || topName.toLowerCase().includes('saree') || topSub.includes('saree')) {
         lookTitle = effectiveTop?.name || 'Rose Pink Ombre Shimmer Organza Saree Set';
-        verdict = 'Regal, statuesque Indian couture elegance. The translucent silk organza cascades with authentic metallic fluidity over your shoulder, creating a commanding ceremonial poise.';
-        complexionFit = `The delicate rose pink and silver zardozi highlight your ${skinToneHex} skin undertone, imparting a luminous, healthy dewy beauty glow.`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: pure organza silk with metallic shimmer border creates statuesque poise and authentic fluid pleating with royal celebration grace.`;
+        complexionFit = `The delicate rose pink and silver zardozi highlight your ${skinToneHex} skin undertone, imparting a luminous dewy glow.`;
         silhouetteFit = 'The high-waisted fluid pleating creates an unbroken vertical column that visually elongates your body line by 3+ inches while subtly accentuating your waist.';
         stylingTips = [
-          'Pin the pallu 2 inches behind the shoulder seam to allow free natural arm movement',
+          'Pin the pallu behind the shoulder seam for natural arm movement',
           'Pair with delicate silver or diamond chandelier jhumkas',
-          'Minimalist footwear or barefoot on marble completes the pure couture aesthetic'
+          'Natural grounded posture on marble completes the statuesque aesthetic',
         ];
         harmonyScore = 99.8;
-      } else if (topSub.includes('corset') || topSub.includes('dress') || topName.includes('dress')) {
-        modelPhotoUrl = 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1000&q=85';
-        lookTitle = effectiveTop?.name || 'White Cherry Embroidered Corset Mini Dress';
-        verdict = 'Effortless romantic charm with architectural tailoring. The corset bodice sculpts the waist with youthful grace.';
-        complexionFit = `Crisp optic white and subtle scarlet cherry accents reflect soft ambient light, flattering your ${skinToneHex} tone.`;
-        silhouetteFit = 'The fit-and-flare A-line hem creates balanced proportions between shoulders and hips.';
+      }
+      // 3. Periwinkle Sky Floral Sundress
+      else if (topId === 'w17' || topName.toLowerCase().includes('periwinkle') || topName.toLowerCase().includes('blue tie') || topName.toLowerCase().includes('sundress')) {
+        lookTitle = effectiveTop?.name || 'Periwinkle Sky Floral Tie-Strap Sundress';
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: lightweight powder blue floral crepe linen with shoulder ribbon ties offers breezy thermal ventilation and effortless summer resort style.`;
+        complexionFit = `Soft powder blue pastel tones harmonize with ${skinToneHex} undertones, reflecting natural ambient daylight.`;
+        silhouetteFit = 'A-line flared skirt balances shoulder width and allows effortless movement during daytime walks.';
         stylingTips = [
-          'Pair with delicate platform block heels or minimalist slides',
-          'Keep hair in a soft half-up romantic wave to frame the neckline'
+          'Tie ribbon straps into relaxed bows at the shoulders',
+          'Carry a woven straw tote for coastal charm',
         ];
-        harmonyScore = 98.9;
-      } else {
-        // Classic White Oxford Shirt + Pleated Trousers (The exact look in user's screenshot!)
-        modelPhotoUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=85';
-        lookTitle = `${effectiveTop?.name || 'Classic White Oxford'} & ${effectiveBottom?.name || 'Ivory Pleated Trousers'}`;
-        verdict = 'Commanding Parisian quiet luxury. You look exceptionally sharp, polished, and effortlessly authoritative with a clean minimalist silhouette.';
-        complexionFit = `The crisp optical white fabric reflects natural daylight upward, creating high-contrast clarity against your ${skinToneHex} complexion.`;
-        silhouetteFit = 'The structured collar frames your jawline with geometric precision, while the high-rise forward pleats create an elongated leg line.';
+        harmonyScore = 99.2;
+      }
+      // 4. Blush Pink Watercolor Rose Dress
+      else if (topId === 'w19' || topName.toLowerCase().includes('blush') || topName.toLowerCase().includes('watercolor') || topName.toLowerCase().includes('rose bell')) {
+        lookTitle = effectiveTop?.name || 'Blush Pink Watercolor Rose Bell-Sleeve Mini Dress';
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: flowing mulberry chiffon with poetic bell sleeves creates camera-ready movement, romantic warmth, and ethereal elegance.`;
+        complexionFit = `Gentle blush rose floral watercolors brighten your ${skinToneHex} complexion with romantic warmth.`;
+        silhouetteFit = 'Fitted bodice transitions into delicate bell sleeves, framing the upper torso with graceful proportion.';
         stylingTips = [
-          'Unbutton the top two buttons for relaxed Parisian sprezzatura',
-          'Do a crisp front French tuck into the extended waistband',
-          'Roll shirt cuffs twice to the forearm to highlight a sleek gold watch or bangle'
+          'Keep hair in loose natural waves to complement the romantic neckline',
+          'Add a dainty rose gold pendant for subtle accent',
         ];
         harmonyScore = 99.4;
       }
-    } else if (activePersona === 'man') {
-      if (topName.includes('botanical') || topName.includes('daisy') || topName.includes('resort') || bottomName.includes('cargo')) {
-        modelPhotoUrl = 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=85';
-        lookTitle = `${effectiveTop?.name || 'Botanical Camp Collar Shirt'} & ${effectiveBottom?.name || 'Utility Cargoes'}`;
-        verdict = 'Refined Mediterranean resort poise. The relaxed natural slub texture and camp collar project effortless coastal confidence.';
-        complexionFit = `The cool botanical pigments and sand khaki earth tones balance warm ${skinToneHex} complexion perfectly.`;
-        silhouetteFit = 'Boxy shoulder drape flatters the upper chest and tapers into relaxed straight utility trouser lines.';
+      // 5. White Cherry Corset Mini Dress
+      else {
+        lookTitle = effectiveTop?.name || 'White Cherry Embroidered Corset Mini Dress';
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: structured cotton poplin corset bodice sculpts your waistline while optic white and scarlet cherries give youthful high-fashion poise.`;
+        complexionFit = `Crisp optic white and subtle scarlet cherry accents reflect soft ambient light, flattering your ${skinToneHex} tone.`;
+        silhouetteFit = 'The fit-and-flare A-line hem creates balanced proportions between shoulders and hips.';
         stylingTips = [
-          'Leave shirt fully untucked to maximize breathable airflow',
-          'Pair with neutral leather slides or minimalist sneakers'
+          'Keep hair half-up to showcase the embroidered square neckline',
+          'Pair with delicate gold jewelry',
         ];
-        harmonyScore = 99.1;
-      } else if (topName.includes('crane') || topName.includes('jacquard')) {
-        modelPhotoUrl = 'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=1000&q=85';
-        lookTitle = `${effectiveTop?.name || 'Japanese Crane Jacquard'} & ${effectiveBottom?.name || 'Tailored Trousers'}`;
-        verdict = 'Opulent evening gala authority. Intricate silk embroidery catches ambient candlelight with subtle luxury.';
-        complexionFit = `Deep forest emerald and rich black create high-definition contrast for ${skinToneHex} undertones.`;
-        silhouetteFit = 'Sculpted shoulders with crisp trouser crease enhance athletic V-taper.';
+        harmonyScore = 99.5;
+      }
+    } else if (activePersona === 'man' || activePersona === 'boy') {
+      const isBoy = activePersona === 'boy';
+      // 1. Botanical Resort Shirt
+      if (topId.includes('13') || topName.toLowerCase().includes('botanical') || topName.toLowerCase().includes('blue abstract')) {
+        lookTitle = `${effectiveTop?.name || 'Botanical Camp Collar Shirt'} & ${effectiveBottom?.name || 'Utility Cargoes'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: breathable 100% slub cotton botanical textures give an effortless Mediterranean holiday vibe, paired with relaxed straight utility cargo trousers.`;
+        complexionFit = `Cool denim sky-blue pigments and sand khaki earth tones balance warm ${skinToneHex} undertones with crisp sunlit contrast.`;
+        silhouetteFit = 'Boxy shoulder drape flatters the upper chest and tapers cleanly into relaxed straight utility trouser lines.';
         stylingTips = [
-          'Fasten collar cleanly and anchor with polished dress shoes'
+          'Leave shirt fully untucked for maximum natural airflow',
+          'Roll sleeves once to highlight the slub cotton weave',
+          'Keep waist relaxed for all-day coastal comfort',
+        ];
+        harmonyScore = 99.4;
+      }
+      // 2. Terracotta Daisy Linen Shirt
+      else if (topId.includes('14') || topName.toLowerCase().includes('terracotta') || topName.toLowerCase().includes('daisy')) {
+        lookTitle = `${effectiveTop?.name || 'Terracotta Daisy Floral Linen Shirt'} & ${effectiveBottom?.name || 'Ivory Gurkha Trousers'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: washed Italian Riviera terracotta linen with natural wood buttons meets Savile Row double-forward pleats for effortless sprezzatura.`;
+        complexionFit = `Warm terracotta rust and crisp white daisy accents bring natural sun-kissed radiance to ${skinToneHex} skin tones.`;
+        silhouetteFit = 'Camp collar opens the neck naturally, while high-rise forward pleats visually elongate the leg line.';
+        stylingTips = [
+          'Pair with ivory Gurkha trousers or sand cargoes',
+          'Roll sleeves once to highlight the washed linen texture',
+          'Do a relaxed front French tuck',
+        ];
+        harmonyScore = 99.2;
+      }
+      // 3. White & Slate Floral Resort Shirt
+      else if (topId.includes('15') || topName.toLowerCase().includes('floral resort') || topName.toLowerCase().includes('bechariel')) {
+        lookTitle = `${effectiveTop?.name || 'White & Slate Floral Resort Shirt'} & ${effectiveBottom?.name || 'Vintage Denim'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: silky poplin floral placement shirt creates camera-ready charisma balanced by vintage straight-leg denim.`;
+        complexionFit = `Optical white and slate-blue motifs reflect natural daylight, bringing high-contrast clarity to ${skinToneHex} complexion.`;
+        silhouetteFit = 'Relaxed torso drape balances straight-leg denim for an easy modern streetwear silhouette.';
+        stylingTips = [
+          'Wear untucked with top button open',
+          'Roll sleeves twice to the mid-forearm',
+          'Keep collar spread wide and relaxed',
+        ];
+        harmonyScore = 99.0;
+      }
+      // 4. Japanese Crane Jacquard Shirt
+      else if (topId.includes('16') || topName.toLowerCase().includes('crane') || topName.toLowerCase().includes('jacquard')) {
+        lookTitle = `${effectiveTop?.name || 'Forest Green Japanese Crane Jacquard'} & ${effectiveBottom?.name || 'Tailored Black Trousers'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: deep emerald jacquard with silk-embroidered cranes commands presence and sartorial distinction over sharp crease-resistant jet-black trousers.`;
+        complexionFit = `Deep forest emerald and rich black create high-definition evening contrast for ${skinToneHex} undertones under festive lighting.`;
+        silhouetteFit = 'Sculpted shoulders with crisp trouser crease enhance an athletic V-taper.';
+        stylingTips = [
+          'Fasten collar cleanly for regal poise',
+          'Tuck cleanly into tailored black trousers',
+          'Keep lines clean with minimal accessories',
         ];
         harmonyScore = 99.6;
-      } else {
-        modelPhotoUrl = 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=1000&q=85';
-        lookTitle = `${effectiveTop?.name || 'Classic White Oxford'} & ${effectiveBottom?.name || 'Pleated Gurkha Trousers'}`;
-        verdict = 'Impeccable Savile Row sartorial tailoring. Clean, masculine lines convey sharp intellect and quiet luxury.';
-        complexionFit = `Pristine optical white creates an energetic, crisp contrast with your ${skinToneHex} skin tone.`;
-        silhouetteFit = 'Double-forward pleats drape cleanly over the thighs with a sharp center crease to the ankle.';
+      }
+      // 5. Navy Swirl Graphic Shirt
+      else if (topId.includes('17') || topName.toLowerCase().includes('swirl') || topName.toLowerCase().includes('calligraphy')) {
+        lookTitle = `${effectiveTop?.name || 'Navy Calligraphy Swirl Graphic Shirt'} & ${effectiveBottom?.name || 'Vintage Denim'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg ring-spun denim delivers contemporary urban cool.`;
+        complexionFit = `Deep navy and cream graphics provide crisp contrast that flatters ${skinToneHex} skin.`;
+        silhouetteFit = 'Straight hem hangs naturally over denim with zero bunching.';
         stylingTips = [
-          'Tuck shirt tightly into Gurkha waistband to showcase extended tab buckle',
-          'Pair with brown suede loafers or minimalist cream slides'
+          'Leave untucked for casual flow',
+          'Leave collar relaxed and open',
+          'Pair with straight-leg denim cuffs',
+        ];
+        harmonyScore = 99.1;
+      }
+      // 6. Classic Pure White Oxford Polo
+      else if (topId.includes('18') || (topName.toLowerCase().includes('white') && topName.toLowerCase().includes('oxford'))) {
+        lookTitle = `${effectiveTop?.name || 'Classic White Oxford Polo'} & ${effectiveBottom?.name || 'Ivory Pleated Gurkha Trousers'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: heavy optical white Oxford cotton tucked into double-pleated Gurkha dress trousers provides Savile Row quiet luxury and intellectual poise.`;
+        complexionFit = `Pristine optical white creates an energetic, crisp contrast with your ${skinToneHex} skin tone.`;
+        silhouetteFit = 'Structured button-down collar frames your jawline, while forward pleats drape cleanly to the ankle.';
+        stylingTips = [
+          'Tuck shirt cleanly into Gurkha waistband to showcase extended tab buckle',
+          'Roll cuffs twice to forearm to highlight a sleek watch',
+          'Unbutton top button for sprezzatura ease',
+        ];
+        harmonyScore = 99.5;
+      }
+      // 7. Olive Sage Oxford Polo
+      else if (topId.includes('19') || topName.toLowerCase().includes('olive')) {
+        lookTitle = `${effectiveTop?.name || 'Olive Sage Oxford Polo'} & ${effectiveBottom?.name || 'Mocha Camel Trousers'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: rich olive sage Oxford weaves an intellectual, approachable air with sharp collar poise, anchored by mocha camel trousers.`;
+        complexionFit = `Muted earth tones harmonize seamlessly with ${skinToneHex} medium complexion.`;
+        silhouetteFit = 'Structured knit collar holds its shape under a jacket or worn solo.';
+        stylingTips = [
+          'Tuck into mocha camel trousers with a classic leather belt',
+          'Roll sleeves to the elbow for engaged presentation poise',
         ];
         harmonyScore = 99.3;
       }
-    } else if (activePersona === 'boy') {
-      modelPhotoUrl = 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1000&q=85';
-      lookTitle = `${effectiveTop?.name || 'Oxford Polo'} & ${effectiveBottom?.name || 'Tailored Trousers'}`;
-      verdict = 'Smart, clean, youth prep styling. Athletic, dignified, and comfortable for all-day celebrations.';
-      complexionFit = 'Bright natural tones brighten youth complexion.';
-      silhouetteFit = 'Proportional tailored fit allowing full mobility.';
-      stylingTips = [
-        'Button up collar for formal occasions or open one button for casual gatherings'
-      ];
-      harmonyScore = 99.0;
+      // 8. Jet Black Oxford Polo
+      else if (topId.includes('20') || (topName.toLowerCase().includes('black') && topName.toLowerCase().includes('oxford'))) {
+        lookTitle = `${effectiveTop?.name || 'Jet Black Oxford Polo'} & ${effectiveBottom?.name || 'Tailored Black Trousers'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: monochromatic Obsidian Noir delivers sleek high-contrast confidence and athletic shoulder structure.`;
+        complexionFit = `Solid jet black provides clean, sharp framing that highlights healthy ${skinToneHex} skin tone.`;
+        silhouetteFit = 'Fitted polo sleeves define biceps, tapering cleanly into tailored trousers.';
+        stylingTips = [
+          'Leave top button open for relaxed sophistication',
+          'Do a neat front tuck to define the waist',
+        ];
+        harmonyScore = 99.6;
+      }
+      // 9. Sky Blue Oxford Polo
+      else if (topId.includes('21') || (topName.toLowerCase().includes('sky blue') && topName.toLowerCase().includes('oxford'))) {
+        lookTitle = `${effectiveTop?.name || 'Sky Blue Oxford Polo'} & ${effectiveBottom?.name || 'Mocha Camel Trousers'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: classic Oxford sky blue cotton channels timeless Ivy League prep heritage with crisp collar discipline.`;
+        complexionFit = `Gentle sky blue tones brighten medium undertones with crisp daylight clarity.`;
+        silhouetteFit = 'Tailored chest drape tapers into structured trousers.';
+        stylingTips = [
+          'Button collar points cleanly',
+          'Tuck securely with classic leather belt',
+        ];
+        harmonyScore = 99.2;
+      }
+      // 10. Dusty Lavender Linen Shirt
+      else if (topId.includes('22') || topName.toLowerCase().includes('lavender') || topName.toLowerCase().includes('lilac')) {
+        lookTitle = `${effectiveTop?.name || 'Dusty Lavender Linen Shirt'} & ${effectiveBottom?.name || 'Sand Khaki Cargoes'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: washed linen-cotton slub in dusty lilac provides breathable summer thermal ventilation with subtle pastel elegance.`;
+        complexionFit = `Soft dusty lilac softens ${skinToneHex} undertones with romantic daytime warmth.`;
+        silhouetteFit = 'Relaxed fit allows maximum air circulation.';
+        stylingTips = [
+          'Leave untucked over trousers',
+          'Unbutton top two buttons for casual coastal poise',
+        ];
+        harmonyScore = 99.1;
+      }
+      // Fallback
+      else {
+        lookTitle = `${effectiveTop?.name || 'Oxford Polo'} & ${effectiveBottom?.name || 'Tailored Trousers'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: classic tailored cotton provides freedom of movement while projecting sharp sartorial poise.`;
+        complexionFit = `Natural tones brighten ${skinToneHex} complexion with clean daylight balance.`;
+        silhouetteFit = isBoy ? 'Proportional tailored youth fit allowing full mobility.' : 'Structured athletic drape from shoulder to hem.';
+        stylingTips = ['Button collar for formal occasions or open one button for casual gatherings'];
+        harmonyScore = 99.3;
+      }
     } else {
-      // Girl
-      if (topSub.includes('saree') || topName.includes('saree')) {
-        modelPhotoUrl = '/wardrobe/girl/rose_pink_saree_model.jpg';
+      // 3. GIRL PERSONA
+      // Mauve & Ivory Ombre Mirror Saree
+      if (topId === 'g18' || topName.toLowerCase().includes('mauve') || topName.toLowerCase().includes('mirror')) {
+        lookTitle = effectiveTop?.name || 'Mauve & Ivory Ombre Scalloped Mirror Saree Set';
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: scalloped mirror-work sparkles under celebratory illumination, creating high-fashion ethnic poise.`;
+        complexionFit = `Ivory and dusty mauve illuminate ${skinToneHex} complexion with delicate festive luster.`;
+        silhouetteFit = 'Lightweight georgette pleating flows naturally with joyful grace.';
+        stylingTips = ['Pair with ivory ruched block heels and silver jhumkas'];
+        harmonyScore = 99.7;
+      }
+      // Rose Pink Organza Saree Set
+      else if (topId === 'g17' || topName.toLowerCase().includes('saree') || topSub.includes('saree')) {
         lookTitle = effectiveTop?.name || 'Rose Pink Ombre Shimmer Organza Saree Set';
-        verdict = 'Breathtaking festive grace. The organza saree shimmers beautifully under celebratory lighting.';
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: shimmering organza silk cascades with royal elegance and statuesque celebratory grace.`;
         complexionFit = `Rose pink and silver embroidery illuminate ${skinToneHex} complexion.`;
         silhouetteFit = 'Fluid pleating creates graceful, balanced movement.';
         stylingTips = ['Pair with silver jhumkas and comfortable embroidered juttis'];
-        harmonyScore = 99.7;
-      } else {
-        modelPhotoUrl = 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1000&q=85';
-        lookTitle = `${effectiveTop?.name || 'Corset Dress / Casual Look'}`;
-        verdict = 'Vibrant, chic Pinterest aesthetic with high-fashion charm.';
-        complexionFit = 'Natural pastel tones harmonize with delicate skin tones.';
+        harmonyScore = 99.8;
+      }
+      // Heart Denim / Cargo Jeans
+      else if (topId === 'g21' || topId === 'g20' || bottomName.toLowerCase().includes('heart') || bottomName.toLowerCase().includes('cargo') || bottomName.toLowerCase().includes('denim')) {
+        lookTitle = `${effectiveTop?.name || 'Cherry Top'} & ${effectiveBottom?.name || 'Heart Denim Jeans'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: trendy wide-leg denim balances comfort with bold aesthetic flair and streetwear chic.`;
+        complexionFit = `Bright white and denim blue tones create youthful contrast against ${skinToneHex} skin.`;
+        silhouetteFit = 'Wide-leg cut elongates the vertical silhouette with relaxed streetwear poise.';
+        stylingTips = ['Pair with platform sandals or clean white slides'];
+        harmonyScore = 99.1;
+      }
+      // Corset Dress / Floral Sundress
+      else {
+        lookTitle = `${effectiveTop?.name || 'White Cherry Corset Mini Dress'}`;
+        verdict = `For ${effectiveOccasionName} at ${simulatedTemp}°C: effortless romantic silhouette with flattering fitted bodice and fluid skirt lines.`;
+        complexionFit = `Natural pastel tones harmonize with ${skinToneHex} delicate skin tones.`;
         silhouetteFit = 'Flattering fitted waist with flowing skirt.';
         stylingTips = ['Pair with platform sandals or clean white slides'];
-        harmonyScore = 99.2;
+        harmonyScore = 99.5;
       }
     }
 
@@ -752,14 +870,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
       stylingTips,
       harmonyScore,
     };
-  }, [activePersona, effectiveTop, effectiveBottom, skinToneHex]);
-
-  const copyPromptToClipboard = () => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(activeVtonPrompt);
-      toast('Prompt Copied!', 'Ready to paste into Midjourney, DALL-E, IDM-VTON, or CatVTON', 'success');
-    }
-  };
+  }, [activePersona, effectiveTop, effectiveBottom, skinToneHex, selectedOccasion, customOccasion, simulatedTemp]);
 
   // Custom Photo Upload Handler
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -841,182 +952,191 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
       let calculatedHarmony = 99.4;
 
       const findById = (id: string) => closet.find((i) => i.id === id);
+      const q = (customOccasion.trim() || occPreset?.name || occId).toLowerCase();
+      const isOcc = (...keys: string[]) => keys.some((k) => q.includes(k.toLowerCase()) || occId.includes(k.toLowerCase()));
 
       // 1. GIRL PERSONA
       if (activePersona === 'girl') {
-        if (occId === 'sangeet') {
-          nextTop = findById('g17') || tops[0];
-          nextFootwear = findById('g25') || footwear[0];
-          lookTitle = 'Imperial Rose Pink Shimmer Organza Saree Set';
-          rationaleText = `Engine-selected for ${effectiveOccasion} at ${simulatedTemp}°C: tissue silk organza with metallic shimmer drape catches festive chandelier lighting, paired with classic black suede block heels for stability.`;
-          calculatedHarmony = 99.8;
-        } else if (occId === 'formal' || occId === 'photoshoot') {
+        if (isOcc('wedding_reception', 'reception', 'formal', 'photoshoot', 'mirror', 'gala')) {
           nextTop = findById('g18') || tops[0];
-          nextFootwear = findById('g24') || footwear[0];
+          nextBottom = null;
+          nextFootwear = findById('g24') || footwear[0] || null;
           lookTitle = 'Mauve & Ivory Ombre Scalloped Mirror Saree Set';
-          rationaleText = `Synthesized for royal reception and editorial gala at ${simulatedTemp}°C: scalloped mirror-work border catches evening candlelit glow, paired with ivory ruched satin platform heels.`;
-          calculatedHarmony = 99.6;
-        } else if (occId === 'brunch') {
-          nextTop = findById('g19') || tops[0];
-          nextFootwear = findById('g23') || footwear[0];
-          lookTitle = 'Blush Pink Watercolor Rose Dress & Ribbed Slides';
-          rationaleText = `Curated for Sunday brunch at ${simulatedTemp}°C: romantic watercolor rose bell-sleeve dress paired with ergonomic cream ribbed slides for breezy outdoor cafe comfort.`;
-          calculatedHarmony = 99.2;
-        } else if (occId === 'beach') {
-          nextTop = findById('g16') || tops[0];
-          nextFootwear = findById('g23') || footwear[0];
-          lookTitle = 'Periwinkle Sky Floral Sundress & Cream Slides';
-          rationaleText = `At ${simulatedTemp}°C, lightweight crepe linen with ribbon tie-straps ensures effortless thermal breathability for seaside promenades and sunlit dining.`;
-          calculatedHarmony = 99.3;
-        } else if (occId === 'streetwear') {
-          nextBottom = findById('g21') || bottoms[0];
-          nextTop = findById('g15') || tops[0];
-          nextFootwear = findById('g23') || footwear[0];
-          lookTitle = 'Y2K Painted Heart Denim & Cherry Corset Top';
-          rationaleText = `Y2K street-style aesthetic for ${simulatedTemp}°C: hand-painted white brushstroke hearts on wide-leg denim balanced by fitted cotton and comfort slides.`;
-          calculatedHarmony = 99.1;
-        } else {
-          // birthday default
-          nextTop = findById('g15') || tops[0];
-          nextFootwear = findById('g24') || footwear[0];
-          lookTitle = 'White Cherry Corset Mini Dress & Satin Platforms';
-          rationaleText = `High-fashion party fit at ${simulatedTemp}°C: cinched corset bodice with scarlet cherry embroidery and party-poised ruched satin block heels.`;
-          calculatedHarmony = 99.5;
-        }
-      }
-
-      // 2. BOY PERSONA
-      else if (activePersona === 'boy') {
-        if (occId === 'beach') {
-          nextTop = findById('b13') || tops[0];
-          nextBottom = findById('b23') || bottoms[0];
-          nextFootwear = findById('b28') || footwear[0];
-          lookTitle = 'Light Blue Botanical Resort Shirt & Sand Khaki Cargoes';
-          rationaleText = `Calibrated for seaside resort holiday at ${simulatedTemp}°C: breathable slub cotton botanical camp collar shirt paired with reinforced khaki utility cargo trousers for effortless coastal ease.`;
-          calculatedHarmony = 99.4;
-        } else if (occId === 'brunch') {
-          nextTop = findById('b14') || tops[0];
-          nextBottom = findById('b26') || bottoms[0];
-          nextFootwear = findById('b28') || footwear[0];
-          lookTitle = 'Terracotta Daisy Linen Shirt & Ivory Gurkha Trousers';
-          rationaleText = `Italian Riviera sprezzatura for brunch at ${simulatedTemp}°C: washed terracotta linen shirt with natural wood buttons paired with crisp double-pleated ivory trousers.`;
-          calculatedHarmony = 99.2;
-        } else if (occId === 'streetwear') {
-          nextTop = findById('b17') || tops[0];
-          nextBottom = findById('b24') || bottoms[0];
-          nextFootwear = findById('b28') || footwear[0];
-          lookTitle = 'Navy Blue Calligraphy Swirl Shirt & Vintage Denim';
-          rationaleText = `Youth street-style statement at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg light-wash denim.`;
-          calculatedHarmony = 99.0;
-        } else if (occId === 'sangeet' || occId === 'formal') {
-          nextTop = findById('b16') || tops[0];
-          nextBottom = findById('b25') || bottoms[0];
-          nextFootwear = findById('b28') || footwear[0];
-          lookTitle = 'Forest Green Japanese Crane Jacquard & Tailored Trousers';
-          rationaleText = `Synthesized for evening gala & celebration at ${simulatedTemp}°C: opulent textured jacquard with silk-embroidered cranes over sharp crease-resistant jet-black trousers.`;
-          calculatedHarmony = 99.6;
-        } else if (occId === 'school') {
-          nextTop = findById('b21') || tops[0];
-          nextBottom = findById('b27') || bottoms[0];
-          nextFootwear = findById('b28') || footwear[0];
-          lookTitle = 'Sky Blue Oxford Polo & Mocha Camel Tailored Trousers';
-          rationaleText = `Academic honors & presentation styling: heavy Oxford cotton polo with button-down collar anchored by tailored Italian mocha camel gabardine trousers.`;
-          calculatedHarmony = 99.1;
-        } else {
-          nextTop = findById('b18') || tops[0];
-          nextBottom = findById('b26') || bottoms[0];
-          nextFootwear = findById('b28') || footwear[0];
-          lookTitle = 'Classic Pure White Oxford Polo & Ivory Gurkha Trousers';
-          rationaleText = `Curated for ${effectiveOccasion} at ${simulatedTemp}°C: heavy optical white Oxford cotton polo with navy pony logo tucked into high-rise pleated Gurkha dress trousers.`;
-          calculatedHarmony = 99.3;
-        }
-      }
-
-      // 3. MAN PERSONA
-      else if (activePersona === 'man') {
-        if (occId === 'beach') {
-          nextTop = findById('m13') || tops[0];
-          nextBottom = findById('m23') || bottoms[0];
-          nextFootwear = findById('m28') || footwear[0];
-          lookTitle = 'Light Blue Abstract Botanical Shirt & Utility Cargoes';
-          rationaleText = `Coastal leisure at ${simulatedTemp}°C: breathable slub cotton botanical camp collar shirt paired with tailored sand khaki utility cargo trousers. 100% natural fiber airflow.`;
-          calculatedHarmony = 99.4;
-        } else if (occId === 'brunch') {
-          nextTop = findById('m14') || tops[0];
-          nextBottom = findById('m26') || bottoms[0];
-          nextFootwear = findById('m28') || footwear[0];
-          lookTitle = 'Terracotta Daisy Linen Shirt & Ivory Gurkha Trousers';
-          rationaleText = `Italian Riviera sprezzatura for cafe brunch at ${simulatedTemp}°C: washed terracotta linen shirt with extended-tab Gurkha trousers creates effortless sartorial poise.`;
-          calculatedHarmony = 99.2;
-        } else if (occId === 'streetwear') {
-          nextTop = findById('m15') || tops[0];
-          nextBottom = findById('m24') || bottoms[0];
-          nextFootwear = findById('m28') || footwear[0];
-          lookTitle = 'White & Slate Floral Resort Shirt & Vintage Denim';
-          rationaleText = `Contemporary urban aesthetic for ${effectiveOccasion}: oversized slate-blue placement floral poplin balanced by relaxed straight-leg ring-spun denim.`;
-          calculatedHarmony = 98.9;
-        } else if (occId === 'sangeet' || occId === 'formal') {
-          nextTop = findById('m16') || tops[0];
-          nextBottom = findById('m25') || bottoms[0];
-          nextFootwear = findById('m28') || footwear[0];
-          lookTitle = 'Forest Green Japanese Crane Jacquard & Tailored Trousers';
-          rationaleText = `Intimate evening gala & festive celebration: silk-embroidered Japanese crane jacquard shirt over sharp crease-resistant jet black dress trousers.`;
-          calculatedHarmony = 99.6;
-        } else if (occId === 'school') {
-          nextTop = findById('m19') || tops[0];
-          nextBottom = findById('m27') || bottoms[0];
-          nextFootwear = findById('m28') || footwear[0];
-          lookTitle = 'Olive Sage Oxford Polo & Mocha Camel Gabardine Trousers';
-          rationaleText = `Sartorial business presentation: heavy Oxford cotton in olive sage green paired with fine Italian mocha gabardine trousers with sharp center crease.`;
-          calculatedHarmony = 99.1;
-        } else {
-          nextTop = findById('m18') || tops[0];
-          nextBottom = findById('m26') || bottoms[0];
-          nextFootwear = findById('m28') || footwear[0];
-          lookTitle = 'Classic Pure White Oxford Polo & Ivory Gurkha Trousers';
-          rationaleText = `Quiet luxury pairing for ${effectiveOccasion} at ${simulatedTemp}°C: pristine optical white Oxford button-down polo tucked into tailored double-pleated ivory Gurkha trousers.`;
-          calculatedHarmony = 99.3;
-        }
-      }
-
-      // 4. WOMEN PERSONA
-      else {
-        if (occId === 'sangeet') {
-          nextTop = findById('w11') || tops[0];
-          nextFootwear = findById('w23') || footwear[0];
-          lookTitle = 'Imperial Rose Pink Shimmer Organza Saree Set';
-          rationaleText = `Majestic wedding festive attire: pure organza silk with silver shimmer border catches ambient candlelit and festive ballroom lighting.`;
-          calculatedHarmony = 99.8;
-        } else if (occId === 'formal' || occId === 'photoshoot') {
-          nextTop = findById('w16') || tops[0];
-          nextFootwear = findById('w23') || footwear[0];
-          lookTitle = 'Mauve & Ivory Ombre Scalloped Mirror Saree Set';
-          rationaleText = `High-couture evening gala: hand-embroidered scalloped mirror border creates candlelit luminescence with pure silk georgette drape.`;
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: hand-embroidered scalloped mirror-work saree creates candlelit luminescence, while the vertical ivory-to-mauve ombre visually elongates your silhouette with royal poise.`;
           calculatedHarmony = 99.7;
-        } else if (occId === 'beach') {
-          nextTop = findById('w17') || tops[0];
-          nextFootwear = findById('w23') || footwear[0];
-          lookTitle = 'Periwinkle Sky Floral Tie-Strap Sundress';
-          rationaleText = `Seaside holiday promenade at ${simulatedTemp}°C: lightweight periwinkle floral crepe linen with shoulder ribbon ties.`;
-          calculatedHarmony = 99.2;
-        } else if (occId === 'brunch') {
-          nextTop = findById('w19') || tops[0];
-          nextFootwear = findById('w23') || footwear[0];
+        } else if (isOcc('traditional_wedding', 'wedding', 'sangeet', 'festive_diwali', 'diwali', 'eid', 'cultural')) {
+          nextTop = findById('g17') || tops[0];
+          nextBottom = null;
+          nextFootwear = findById('g25') || footwear[0] || null;
+          lookTitle = 'Imperial Rose Pink Shimmer Organza Saree Set';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: translucent metallic shimmer drape and authentic fluid pleating offer majestic traditional elegance and statuesque celebration grace.`;
+          calculatedHarmony = 99.8;
+        } else if (isOcc('college_farewell', 'farewell', 'brunch', 'date_night', 'rose')) {
+          nextTop = findById('g19') || tops[0];
+          nextBottom = null;
+          nextFootwear = findById('g23') || footwear[0] || null;
           lookTitle = 'Blush Pink Watercolor Rose Bell-Sleeve Mini Dress';
-          rationaleText = `Terrace brunch styling: romantic blush rose watercolor botanical print on breezy mulberry chiffon with cotton lining.`;
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: flowing mulberry chiffon with poetic bell sleeves creates camera-ready movement, romantic warmth, and effortless comfort.`;
+          calculatedHarmony = 99.4;
+        } else if (isOcc('beach', 'resort', 'coastal', 'holiday', 'vacation')) {
+          nextTop = findById('g16') || tops[0];
+          nextBottom = null;
+          nextFootwear = findById('g23') || footwear[0] || null;
+          lookTitle = 'Periwinkle Sky Floral Tie-Strap Sundress';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: lightweight powder blue crepe linen with ribbon ties delivers breezy thermal ventilation and effortless summer resort charm.`;
+          calculatedHarmony = 99.3;
+        } else if (isOcc('casual_outing', 'casual', 'streetwear', 'hangout')) {
+          nextTop = findById('g15') || tops[0];
+          nextBottom = findById('g21') || findById('g20') || bottoms[0] || null;
+          nextFootwear = findById('g23') || footwear[0] || null;
+          lookTitle = 'Cherry Corset Top & Painted Heart Denim Jeans';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: fitted cherry embroidered bodice balanced by relaxed wide-leg denim creates modern Y2K streetwear chic.`;
           calculatedHarmony = 99.1;
         } else {
-          nextTop = findById('w15') || tops[0];
-          nextFootwear = findById('w23') || footwear[0];
+          // Birthday / Party / Default
+          nextTop = findById('g15') || tops[0];
+          nextBottom = null;
+          nextFootwear = findById('g24') || footwear[0] || null;
           lookTitle = 'White Cherry Embroidered Corset Mini Dress';
-          rationaleText = `Celebration garden party: structured cotton poplin corset bodice with delicate red cherry embroidery.`;
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: structured cotton poplin corset bodice sculpts your waistline while optic white and scarlet cherries give youthful high-fashion poise.`;
           calculatedHarmony = 99.5;
         }
       }
 
-      if (nextTop) setWornTop(nextTop);
-      if (nextBottom) setWornBottom(nextBottom);
-      if (nextFootwear) setWornFootwear(nextFootwear);
+      // 2. BOY PERSONA (ZERO FOOTWEAR)
+      else if (activePersona === 'boy') {
+        nextFootwear = null;
+        if (isOcc('beach', 'resort', 'coastal', 'holiday', 'vacation', 'summer', 'pool')) {
+          nextTop = findById('b13') || tops[0];
+          nextBottom = findById('b23') || bottoms[0] || null;
+          lookTitle = 'Light Blue Abstract Botanical Camp Collar Shirt & Sand Khaki Cargoes';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: breathable 100% slub cotton botanical textures ensure continuous airflow, paired with relaxed straight utility cargo trousers.`;
+          calculatedHarmony = 99.4;
+        } else if (isOcc('brunch', 'cafe', 'sunday', 'afternoon', 'terracotta')) {
+          nextTop = findById('b14') || tops[0];
+          nextBottom = findById('b26') || bottoms[0] || null;
+          lookTitle = 'Terracotta Daisy Floral Linen Shirt & Ivory Pleated Gurkha Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: washed Italian Riviera terracotta linen with natural wood buttons meets Savile Row double-forward pleats for effortless youth sprezzatura.`;
+          calculatedHarmony = 99.2;
+        } else if (isOcc('sangeet', 'traditional_wedding', 'wedding', 'festive_diwali', 'gala', 'formal', 'ceremony')) {
+          nextTop = findById('b16') || tops[0];
+          nextBottom = findById('b25') || bottoms[0] || null;
+          lookTitle = 'Forest Green Japanese Crane Jacquard Shirt & Jet Black Tailored Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep emerald jacquard with silk-embroidered cranes commands celebratory presence over sharp crease-resistant jet-black trousers.`;
+          calculatedHarmony = 99.6;
+        } else if (isOcc('casual_outing', 'casual', 'streetwear', 'hangout', 'weekend', 'friends')) {
+          nextTop = findById('b17') || tops[0];
+          nextBottom = findById('b24') || bottoms[0] || null;
+          lookTitle = 'Navy Blue Calligraphy Swirl Graphic Shirt & Vintage Straight Denim';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg ring-spun denim delivers contemporary youth cool.`;
+          calculatedHarmony = 99.1;
+        } else if (isOcc('school', 'presentation', 'honors', 'academy', 'interview')) {
+          nextTop = findById('b21') || findById('b18') || tops[0];
+          nextBottom = findById('b27') || findById('b26') || bottoms[0] || null;
+          lookTitle = 'Sky Blue Oxford Button-Down Polo & Mocha Camel Tailored Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy Oxford cotton polo with button-down collar anchored by tailored Italian mocha camel trousers.`;
+          calculatedHarmony = 99.3;
+        } else if (isOcc('dinner', 'evening', 'night', 'date')) {
+          nextTop = findById('b20') || tops[0];
+          nextBottom = findById('b25') || bottoms[0] || null;
+          lookTitle = 'Jet Black Oxford Button-Down Polo & Jet Black Tailored Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: monochromatic Obsidian Noir delivers sleek high-contrast confidence with tailored black trousers.`;
+          calculatedHarmony = 99.5;
+        } else {
+          // Default / Birthday
+          nextTop = findById('b18') || tops[0];
+          nextBottom = findById('b26') || bottoms[0] || null;
+          lookTitle = 'Classic Pure White Oxford Polo & Ivory Pleated Gurkha Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy optical white Oxford cotton polo tucked into high-rise double-pleated Gurkha dress trousers provides smart, clean youth elegance.`;
+          calculatedHarmony = 99.3;
+        }
+      }
+
+      // 3. MAN PERSONA (ZERO FOOTWEAR)
+      else if (activePersona === 'man') {
+        nextFootwear = null;
+        if (isOcc('beach', 'resort', 'coastal', 'holiday', 'vacation', 'summer', 'pool', 'yacht')) {
+          nextTop = findById('m13') || tops[0];
+          nextBottom = findById('m23') || bottoms[0] || null;
+          lookTitle = 'Light Blue Abstract Botanical Camp Collar Shirt & Sand Khaki Utility Cargoes';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: breathable 100% slub cotton botanical textures ensure continuous natural airflow, paired with structured sand khaki cotton twill utility cargoes.`;
+          calculatedHarmony = 99.4;
+        } else if (isOcc('brunch', 'cafe', 'sunday', 'afternoon', 'terracotta')) {
+          nextTop = findById('m14') || tops[0];
+          nextBottom = findById('m26') || bottoms[0] || null;
+          lookTitle = 'Terracotta Daisy Floral Linen Shirt & Ivory Pleated Gurkha Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: washed Italian Riviera terracotta linen with natural wood buttons meets Savile Row double-forward pleats for effortless sartorial sprezzatura.`;
+          calculatedHarmony = 99.2;
+        } else if (isOcc('sangeet', 'traditional_wedding', 'wedding', 'festive_diwali', 'gala', 'formal', 'ceremony')) {
+          nextTop = findById('m16') || tops[0];
+          nextBottom = findById('m25') || bottoms[0] || null;
+          lookTitle = 'Forest Green Japanese Crane Jacquard Shirt & Jet Black Tailored Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep emerald jacquard with silk-embroidered cranes commands presence and sartorial distinction over sharp crease-resistant jet-black trousers.`;
+          calculatedHarmony = 99.6;
+        } else if (isOcc('dinner', 'evening', 'night', 'date', 'lounge', 'cocktail')) {
+          nextTop = findById('m20') || tops[0];
+          nextBottom = findById('m25') || bottoms[0] || null;
+          lookTitle = 'Jet Black Oxford Button-Down Polo & Jet Black Tailored Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: monochromatic Obsidian Noir delivers sleek high-contrast confidence and athletic shoulder structure with tailored black trousers.`;
+          calculatedHarmony = 99.6;
+        } else if (isOcc('job_interview', 'interview', 'meeting', 'office', 'corporate', 'presentation', 'honors', 'academy')) {
+          nextTop = findById('m18') || findById('m19') || tops[0];
+          nextBottom = findById('m26') || findById('m27') || bottoms[0] || null;
+          lookTitle = 'Classic Pure White Oxford Polo & Ivory Pleated Gurkha Trousers';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: heavy optic white Oxford cotton tucked into double-pleated Gurkha dress trousers provides Savile Row quiet luxury and intellectual poise.`;
+          calculatedHarmony = 99.5;
+        } else if (isOcc('casual_outing', 'casual', 'streetwear', 'hangout', 'weekend', 'friends')) {
+          nextTop = findById('m17') || tops[0];
+          nextBottom = findById('m24') || bottoms[0] || null;
+          lookTitle = 'Navy Blue Calligraphy Swirl Graphic Shirt & Vintage Straight Denim';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: deep regatta navy swirl graphic poplin balanced by relaxed straight-leg ring-spun denim delivers contemporary urban cool.`;
+          calculatedHarmony = 99.1;
+        } else {
+          // Default / Birthday Party
+          nextTop = findById('m15') || findById('m18') || tops[0];
+          nextBottom = findById('m24') || findById('m26') || bottoms[0] || null;
+          lookTitle = 'White & Slate Floral Resort Shirt & Vintage Denim Jeans';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: silky poplin floral placement shirt creates camera-ready charisma balanced by vintage straight-leg denim.`;
+          calculatedHarmony = 99.2;
+        }
+      }
+
+      // 4. WOMEN PERSONA (ALL 5 ITEMS ARE ONE-PIECE SAREES & DRESSES)
+      else {
+        nextBottom = null;
+        nextFootwear = null;
+        if (isOcc('wedding_reception', 'reception', 'formal', 'photoshoot', 'mirror', 'gala')) {
+          nextTop = findById('w16') || tops[0];
+          lookTitle = 'Mauve & Ivory Ombre Scalloped Mirror Saree Set';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: hand-embroidered scalloped mirror-work saree creates candlelit luminescence, while vertical ivory-to-mauve ombre visually elongates your silhouette with royal poise.`;
+          calculatedHarmony = 99.7;
+        } else if (isOcc('traditional_wedding', 'wedding', 'sangeet', 'festive_diwali', 'diwali', 'shaadi', 'puja')) {
+          nextTop = findById('w11') || tops[0];
+          lookTitle = 'Imperial Rose Pink Shimmer Organza Saree Set';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: translucent metallic shimmer drape and authentic fluid pleating offer majestic traditional elegance and statuesque celebration grace.`;
+          calculatedHarmony = 99.8;
+        } else if (isOcc('college_farewell', 'farewell', 'graduation', 'date_night', 'date', 'romantic')) {
+          nextTop = findById('w19') || tops[0];
+          lookTitle = 'Blush Pink Watercolor Rose Bell-Sleeve Mini Dress';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: flowing mulberry chiffon with poetic bell sleeves creates camera-ready movement, romantic warmth, and effortless comfort.`;
+          calculatedHarmony = 99.4;
+        } else if (isOcc('beach', 'resort', 'coastal', 'holiday', 'vacation')) {
+          nextTop = findById('w17') || tops[0];
+          lookTitle = 'Periwinkle Sky Floral Tie-Strap Sundress';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: lightweight powder blue crepe linen with ribbon ties delivers breezy thermal ventilation and effortless summer resort charm.`;
+          calculatedHarmony = 99.2;
+        } else {
+          // Birthday / Party / Default
+          nextTop = findById('w15') || tops[0];
+          lookTitle = 'White Cherry Embroidered Corset Mini Dress';
+          rationaleText = `For ${effectiveOccasion} at ${simulatedTemp}°C: structured cotton poplin corset bodice sculpts your waistline while optic white and scarlet cherries give youthful high-fashion poise.`;
+          calculatedHarmony = 99.5;
+        }
+      }
+
+      setWornTop(nextTop);
+      setWornBottom(nextBottom);
+      setWornFootwear(nextFootwear);
       setAiRationale(rationaleText);
       setHarmonyScore(calculatedHarmony);
       setJustDressedBadge(lookTitle || nextTop?.name || 'Curated Ensemble');
@@ -1157,6 +1277,20 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
   // Filter Items in the Live Mix-and-Match Rack
   const rackItems = useMemo(() => {
     if (rackCategory === 'all') return closet;
+    if (rackCategory === 'dresses') {
+      return closet.filter((i) => {
+        const sub = (i.subType || '').toLowerCase();
+        const name = (i.name || '').toLowerCase();
+        return (
+          sub.includes('saree') ||
+          sub.includes('dress') ||
+          sub.includes('gown') ||
+          sub.includes('chudidar') ||
+          name.includes('saree') ||
+          name.includes('dress')
+        );
+      });
+    }
     return closet.filter((i) => i.category === rackCategory);
   }, [closet, rackCategory]);
 
@@ -1737,9 +1871,9 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                   }`}
                 >
                   
-                  {/* Real Photorealistic Human Model Wearing The Outfit */}
+                  {/* Real Photorealistic Human Model Runway Stage */}
                   <div 
-                    className="relative z-20 flex flex-col items-center justify-center w-full max-w-[380px] h-full transition-all duration-500 rounded-3xl overflow-hidden shadow-2xl border border-amber-300/40 bg-black/5"
+                    className="relative z-20 w-full max-w-[370px] h-full rounded-3xl overflow-hidden shadow-2xl border-2 border-amber-300/60 bg-gradient-to-b from-black/80 via-black/40 to-black/80 transition-all duration-500"
                     style={{ filter: lightingFilterStyle }}
                   >
                     {/* The Full-Body Model Photograph */}
@@ -1749,13 +1883,13 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                       className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
                     />
 
-                    {/* If User Uploaded a Custom Photo: Seamless Digital Twin Face-Swap */}
+                    {/* Seamless Face Swap / Digital Twin Overlay if user clicked "Try on My Face" */}
                     {isUsingCustomPhoto && customPhotoUrl && (
                       <div
-                        className="absolute top-[3%] left-1/2 -translate-x-1/2 w-20 h-24 sm:w-24 sm:h-28 rounded-full overflow-hidden shadow-md z-30"
+                        className="absolute top-[3%] left-1/2 -translate-x-1/2 w-20 h-24 sm:w-24 sm:h-28 rounded-full overflow-hidden shadow-lg z-30 border border-white/20"
                         style={{
-                          WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
-                          maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
+                          WebkitMaskImage: 'radial-gradient(ellipse at center, black 68%, transparent 100%)',
+                          maskImage: 'radial-gradient(ellipse at center, black 68%, transparent 100%)',
                         }}
                       >
                         <img
@@ -1767,23 +1901,23 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     )}
 
                     {/* Gradient Rim & Studio Ambient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
                     {/* Top Floating Model Identity Pill */}
-                    <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-auto">
-                      <div className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/40 text-[10px] font-mono font-bold shadow-md flex items-center gap-1.5">
+                    <div className="absolute top-3 inset-x-3 flex items-center justify-between z-30 pointer-events-auto">
+                      <div className="px-3 py-1 rounded-full bg-black/85 backdrop-blur-md text-amber-300 border border-amber-400/40 text-[10px] font-mono font-bold shadow-md flex items-center gap-1.5">
                         <span>{isUsingCustomPhoto ? '📸' : activePersona === 'boy' ? '👦' : activePersona === 'girl' ? '👧' : activePersona === 'women' ? '👩' : '👨'}</span>
-                        <span>{isUsingCustomPhoto ? 'My Personal Digital Twin' : `${effectiveFaceName} (Default Model Face)`}</span>
+                        <span className="truncate max-w-[150px]">{isUsingCustomPhoto ? 'My Personal Digital Twin' : `${effectiveFaceName} (Default Model Face)`}</span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
                         {isUsingCustomPhoto ? (
                           <button
                             onClick={handleRevertToDemographic}
-                            className="px-2.5 py-1 rounded-full bg-white/90 hover:bg-white text-black text-[10px] font-mono font-bold shadow-xs cursor-pointer transition-all"
+                            className="px-2.5 py-1 rounded-full bg-white/95 hover:bg-white text-black text-[10px] font-mono font-bold shadow-xs cursor-pointer transition-all"
                             title="Reset to default model face"
                           >
-                            Reset to Default Face
+                            Reset Face
                           </button>
                         ) : (
                           <button
@@ -1799,15 +1933,15 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     </div>
 
                     {/* Bottom Floating Ensemble Tag */}
-                    <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
-                      <div className="px-3 py-1.5 rounded-2xl bg-black/85 backdrop-blur-md border border-white/20 text-white text-xs font-semibold shadow-lg max-w-[70%]">
-                        <span className="text-[9px] font-mono uppercase tracking-widest text-amber-400 block font-bold">
-                          Photorealistic VTON
+                    <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-30 pointer-events-none">
+                      <div className="px-3 py-1.5 rounded-2xl bg-black/85 backdrop-blur-md border border-white/20 text-white text-xs font-semibold shadow-lg max-w-[72%]">
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-amber-400 block font-bold truncate">
+                          Photorealistic AI VTON
                         </span>
-                        <p className="truncate text-xs text-neutral-100">{resolvedDrape.lookTitle}</p>
+                        <p className="truncate text-[11px] text-neutral-100 font-medium">{resolvedDrape.lookTitle}</p>
                       </div>
 
-                      <div className="px-3 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-xs font-mono font-bold shadow-md">
+                      <div className="px-2.5 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-[11px] font-mono font-bold shadow-md">
                         {resolvedDrape.harmonyScore}% FIT
                       </div>
                     </div>
@@ -1888,11 +2022,11 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     </button>
 
                     <button
-                      onClick={copyPromptToClipboard}
+                      onClick={() => handleCurateAndDress()}
                       className="px-4 py-2 rounded-xl border border-[var(--border-gold)] bg-[var(--pill-bg)] text-[var(--gold-primary)] text-xs font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
                     >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy AI Generation Prompt</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Re-Curate For Occasion</span>
                     </button>
                   </div>
                 </div>
@@ -1952,39 +2086,41 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Footwear vs Bare Foot Controls */}
-                  <div className="flex items-center gap-1 text-[10px] font-mono">
-                    <span className="text-neutral-500 font-bold flex items-center gap-1">
-                      <span>Foot:</span>
-                    </span>
-                    <button
-                      onClick={() => {
-                        setFootwearMode('slippers');
-                        toast('Default Slippers Active', 'Covering feet with minimalist atelier slides', 'info');
-                      }}
-                      className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
-                        footwearMode === 'slippers' || effectiveFootwear !== null
-                          ? 'bg-black text-white dark:bg-white dark:text-black font-bold'
-                          : 'text-neutral-600 hover:text-neutral-900'
-                      }`}
-                    >
-                      🩴 Slippers
-                    </button>
-                    <button
-                      onClick={() => {
-                        setWornFootwear(null);
-                        setFootwearMode('barefoot');
-                        toast('Barefoot Mode Active', 'Displaying natural tone-matched anatomical feet on pedestal', 'info');
-                      }}
-                      className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
-                        !wornFootwear && footwearMode === 'barefoot'
-                          ? 'bg-[var(--gold-primary)] text-black font-bold'
-                          : 'text-neutral-600 hover:text-neutral-900'
-                      }`}
-                    >
-                      🦶 Bare Foot
-                    </button>
-                  </div>
+                  {/* Footwear vs Bare Foot Controls (Girl Only) */}
+                  {activePersona === 'girl' && (
+                    <div className="flex items-center gap-1 text-[10px] font-mono">
+                      <span className="text-neutral-500 font-bold flex items-center gap-1">
+                        <span>Foot:</span>
+                      </span>
+                      <button
+                        onClick={() => {
+                          setFootwearMode('slippers');
+                          toast('Default Slippers Active', 'Covering feet with minimalist atelier slides', 'info');
+                        }}
+                        className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
+                          footwearMode === 'slippers' || effectiveFootwear !== null
+                            ? 'bg-black text-white dark:bg-white dark:text-black font-bold'
+                            : 'text-neutral-600 hover:text-neutral-900'
+                        }`}
+                      >
+                        🩴 Slippers
+                      </button>
+                      <button
+                        onClick={() => {
+                          setWornFootwear(null);
+                          setFootwearMode('barefoot');
+                          toast('Barefoot Mode Active', 'Displaying natural tone-matched anatomical feet on pedestal', 'info');
+                        }}
+                        className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
+                          !wornFootwear && footwearMode === 'barefoot'
+                            ? 'bg-[var(--gold-primary)] text-black font-bold'
+                            : 'text-neutral-600 hover:text-neutral-900'
+                        }`}
+                      >
+                        🦶 Bare Foot
+                      </button>
+                    </div>
+                  )}
 
                 </div>
 
@@ -2116,30 +2252,30 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Footwear Card */}
-                  {(effectiveFootwear || DEFAULT_ATELIER_SLIPPERS) && (
+                  {/* Footwear Card (Girl Only) */}
+                  {activePersona === 'girl' && effectiveFootwear && (
                     <div className="p-3.5 rounded-2xl bg-white/90 border border-amber-300/60 shadow-sm space-y-2 flex flex-col justify-between">
                       <div>
                         <div className="w-full h-32 rounded-xl bg-neutral-50 flex items-center justify-center p-2 overflow-hidden border border-amber-100">
                           <img 
-                            src={(effectiveFootwear || DEFAULT_ATELIER_SLIPPERS).imageUrl || ''} 
-                            alt={(effectiveFootwear || DEFAULT_ATELIER_SLIPPERS).name} 
+                            src={effectiveFootwear.imageUrl || ''} 
+                            alt={effectiveFootwear.name} 
                             className="h-full w-auto object-contain" 
                           />
                         </div>
                         <span className="text-[9px] font-mono uppercase tracking-wider text-amber-700 font-bold mt-2 block">
-                          FOOTWEAR · {(effectiveFootwear || DEFAULT_ATELIER_SLIPPERS).subType || 'Slides'}
+                          FOOTWEAR · {effectiveFootwear.subType || 'Slides'}
                         </span>
                         <h5 className="font-bold text-xs text-neutral-900 line-clamp-1">
-                          {effectiveFootwear ? effectiveFootwear.name : 'Minimalist Cream Ribbed Atelier Slides'}
+                          {effectiveFootwear.name}
                         </h5>
                         <p className="text-[11px] text-neutral-600 mt-1">
-                          <strong>Material:</strong> {(effectiveFootwear || DEFAULT_ATELIER_SLIPPERS).material || 'Ergonomic EVA Footbed'}
+                          <strong>Material:</strong> {effectiveFootwear.material || 'Ergonomic Footbed'}
                         </p>
                       </div>
                       <div className="pt-2 border-t border-amber-100 text-[10px] font-mono flex items-center justify-between text-neutral-500">
                         <span>Comfort Index</span>
-                        <span className="text-amber-600 font-bold">All-Day Wear</span>
+                        <span className="text-emerald-600 font-bold">100% Anatomical</span>
                       </div>
                     </div>
                   )}
@@ -2158,28 +2294,59 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
 
           </div>
 
-          {/* AI VTON Generation Prompt Box for Pitch & Client Presentations */}
+          {/* AI Occasion Intelligence & Wardrobe Curation Rationale */}
           <div className="p-4 sm:p-5 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-card)] shadow-xs space-y-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[var(--gold-primary)]" />
                 <span className="text-xs font-bold uppercase font-mono tracking-wider text-[var(--text-heading)]">
-                  Master AI VTON Generation Prompt
+                  AI Personal Stylist Curation for {customOccasion.trim() || OCCASION_PRESETS.find(p => p.id === selectedOccasion)?.name || selectedOccasion}
                 </span>
               </div>
-              <button
-                onClick={copyPromptToClipboard}
-                className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-              >
-                <span>📋 Copy AI VTON Prompt</span>
-              </button>
+              <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold">
+                100% Wardrobe Aligned
+              </span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] text-xs font-mono text-[var(--text-muted)] leading-relaxed select-all">
-              {activeVtonPrompt}
+            <div className="p-3.5 rounded-2xl bg-[var(--bg-card-inner)] border border-[var(--border-gold)]/40 text-xs text-[var(--text-body)] leading-relaxed">
+              <strong className="text-[10px] uppercase font-mono text-[var(--gold-primary)] font-bold block mb-1">
+                💡 Why This Look Works For Your Function:
+              </strong>
+              "{resolvedDrape.verdict || aiRationale}"
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-[10px] text-[var(--text-muted)]">
-              <span>💡 Full garment coverage guaranteed (Default T-Shirt & Pant fallback with slippers or bare foot)</span>
-              <span className="font-mono text-emerald-500 font-bold">100% Client-Ready Spec</span>
+
+            {/* Quick Occasion Switcher to Test Suggestions On the Fly */}
+            <div className="space-y-1.5 pt-1 border-t border-[var(--border-card)]/60">
+              <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] font-bold block">
+                Switch Function to Get Instant AI Styling Brain Advice:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {OCCASION_PRESETS.slice(0, 6).map((occ) => {
+                  const isSelected = selectedOccasion === occ.id;
+                  return (
+                    <button
+                      key={occ.id}
+                      onClick={() => {
+                        setSelectedOccasion(occ.id);
+                        setCustomOccasion('');
+                        handleCurateAndDress(occ.id);
+                      }}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+                          : 'bg-[var(--bg-card-inner)] text-[var(--text-body)] hover:border-[var(--gold-primary)] border border-[var(--border-card)]'
+                      }`}
+                    >
+                      <span>{occ.icon}</span>
+                      <span>{occ.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-[10px] text-[var(--text-muted)] pt-1">
+              <span>💡 Guaranteed full coverage: Every piece worn is selected from your verified digital closet.</span>
+              <span className="font-mono text-emerald-500 font-bold">{resolvedDrape.harmonyScore || harmonyScore}% Sartorial Harmony</span>
             </div>
           </div>
 
@@ -2192,17 +2359,18 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                   <span>Tap to Try On: Live Closet Rack</span>
                 </h4>
                 <p className="text-[11px] text-[var(--text-muted)]">
-                  Tap any piece below to equip it. Tap again to unequip and smoothly revert to default t-shirt or pant!
+                  Tap any dress or garment below to equip it. Tap again to unequip and smoothly revert to default t-shirt or pant!
                 </p>
               </div>
 
               {/* Rack Category Tabs */}
               <div className="flex flex-wrap items-center gap-1">
                 {[
-                  { id: 'all', label: 'All' },
-                  { id: 'tops', label: 'Shirts & Tops' },
-                  { id: 'bottoms', label: 'Pants' },
-                  { id: 'footwear', label: 'Shoes & Slides' },
+                  { id: 'all', label: 'All Items' },
+                  { id: 'dresses', label: '👗 Sarees & Dresses' },
+                  { id: 'tops', label: '👕 Shirts & Tops' },
+                  { id: 'bottoms', label: '👖 Pants' },
+                  ...(activePersona === 'girl' ? [{ id: 'footwear', label: '👡 Shoes & Slides' }] : []),
                 ].map((tab) => (
                   <button
                     key={tab.id}
