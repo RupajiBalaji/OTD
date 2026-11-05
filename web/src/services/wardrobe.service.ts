@@ -81,7 +81,7 @@ export const wardrobeApiService = {
   },
 
   async analyzeImage(
-    payload: { imageUrl?: string; fileName?: string; mimeType?: string },
+    payload: { imageUrl?: string; fileName?: string; mimeType?: string; imageBase64?: string },
     token?: string
   ): Promise<any | null> {
     const result = await requestApi<any>('/wardrobe/analyze-image', {

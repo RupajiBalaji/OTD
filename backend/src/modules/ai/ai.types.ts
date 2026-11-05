@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { SlotChange } from '../../integrations/ai/ai.schemas';
 
 export interface StylistChatRequest {
   message: string;
@@ -14,8 +15,12 @@ export interface StylistChatResponse {
   conversationId: string;
   messageId: string;
   reply: string;
+  intent: string;
+  slotChanges: SlotChange[];
   suggestedGarmentIds?: string[];
   recommendedOutfitId?: string;
+  source: 'gemini' | 'rules';
+  modelUsed?: string;
   timestamp: string;
 }
 

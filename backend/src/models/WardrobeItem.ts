@@ -18,7 +18,7 @@ export interface IWardrobeItem extends Document {
   timesWorn: number;
   lastWorn?: Date;
   purchasePrice: number;
-  costPerWear: number;
+  costPerWear: number | null;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -59,7 +59,7 @@ WardrobeItemSchema.index({ userId: 1, category: 1 });
 WardrobeItemSchema.index({ userId: 1, createdAt: -1 });
 
 WardrobeItemSchema.virtual('costPerWear').get(function () {
-  return this.timesWorn === 0 ? this.purchasePrice : +(this.purchasePrice / this.timesWorn).toFixed(2);
+  return this.timesWorn === 0 ? null : +(this.purchasePrice / this.timesWorn).toFixed(2);
 });
 
 export const WardrobeItem = mongoose.model<IWardrobeItem>('WardrobeItem', WardrobeItemSchema);

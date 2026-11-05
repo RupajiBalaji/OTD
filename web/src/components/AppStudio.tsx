@@ -720,7 +720,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                 { id: 'stylist', label: 'AI Stylist', icon: Sparkles },
                 { id: 'ideas', label: 'Create Look', icon: Shirt },
                 { id: 'destinations', label: 'Destination Mode', icon: Compass },
-                { id: 'tryon', label: 'AI Virtual Try-On (VTON)', icon: Camera, badge: 'VC Gold Standard' },
+                { id: 'tryon', label: 'AI Virtual Try-On (VTON)', icon: Camera, badge: 'Neural Drape' },
                 { id: 'calendar', label: 'Calendar', icon: Calendar },
                 { id: 'saved', label: 'Favorites', icon: Bookmark, badge: likedLooks.length },
                 { id: 'profile', label: 'Profile', icon: User },

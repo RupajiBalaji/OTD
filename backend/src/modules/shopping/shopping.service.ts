@@ -1,6 +1,7 @@
 import { WardrobeGap, IWardrobeGap } from '../../models/WardrobeGap';
 import { WardrobeItem } from '../../models/WardrobeItem';
 import { ShoppingRecommendationDto } from './shopping.types';
+import { env, getGeminiApiKeys } from '../../config/env';
 
 export class ShoppingService {
   public static async analyzeGaps(userId: string): Promise<ShoppingRecommendationDto[]> {
@@ -83,6 +84,50 @@ export class ShoppingService {
         imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=500&q=80',
         affiliateUrl: 'https://shop.brunellocucinelli.com/en-us/men/knitwear',
       });
+    }
+
+    // Optional Gemini-written bespoke explanations
+    const keys = getGeminiApiKeys();
+    if (keys.length > 0 && recommendations.length > 0 && (env.AI_PROVIDER === 'auto' || env.AI_PROVIDER === 'gemini')) {
+      try {
+        const prompt = `
+For each missing wardrobe piece, write an articulate, 1-sentence luxury stylist reason explaining why it elevates this user's wardrobe:
+${recommendations.map((r, i) => `${i + 1}. ${r.name} (${r.category})`).join('\n')}
+
+Return a JSON array of strings: ["reason 1", "reason 2", ...]
+`.trim();
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL || 'gemini-3.5-flash'}:generateContent`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+
+        const res = await fetch(url, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': keys[0],
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } },
+          }),
+        }).finally(() => clearTimeout(timeout));
+
+        if (res.ok) {
+          const data: any = await res.json();
+          const reasons = JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]');
+          if (Array.isArray(reasons)) {
+            reasons.forEach((geminiReason, idx) => {
+              if (recommendations[idx] && typeof geminiReason === 'string') {
+                recommendations[idx].reason = geminiReason;
+              }
+            });
+          }
+        }
+      } catch (err: any) {
+        // Keep rules reasons
+      }
     }
 
     // Sync into WardrobeGap model

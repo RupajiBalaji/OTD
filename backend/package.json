@@ -7,7 +7,10 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed": "tsx scripts/seed.ts",
+    "ai:smoke": "tsx scripts/ai-smoke.ts",
+    "clean:test-users": "tsx scripts/clean-test-users.ts"
   },
   "keywords": [],
   "author": "",

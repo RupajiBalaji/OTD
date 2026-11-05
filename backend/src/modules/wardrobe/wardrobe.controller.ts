@@ -19,8 +19,15 @@ export class WardrobeController {
   });
 
   public static analyzeGarment = asyncHandler(async (req: Request, res: Response) => {
-    const { imageUrl, fileName, mimeType } = req.body;
-    const detected = await VisionRecognitionService.analyzeGarment({ imageUrl, fileName, mimeType });
+    const { imageUrl, fileName, mimeType, imageBase64 } = req.body;
+    let buffer: Buffer | undefined = undefined;
+    if (imageBase64 && typeof imageBase64 === 'string') {
+      const cleanBase64 = imageBase64.replace(/^data:[^;]+;base64,/, '');
+      buffer = Buffer.from(cleanBase64, 'base64');
+    } else if (req.file?.buffer) {
+      buffer = req.file.buffer;
+    }
+    const detected = await VisionRecognitionService.analyzeGarment({ imageUrl, fileName, mimeType, buffer });
     res.status(200).json(new ApiResponse(200, detected, 'Garment attributes analyzed by AI Vision'));
   });
 

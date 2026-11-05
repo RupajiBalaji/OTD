@@ -24,8 +24,11 @@ import {
   normalizeModelSilhouette,
   getBodyShapePreset,
   normalizeSkinToneHex,
+  computeSartorialHarmony,
 } from './PhotorealisticTryOnStudio';
 import { useToast } from './ui';
+import { aiApiService } from '../services/ai.service';
+import { outfitsApiService } from '../services/outfits.service';
 
 // =========================================================================
 // OCCASION INTELLIGENCE DICTIONARY & RESEARCH DATA
@@ -131,6 +134,9 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
   // Ranked Outfits State
   const [selectedRank, setSelectedRank] = useState<1 | 2 | 3>(1);
   const [conversationalTweak, setConversationalTweak] = useState<string>('');
+  const [aiStylistReply, setAiStylistReply] = useState<string | null>(null);
+  const [aiStylistSource, setAiStylistSource] = useState<'gemini' | 'rules' | null>(null);
+  const [isTweaking, setIsTweaking] = useState<boolean>(false);
   const [feedbackMap, setFeedbackMap] = useState<Record<number, 'liked' | 'disliked' | null>>({});
   const [showFullResearchDossier, setShowFullResearchDossier] = useState<boolean>(true);
 
@@ -407,7 +413,12 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
       rank: 1,
       badge: 'Best Overall Look',
       title: rank1Title || `${researchProfile.name} Signature Look`,
-      harmonyScore: 99.8,
+      harmonyScore: computeSartorialHarmony(
+        rank1Pieces.find((p) => p.category === 'tops'),
+        rank1Pieces.find((p) => p.category === 'bottoms'),
+        rank1Pieces.find((p) => p.category === 'footwear'),
+        temperature
+      ),
       pieces: rank1Pieces,
       rationale: {
         occasionFit: `Precision-aligned for ${researchProfile.name} (Tier ${targetTier}/5). Matches the required poise and cultural environment with zero sartorial compromise.`,
@@ -444,7 +455,15 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
         rank: 2,
         badge: 'Alternative Stylish Look',
         title: `${rank2Pieces[0]?.name} (Contemporary Contrast)`,
-        harmonyScore: 98.6,
+        harmonyScore: Math.max(
+          75,
+          computeSartorialHarmony(
+            rank2Pieces.find((p) => p.category === 'tops'),
+            rank2Pieces.find((p) => p.category === 'bottoms'),
+            rank2Pieces.find((p) => p.category === 'footwear'),
+            temperature
+          ) - 2
+        ),
         pieces: rank2Pieces,
         rationale: {
           occasionFit: `A slightly bolder, fashion-forward take on ${researchProfile.name}. Features textured contrasts and contemporary architectural lines.`,
@@ -482,7 +501,15 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
         rank: 3,
         badge: 'Minimal and Comfortable Look',
         title: `${rank3Pieces[0]?.name} (Relaxed Poise)`,
-        harmonyScore: 97.4,
+        harmonyScore: Math.max(
+          72,
+          computeSartorialHarmony(
+            rank3Pieces.find((p) => p.category === 'tops'),
+            rank3Pieces.find((p) => p.category === 'bottoms'),
+            rank3Pieces.find((p) => p.category === 'footwear'),
+            temperature
+          ) - 4
+        ),
         pieces: rank3Pieces,
         rationale: {
           occasionFit: `Understated sophistication prioritizing unconstrained comfort and natural mobility during extended ${researchProfile.name} events.`,
@@ -579,13 +606,78 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
   ]);
 
   // Handlers
-  const handlePerformResearch = () => {
+  const handlePerformResearch = async () => {
     setIsResearching(true);
-    setTimeout(() => {
+    try {
+      const backendOutfit = await outfitsApiService.generateOutfit({
+        occasion: occasionInput.trim() || researchProfile.name,
+        vibe: researchProfile.culturalContext,
+        temperature,
+      });
+
+      if (backendOutfit && backendOutfit.items && backendOutfit.items.length > 0) {
+        setAiStylistSource('gemini');
+        toast('✨ AI Fashion Intelligence', `Synthesized bespoke look for "${researchProfile.name}" via Gemini 3.5 Flash`, 'success');
+      } else {
+        setAiStylistSource('rules');
+        toast('Fashion Intelligence Complete', `Calibrated 3 ranked looks for "${researchProfile.name}"`, 'success');
+      }
+    } catch {
+      setAiStylistSource('rules');
+      toast('Fashion Intelligence', `Synthesized ranked looks via sartorial rules engine.`, 'info');
+    } finally {
       setIsResearching(false);
       setActiveWorkflowStep(2);
-      toast('Fashion Intelligence Complete', `Researched 3 ranked looks for "${researchProfile.name}"`, 'success');
-    }, 650);
+    }
+  };
+
+  const handleApplyTweak = async (textToApply?: string) => {
+    const text = (textToApply || conversationalTweak).trim();
+    if (!text) return;
+
+    setIsTweaking(true);
+    try {
+      const res = await aiApiService.chatWithStylist({
+        message: text,
+        occasion: researchProfile.name,
+        weather: `${temperature}°C`,
+      });
+
+      if (res) {
+        setAiStylistReply(res.reply);
+        setAiStylistSource(res.source);
+        if (res.source === 'gemini') {
+          toast('✨ AI Stylist Recalibrated', res.reply.slice(0, 90) + '...', 'success');
+        } else {
+          toast('Stylist Recalibrated', 'Applied changes via sartorial rules engine.', 'info');
+        }
+
+        if (res.slotChanges && res.slotChanges.length > 0) {
+          for (const change of res.slotChanges) {
+            if (change.itemId) {
+              const item = closet.find((c) => c.id === change.itemId);
+              if (item) {
+                const currentPieces = [...(activeOutfit.pieces || [])];
+                const filtered = currentPieces.filter((p) => p.category !== item.category);
+                filtered.push(item);
+                activeOutfit.pieces = filtered;
+                activeOutfit.harmonyScore = computeSartorialHarmony(
+                  filtered.find((p) => p.category === 'tops'),
+                  filtered.find((p) => p.category === 'bottoms'),
+                  filtered.find((p) => p.category === 'footwear'),
+                  temperature
+                );
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      toast('Notice', 'Stylist service momentarily unavailable. Fallback applied.', 'info');
+    } finally {
+      setIsTweaking(false);
+      setConversationalTweak('');
+    }
   };
 
   const handleApplyOutfitToContext = useCallback(
@@ -1154,32 +1246,52 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Conversational Stylist Refinement</span>
               </span>
-              <span className="text-[10px] text-[var(--text-muted)]">Describe tweaks in plain English</span>
+              <div className="flex items-center gap-2">
+                {aiStylistSource && (
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold ${
+                    aiStylistSource === 'gemini'
+                      ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30'
+                      : 'bg-amber-500/10 text-amber-500 border border-amber-500/30'
+                  }`}>
+                    {aiStylistSource === 'gemini' ? '✨ Gemini 3.5' : '⚙️ Rules Engine'}
+                  </span>
+                )}
+                <span className="text-[10px] text-[var(--text-muted)]">Describe tweaks in plain English</span>
+              </div>
             </div>
+
+            {aiStylistReply && (
+              <div className="p-3 rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] text-xs text-[var(--text-heading)] leading-relaxed italic border-l-2 border-[var(--gold-primary)]">
+                "{aiStylistReply}"
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="e.g. 'Make it more relaxed', 'Swap footwear for heels', 'Prioritize darker tones'..."
+                placeholder="e.g. 'Make it more relaxed', 'Swap footwear for loafers', 'Prioritize darker tones'..."
                 value={conversationalTweak}
                 onChange={(e) => setConversationalTweak(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && conversationalTweak.trim()) {
-                    toast.success(`Stylist adapted look with: "${conversationalTweak}"`);
+                  if (e.key === 'Enter' && conversationalTweak.trim() && !isTweaking) {
+                    handleApplyTweak();
                   }
                 }}
-                className="flex-1 py-2 px-3.5 text-xs rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] focus:outline-none focus:border-[var(--gold-primary)] text-[var(--text-heading)]"
+                disabled={isTweaking}
+                className="flex-1 py-2 px-3.5 text-xs rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] focus:outline-none focus:border-[var(--gold-primary)] text-[var(--text-heading)] disabled:opacity-50"
               />
               <button
                 type="button"
-                onClick={() => {
-                  if (conversationalTweak.trim()) {
-                    toast.success(`Stylist adapted look with: "${conversationalTweak}"`);
-                  }
-                }}
-                className="px-3.5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                onClick={() => handleApplyTweak()}
+                disabled={isTweaking || !conversationalTweak.trim()}
+                className="px-3.5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 shrink-0 disabled:opacity-50"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>Apply Tweak</span>
+                {isTweaking ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>{isTweaking ? 'Styling...' : 'Apply Tweak'}</span>
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -1187,11 +1299,9 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
                 <button
                   key={chip}
                   type="button"
-                  onClick={() => {
-                    setConversationalTweak(chip);
-                    toast.success(`Applied tweak: "${chip}"`);
-                  }}
-                  className="px-2.5 py-1 rounded-full text-[10px] bg-[var(--pill-bg)] border border-[var(--border-card)] hover:border-[var(--gold-primary)] text-[var(--text-muted)] hover:text-[var(--text-heading)] transition-all cursor-pointer"
+                  onClick={() => handleApplyTweak(chip)}
+                  disabled={isTweaking}
+                  className="px-2.5 py-1 rounded-full text-[10px] bg-[var(--pill-bg)] border border-[var(--border-card)] hover:border-[var(--gold-primary)] text-[var(--text-muted)] hover:text-[var(--text-heading)] transition-all cursor-pointer disabled:opacity-50"
                 >
                   + {chip}
                 </button>

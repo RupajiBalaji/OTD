@@ -5,6 +5,8 @@ export const updateProfileSchema = z.object({
   height: z.string().optional(),
   bodyShape: z.string().optional(),
   skinTone: z.string().optional(),
+  stylingPath: z.enum(['Women', 'Men', 'Personalize']).optional(),
+  weight: z.string().optional(),
   stylePersonas: z.array(z.string()).optional(),
   preferredFit: z.string().optional(),
   palettePreferences: z.array(z.string()).optional(),

@@ -17,9 +17,14 @@ const envSchema = z
     RATE_LIMIT_WINDOW_MS: z.string().default('900000').transform((val) => parseInt(val, 10)),
     RATE_LIMIT_MAX: z.string().default('100').transform((val) => parseInt(val, 10)),
     UPLOAD_MAX_SIZE_MB: z.string().default('10').transform((val) => parseInt(val, 10)),
+    GEMINI_API_KEYS: z.string().optional(),
     GEMINI_API_KEY: z.string().optional(),
+    GEMINI_MODEL: z.string().default('gemini-3.5-flash'),
+    GEMINI_VISION_MODEL: z.string().default('gemini-3.5-flash'),
+    GEMINI_IMAGE_MODEL: z.string().default('gemini-2.5-flash-image'),
+    GEMINI_IMAGE_MODEL_PRO: z.string().default('gemini-3-pro-image-preview'),
     OPENAI_API_KEY: z.string().optional(),
-    AI_PROVIDER: z.enum(['gemini', 'openai', 'algorithmic']).default('algorithmic'),
+    AI_PROVIDER: z.enum(['auto', 'gemini', 'openai', 'algorithmic', 'rules']).default('auto'),
   })
   .refine(
     (data) => {
@@ -39,3 +44,8 @@ const envSchema = z
   );
 
 export const env = envSchema.parse(process.env);
+
+export const getGeminiApiKeys = (): string[] => {
+  const raw = env.GEMINI_API_KEYS || env.GEMINI_API_KEY || '';
+  return raw.split(',').map((k) => k.trim()).filter((k) => k.length > 0);
+};

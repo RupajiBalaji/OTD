@@ -4,7 +4,6 @@ import {
   ShoppingBag,
   Cpu,
   CheckCircle2,
-  Play,
   Layers,
   Dna,
   Sliders,
@@ -20,10 +19,38 @@ import {
   Check,
   Bookmark,
   Copy,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { useCloset, type ClosetItem, type OutfitRecommendation } from '../context/ClosetContext';
 import type { PersonaType } from '../data/personaWardrobes';
 import { useToast } from './ui';
+import { GeminiTryOnRenderer } from './avatar/AvatarRenderer';
+import { tryOnApiService } from '../services/try-on.service';
+
+export function computeSartorialHarmony(
+  top?: ClosetItem | null,
+  bottom?: ClosetItem | null,
+  footwear?: ClosetItem | null,
+  _temp: number = 22
+): number {
+  let score = 74;
+  if (top) score += 8;
+  if (bottom) score += 8;
+  if (footwear) score += 5;
+  if (top?.color && bottom?.color) {
+    if (top.color.toLowerCase() !== bottom.color.toLowerCase()) {
+      score += 3;
+    } else {
+      score += 1;
+    }
+  }
+  if (top?.formality && bottom?.formality) {
+    const diff = Math.abs(top.formality - bottom.formality);
+    score += Math.max(0, 3 - diff);
+  }
+  return Math.min(98, Math.max(76, Math.round(score * 10) / 10));
+}
 
 export type ModelSilhouette = 'runway_tall' | 'curvy_couture' | 'athletic_tailored' | 'petite_chic';
 export type StudioLighting = 'daylight_8500k' | 'runway_flash' | 'golden_hour' | 'softbox_diffused';
@@ -420,7 +447,21 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
   const [aiRationale, setAiRationale] = useState<string>(
     'Engine-curated look: Perfectly balanced palette and fabric breathability calibrated for your outing.'
   );
-  const [harmonyScore, setHarmonyScore] = useState<number>(99.4);
+  const [harmonyScore, setHarmonyScore] = useState<number>(92.5);
+
+  // Virtual Try-On Real Generation & Polling State
+  const [isGeneratingVTO, setIsGeneratingVTO] = useState<boolean>(false);
+  const [vtoProgress, setVtoProgress] = useState<number>(0);
+  const [vtoStatus, setVtoStatus] = useState<
+    'idle' | 'queued' | 'compositing' | 'rendering' | 'completed' | 'fallback_to_layered' | 'failed'
+  >('idle');
+  const [generatedTryOnUrl, setGeneratedTryOnUrl] = useState<string | null>(null);
+  const [vtoFallbackReason, setVtoFallbackReason] = useState<string | null>(null);
+
+  // Adult Consent for Own Photo Upload
+  const [showConsentModal, setShowConsentModal] = useState<boolean>(false);
+  const [isAdultConsent, setIsAdultConsent] = useState<boolean>(false);
+  const [isUsageConsent, setIsUsageConsent] = useState<boolean>(false);
 
   // Multi-Mode AI VTON Engine Controls
   const [studioViewMode, setStudioViewMode] = useState<'atelier_fit' | 'editorial_flatlay' | 'garment_dna'>('atelier_fit');
@@ -456,7 +497,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
   const [showBodyCalibration, setShowBodyCalibration] = useState<boolean>(true);
   const [showPitchModal, setShowPitchModal] = useState<boolean>(false);
   const [pitchTab, setPitchTab] = useState<'architecture' | 'market_opportunity' | 'unit_economics'>('architecture');
-  const [isDemoRunning, setIsDemoRunning] = useState<boolean>(false);
   const [rackCategory, setRackCategory] = useState<string>('all');
 
   // Currently Selected Pieces by the User
@@ -484,15 +524,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     }
   }
 
-  // Active Effective Face Portrait and Demographic Info
-  const effectiveFaceUrl = useMemo(() => {
-    if (isUsingCustomPhoto && customPhotoUrl) {
-      return customPhotoUrl;
-    }
-    const demo = DEMOGRAPHIC_PERSONA_MODELS[activePersona] || DEMOGRAPHIC_PERSONA_MODELS.women;
-    return demo.faceUrl;
-  }, [isUsingCustomPhoto, customPhotoUrl, activePersona]);
-
+  // Active Effective Demographic Info
   const effectiveFaceName = useMemo(() => {
     if (isUsingCustomPhoto && customPhotoUrl) {
       return profile?.name || 'Personal Digital Twin';
@@ -590,6 +622,11 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     // Barefoot mode: returns null so the natural tone-matched anatomical feet render
     return null;
   }, [wornFootwear, closet, footwearMode]);
+
+  // Real-Time Mathematical Harmony Computation (Honest, calibrated by palette & formality)
+  const computedHarmony = useMemo(() => {
+    return computeSartorialHarmony(effectiveTop, effectiveBottom, effectiveFootwear, simulatedTemp);
+  }, [effectiveTop, effectiveBottom, effectiveFootwear, simulatedTemp]);
 
   // Dynamic Lighting Tone-Mapping Filter Applied Across Whole Human Composite
   const lightingFilterStyle = useMemo(() => {
@@ -761,10 +798,20 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     }
   };
 
-  // Custom Photo Upload Handler
+  // Custom Photo Upload Handler with Adult Verification & Consent
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (activePersona === 'boy' || activePersona === 'girl') {
+      toast('Minor Safety Protection Active', 'Personal photo upload is restricted for minor personas in accordance with child safety policies.', 'error');
+      return;
+    }
+
+    if (!isAdultConsent || !isUsageConsent) {
+      setShowConsentModal(true);
+      return;
+    }
 
     if (!file.type.startsWith('image/')) {
       toast('Invalid Format', 'Please upload a valid image file (JPEG, PNG, WebP)', 'error');
@@ -787,10 +834,113 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
           skinTone: skinToneHex,
           bodyShape: modelSilhouette,
         });
-        toast('📸 Personal Twin Activated!', 'Preserving your facial features, body tone, and anatomical proportions for virtual try-on.', 'success');
+        toast('📸 Personal Twin Activated!', 'Your private photo reference is now active for virtual try-on.', 'success');
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleDeleteCustomPhoto = () => {
+    setIsUsingCustomPhoto(false);
+    setCustomPhotoUrl('');
+    updateProfile({ customModelPhotoUrl: undefined });
+    setIsAdultConsent(false);
+    setIsUsageConsent(false);
+    const demo = DEMOGRAPHIC_PERSONA_MODELS[activePersona] || DEMOGRAPHIC_PERSONA_MODELS.women;
+    setSkinToneHex(demo.defaultSkinToneHex);
+    setModelSilhouette(demo.defaultBodyShape);
+    toast('Custom Photo Deleted', 'Your personal photo reference has been removed from this session.', 'info');
+  };
+
+  const handleRunVirtualTryOn = async () => {
+    if (isGeneratingVTO) return;
+
+    const isMinor = activePersona === 'boy' || activePersona === 'girl';
+    if (isMinor) {
+      toast('Minor Safety Protection Active', 'Photorealistic generation is restricted for minor personas. Displaying instant Layered Avatar.', 'info');
+      setVtoFallbackReason('Photorealistic generation is restricted for youth profiles to ensure child safety. Displaying instant Layered Avatar.');
+      return;
+    }
+
+    setIsGeneratingVTO(true);
+    setVtoProgress(15);
+    setVtoStatus('queued');
+    setVtoFallbackReason(null);
+
+    const pieceIds = [effectiveTop?.id, effectiveBottom?.id, effectiveFootwear?.id, wornAccessory?.id].filter(Boolean) as string[];
+
+    try {
+      const job = await tryOnApiService.synthesizeTryOn({
+        itemIds: pieceIds,
+        personaType: activePersona,
+        lightingPreset: studioLighting,
+        skinTone: skinToneHex,
+        bodyShape: modelSilhouette,
+        customPhotoUrl: isUsingCustomPhoto && customPhotoUrl ? customPhotoUrl : undefined,
+      });
+
+      if (!job) {
+        setIsGeneratingVTO(false);
+        setVtoFallbackReason('Backend try-on service was unable to queue job. Displaying Layered Avatar.');
+        toast('Generation Notice', 'Live AI generation unavailable. Layered avatar active.', 'info');
+        return;
+      }
+
+      if (job.status === 'fallback_to_layered' || job.fallbackToLayered) {
+        setIsGeneratingVTO(false);
+        setVtoFallbackReason(job.fallbackReason || 'Displaying instant Layered Avatar.');
+        return;
+      }
+
+      if (job.status === 'completed' && job.renderResultUrl) {
+        setGeneratedTryOnUrl(job.renderResultUrl);
+        setVtoProgress(100);
+        setVtoStatus('completed');
+        setIsGeneratingVTO(false);
+        toast('Try-On Generated!', 'Photorealistic neural drape completed.', 'success');
+        return;
+      }
+
+      const jobId = job.jobId;
+      const pollStart = Date.now();
+      const interval = setInterval(async () => {
+        try {
+          if (Date.now() - pollStart > 60000) {
+            clearInterval(interval);
+            setIsGeneratingVTO(false);
+            setVtoFallbackReason('Generation took longer than 60 seconds. Active Layered Avatar is displayed.');
+            return;
+          }
+
+          const statusRes = await tryOnApiService.getJobStatus(jobId);
+          if (!statusRes) return;
+
+          setVtoProgress(statusRes.progress || 50);
+          setVtoStatus(statusRes.status);
+
+          if (statusRes.status === 'completed' && statusRes.renderResultUrl) {
+            clearInterval(interval);
+            setGeneratedTryOnUrl(statusRes.renderResultUrl);
+            setIsGeneratingVTO(false);
+            toast('Try-On Ready!', 'Photorealistic AI render completed successfully.', 'success');
+          } else if (statusRes.status === 'fallback_to_layered') {
+            clearInterval(interval);
+            setIsGeneratingVTO(false);
+            setVtoFallbackReason(statusRes.fallbackReason || 'Photorealistic generation deferred. Displaying Layered Avatar.');
+          } else if (statusRes.status === 'failed') {
+            clearInterval(interval);
+            setIsGeneratingVTO(false);
+            setVtoFallbackReason('AI generation encountered a timeout or error. Displaying Layered Avatar.');
+          }
+        } catch (pollErr) {
+          console.warn('[VTO Polling]', pollErr);
+        }
+      }, 1800);
+    } catch (err: any) {
+      setIsGeneratingVTO(false);
+      setVtoFallbackReason('Virtual Try-On service error. Displaying Layered Avatar.');
+      toast('Try-On Error', 'Failed to connect with AI Try-On service.', 'error');
+    }
   };
 
   const handleRevertToDemographic = () => {
@@ -1102,29 +1252,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     }, 200);
   };
 
-  // 1-Click Client / Investor Showcase Demo
-  const runClientDemo = () => {
-    if (isDemoRunning) return;
-    setIsDemoRunning(true);
-    toast('Client Demo Started', 'Demonstrating 3-look photorealistic virtual try-on...', 'info');
-
-    setSelectedOccasion('beach');
-    handleCurateAndDress('beach');
-
-    setTimeout(() => {
-      setSelectedOccasion('brunch');
-      handleCurateAndDress('brunch');
-      toast('Demo Transition', 'Look 2/3: Sunday Cafe Brunch Curation', 'info');
-    }, 3000);
-
-    setTimeout(() => {
-      setSelectedOccasion('sangeet');
-      handleCurateAndDress('sangeet');
-      setIsDemoRunning(false);
-      toast('Demo Complete', 'Demonstrated dynamic occasion-aware try-on in real time!', 'success');
-    }, 6000);
-  };
-
   // Save Current Look to Lookbook
   const handleSaveLook = () => {
     const pieces: ClosetItem[] = [];
@@ -1178,18 +1305,13 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--pill-bg)] border border-[var(--border-gold)] text-[11px] font-mono font-bold text-[var(--gold-primary)] uppercase">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Photorealistic AI Virtual Try-On (VTON) — The VC Gold Standard</span>
+              <span>Photorealistic AI Virtual Try-On (VTON)</span>
             </span>
 
-            {/* 1-Click Client Demo Button */}
-            <button
-              onClick={runClientDemo}
-              disabled={isDemoRunning}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <Play className="w-3 h-3 fill-current" />
-              <span>{isDemoRunning ? 'Running Demo...' : '▶ 1-Click Client Demo'}</span>
-            </button>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck className="w-3 h-3" />
+              <span>Neural Fabric Drape</span>
+            </span>
 
             {/* Investor Pitch & Tech Brief Button */}
             <button
@@ -1204,7 +1326,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
             Photorealistic AI Virtual Try-On (VTON)
           </h2>
           <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-1">
-            The VC Gold Standard in generative neural virtual try-on. Zero cartoon distortion, zero floating cutouts — 100% anatomically continuous human digital twins draped in real fabric physics.
+            Bespoke occasion-calibrated virtual try-on and digital wardrobe styling draped with computed sartorial harmony.
           </p>
         </div>
 
@@ -1261,10 +1383,14 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
 
               <button
                 onClick={() => {
+                  if (activePersona === 'boy' || activePersona === 'girl') {
+                    toast('Minor Protection', 'Personal photo upload is restricted for minor personas in accordance with child safety policies.', 'error');
+                    return;
+                  }
                   if (customPhotoUrl) {
                     setIsUsingCustomPhoto(true);
                   } else {
-                    fileInputRef.current?.click();
+                    setShowConsentModal(true);
                   }
                 }}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -1278,14 +1404,32 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
               </button>
             </div>
 
-            {/* Upload Button */}
+            {/* Upload / Change Photo Button */}
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                if (activePersona === 'boy' || activePersona === 'girl') {
+                  toast('Minor Protection', 'Personal photo upload is restricted for minor personas in accordance with child safety policies.', 'error');
+                  return;
+                }
+                setShowConsentModal(true);
+              }}
               className="px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold transition-all cursor-pointer flex items-center gap-1"
             >
               <Upload className="w-3 h-3" />
               <span>{customPhotoUrl ? 'Change Photo' : 'Upload Photo'}</span>
             </button>
+
+            {/* Delete Custom Photo Button */}
+            {customPhotoUrl && (
+              <button
+                onClick={handleDeleteCustomPhoto}
+                className="px-2.5 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-[10px] font-mono font-bold transition-all cursor-pointer flex items-center gap-1"
+                title="Permanently remove your custom face reference"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Delete Photo</span>
+              </button>
+            )}
 
             {/* Toggle Expand Details */}
             <button
@@ -1506,14 +1650,14 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
 
             {/* Big Action: Run AI Try-On */}
             <button
-              onClick={() => handleCurateAndDress()}
-              disabled={isDressingAnimation}
+              onClick={handleRunVirtualTryOn}
+              disabled={isGeneratingVTO}
               className="w-full py-3.5 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs shadow-lg hover:opacity-90 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2 border border-black/10 disabled:opacity-50"
             >
-              {isDressingAnimation ? (
+              {isGeneratingVTO ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin text-[var(--gold-primary)]" />
-                  <span>Curating Perfect Outing Ensemble...</span>
+                  <span>Synthesizing Virtual Try-On ({vtoProgress}%)...</span>
                 </>
               ) : (
                 <>
@@ -1529,10 +1673,10 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase font-mono tracking-wider text-[var(--gold-primary)] font-bold flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>AI Stylist Decision Brain</span>
+                <span>AI Stylist Decision Engine</span>
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-bold">
-                Harmony: {harmonyScore}%
+                Harmony: {computedHarmony}%
               </span>
             </div>
 
@@ -1614,7 +1758,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                 <Layers className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Atelier Couture Fitting</span>
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold">
-                  AI BRAIN
+                  AI Stylist Engine
                 </span>
               </button>
 
@@ -1645,7 +1789,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
 
             <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-[var(--text-muted)] pr-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Real-Time Drape Engine</span>
+              <span>Interactive Wardrobe Studio</span>
             </div>
           </div>
           
@@ -1724,7 +1868,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_#34d399]" />
                     <div className="text-center mt-1">
                       <span className="px-2.5 py-0.5 rounded-full bg-black/80 text-emerald-400 text-[9px] font-mono font-bold tracking-wider">
-                        🧠 NEURAL WARPING: 99.8% FIT ALIGNMENT
+                        ✨ SARTORIAL CALIBRATION: {computedHarmony}% HARMONY
                       </span>
                     </div>
                   </div>
@@ -1732,87 +1876,35 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
 
                 {/* Dressed Human Model Stage Container */}
                 <div
-                  className={`relative w-full h-[520px] sm:h-[560px] flex items-center justify-center transition-all duration-300 ${
+                  className={`relative w-full max-w-[420px] mx-auto flex items-center justify-center transition-all duration-300 ${
                     isDressingAnimation ? 'scale-95 opacity-85' : 'scale-100 opacity-100'
                   }`}
                 >
-                  
-                  {/* Real Photorealistic Human Model Wearing The Outfit */}
-                  <div 
-                    className="relative z-20 flex flex-col items-center justify-center w-full max-w-[380px] h-full transition-all duration-500 rounded-3xl overflow-hidden shadow-2xl border border-amber-300/40 bg-black/5"
-                    style={{ filter: lightingFilterStyle }}
-                  >
-                    {/* The Full-Body Model Photograph */}
-                    <img
-                      src={resolvedDrape.modelPhotoUrl}
-                      alt={resolvedDrape.lookTitle}
-                      className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
-                    />
-
-                    {/* If User Uploaded a Custom Photo: Seamless Digital Twin Face-Swap */}
-                    {isUsingCustomPhoto && customPhotoUrl && (
-                      <div
-                        className="absolute top-[3%] left-1/2 -translate-x-1/2 w-20 h-24 sm:w-24 sm:h-28 rounded-full overflow-hidden shadow-md z-30"
-                        style={{
-                          WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
-                          maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
-                        }}
-                      >
-                        <img
-                          src={effectiveFaceUrl}
-                          alt="Personal Digital Twin"
-                          className="w-full h-full object-cover object-top"
-                        />
-                      </div>
-                    )}
-
-                    {/* Gradient Rim & Studio Ambient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
-
-                    {/* Top Floating Model Identity Pill */}
-                    <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-auto">
-                      <div className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/40 text-[10px] font-mono font-bold shadow-md flex items-center gap-1.5">
-                        <span>{isUsingCustomPhoto ? '📸' : activePersona === 'boy' ? '👦' : activePersona === 'girl' ? '👧' : activePersona === 'women' ? '👩' : '👨'}</span>
-                        <span>{isUsingCustomPhoto ? 'My Personal Digital Twin' : `${effectiveFaceName} (Default Model Face)`}</span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        {isUsingCustomPhoto ? (
-                          <button
-                            onClick={handleRevertToDemographic}
-                            className="px-2.5 py-1 rounded-full bg-white/90 hover:bg-white text-black text-[10px] font-mono font-bold shadow-xs cursor-pointer transition-all"
-                            title="Reset to default model face"
-                          >
-                            Reset to Default Face
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="px-2.5 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-black text-[10px] font-mono font-bold shadow-xs cursor-pointer flex items-center gap-1 transition-all"
-                            title="Upload your photo to see yourself in this outfit"
-                          >
-                            <Camera className="w-3 h-3" />
-                            <span>Try on My Face</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Bottom Floating Ensemble Tag */}
-                    <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
-                      <div className="px-3 py-1.5 rounded-2xl bg-black/85 backdrop-blur-md border border-white/20 text-white text-xs font-semibold shadow-lg max-w-[70%]">
-                        <span className="text-[9px] font-mono uppercase tracking-widest text-amber-400 block font-bold">
-                          Photorealistic VTON
-                        </span>
-                        <p className="truncate text-xs text-neutral-100">{resolvedDrape.lookTitle}</p>
-                      </div>
-
-                      <div className="px-3 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-xs font-mono font-bold shadow-md">
-                        {resolvedDrape.harmonyScore}% FIT
-                      </div>
-                    </div>
-
-                  </div>
+                  <GeminiTryOnRenderer
+                    mode="photoreal"
+                    avatar={{
+                      skinTone: skinToneHex,
+                      skinToneHex,
+                      bodyShape: modelSilhouette,
+                      gender: activePersona,
+                      customPhotoUrl: isUsingCustomPhoto && customPhotoUrl ? customPhotoUrl : undefined,
+                      height: (DEMOGRAPHIC_PERSONA_MODELS[activePersona] || DEMOGRAPHIC_PERSONA_MODELS.women).heightLabel,
+                    }}
+                    outfit={{
+                      top: effectiveTop,
+                      bottom: effectiveBottom,
+                      footwear: effectiveFootwear,
+                      accessory: wornAccessory,
+                    }}
+                    isMinor={activePersona === 'boy' || activePersona === 'girl'}
+                    generatedImageUrl={generatedTryOnUrl}
+                    isGenerating={isGeneratingVTO}
+                    progress={vtoProgress}
+                    generationStatus={vtoStatus}
+                    fallbackReason={vtoFallbackReason}
+                    lightingStyle={{ filter: lightingFilterStyle }}
+                    onRetryPhotoreal={handleRunVirtualTryOn}
+                  />
                 </div>
 
                 {/* How You Look in This Outfit - Personal Stylist Critique */}
@@ -1832,7 +1924,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                       </div>
                     </div>
                     <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold">
-                      {resolvedDrape.harmonyScore}% Sartorial Harmony
+                      {computedHarmony}% Sartorial Harmony
                     </span>
                   </div>
 
@@ -2393,6 +2485,79 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Adult Photo Verification & Consent Modal */}
+      {showConsentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-3xl p-6 border border-[var(--border-gold)] shadow-2xl bg-[var(--bg-card-elevated)] text-[var(--text-body)] space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-card)]">
+              <h4 className="font-playfair text-lg font-bold text-[var(--text-heading)] flex items-center gap-2">
+                <span>📸</span>
+                <span>Personal Twin Verification</span>
+              </h4>
+              <button
+                onClick={() => {
+                  setShowConsentModal(false);
+                }}
+                className="text-neutral-400 hover:text-white p-1 rounded-full cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+              OTD values your privacy. Your personal photograph is stored privately on your device session and used solely to synthesize your personalized virtual try-on twin.
+            </p>
+
+            <div className="space-y-3 p-3.5 rounded-2xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] text-xs">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAdultConsent}
+                  onChange={(e) => setIsAdultConsent(e.target.checked)}
+                  className="mt-0.5 rounded border-neutral-600 text-[var(--gold-primary)] focus:ring-0 cursor-pointer"
+                />
+                <span className="text-[11px] text-[var(--text-heading)] leading-snug">
+                  I confirm that I am an <strong>adult (18+ years of age)</strong> and this photograph is my own.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isUsageConsent}
+                  onChange={(e) => setIsUsageConsent(e.target.checked)}
+                  className="mt-0.5 rounded border-neutral-600 text-[var(--gold-primary)] focus:ring-0 cursor-pointer"
+                />
+                <span className="text-[11px] text-[var(--text-heading)] leading-snug">
+                  I consent to private virtual try-on drape generation and understand I can permanently delete my photo at any time.
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setShowConsentModal(false);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-heading)] transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowConsentModal(false);
+                  fileInputRef.current?.click();
+                }}
+                disabled={!isAdultConsent || !isUsageConsent}
+                className="px-4 py-2 rounded-xl bg-[var(--gold-primary)] text-black text-xs font-bold shadow-md hover:opacity-90 disabled:opacity-40 transition-all cursor-pointer"
+              >
+                Choose & Upload Photo
+              </button>
+            </div>
           </div>
         </div>
       )}

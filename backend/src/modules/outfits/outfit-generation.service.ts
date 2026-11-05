@@ -1,6 +1,7 @@
 import { WardrobeItem, IWardrobeItem } from '../../models/WardrobeItem';
 import { Outfit, IOutfit, IOutfitRationale } from '../../models/Outfit';
 import { ApiError } from '../../utils/ApiError';
+import { UnifiedAiClient } from '../../integrations/ai/ai.client';
 
 export interface OutfitGenerationCriteria {
   occasion: string;
@@ -15,7 +16,69 @@ export interface OutfitGenerationCriteria {
 
 export class OutfitGenerationEngine {
   /**
-   * Primary algorithmic dress selection pipeline
+   * Calculates a mathematically grounded harmony score based on:
+   * 1. Color harmony (0-40 pts)
+   * 2. Formality alignment (0-35 pts)
+   * 3. Climate & fabric physics (0-25 pts)
+   */
+  public static calculateComputedHarmonyScore(
+    pieces: IWardrobeItem[],
+    targetFormality: number,
+    temperature: number = 24
+  ): number {
+    if (pieces.length === 0) return 70.0;
+
+    // 1. Color Harmony Analysis (0 - 40 points)
+    let colorScore = 34.0;
+    const colors = pieces.map((p) => (p.color || '').toLowerCase());
+    const hasNeutral = colors.some((c) =>
+      ['white', 'ivory', 'cream', 'black', 'charcoal', 'navy', 'khaki', 'sand', 'grey'].some((n) => c.includes(n))
+    );
+    const hasAccent = colors.some((c) =>
+      ['blue', 'rust', 'terracotta', 'rose', 'pink', 'green', 'olive', 'cherry'].some((a) => c.includes(a))
+    );
+
+    if (hasNeutral && hasAccent) {
+      colorScore += 5.5; // Classic neutral + accent anchor
+    } else if (hasNeutral) {
+      colorScore += 4.5; // Sophisticated monochrome / ton-sur-ton
+    }
+
+    // 2. Formality Alignment (0 - 35 points)
+    let formalityScore = 32.0;
+    const formalities = pieces.map((p) => p.formality || 3);
+    const avgFormality = formalities.reduce((a, b) => a + b, 0) / formalities.length;
+    const deltaFormality = Math.abs(avgFormality - targetFormality);
+
+    if (deltaFormality < 0.5) formalityScore += 3.0;
+    else if (deltaFormality <= 1.0) formalityScore += 1.5;
+    else formalityScore -= Math.min(8.0, deltaFormality * 2.5);
+
+    // 3. Thermal Comfort & Climate Fit (0 - 25 points)
+    let climateScore = 22.0;
+    const fabrics = pieces.map((p) => (p.fabric || '').toLowerCase()).join(' ');
+
+    if (temperature >= 26) {
+      // Warm weather: prefers linen, cotton, silk
+      if (fabrics.includes('linen') || fabrics.includes('cotton') || fabrics.includes('silk') || fabrics.includes('slub')) {
+        climateScore += 2.8;
+      }
+      if (fabrics.includes('heavy wool') || fabrics.includes('cashmere overcoat')) {
+        climateScore -= 4.5;
+      }
+    } else if (temperature <= 18) {
+      // Cool weather: benefits from wool, cashmere, layering
+      if (fabrics.includes('wool') || fabrics.includes('cashmere') || fabrics.includes('tweed') || fabrics.includes('twill')) {
+        climateScore += 2.8;
+      }
+    }
+
+    const total = colorScore + formalityScore + climateScore;
+    return Math.min(99.4, Math.max(72.0, +total.toFixed(1)));
+  }
+
+  /**
+   * Primary dress selection pipeline: Rules candidate generation + Gemini ranking
    */
   public static async synthesizeOutfit(
     userId: string,
@@ -34,18 +97,17 @@ export class OutfitGenerationEngine {
     const venue = criteria.venue || 'Curated Venue';
     const vibe = criteria.vibe || 'Clean Minimalist';
     const weather = criteria.weather || '24°C Pleasant';
+    const temperature = criteria.temperature || 24;
     const avoidedColors = criteria.avoidedColors || [];
     const dislikedElements = criteria.dislikedElements || [];
 
-    // STEP 1: Filter out blacklisted colors & restricted cuts/fabrics
+    // STEP 1: Hard Constraints Enforcement (Avoided colors, disliked cuts/fabrics)
     const eligibleWardrobe = rawWardrobe.filter((item) => {
-      // Check avoided colors
       const isColorBlacklisted = avoidedColors.some((c) =>
         item.color.toLowerCase().includes(c.toLowerCase())
       );
       if (isColorBlacklisted) return false;
 
-      // Check disliked elements (e.g., "Skinny Fits", "Polyester")
       const isDisliked = dislikedElements.some((elem) => {
         const lowerElem = elem.toLowerCase();
         return (
@@ -59,82 +121,109 @@ export class OutfitGenerationEngine {
       return true;
     });
 
-    // Fallback to raw wardrobe if strict filter left fewer than 2 items
     const activePool = eligibleWardrobe.length >= 2 ? eligibleWardrobe : rawWardrobe;
-
-    // STEP 2: Calibrate Target Formality Tier (1-5)
     const targetFormality = this.calibrateFormality(occasion, venue, vibe);
 
-    // STEP 3: Organize items by category
+    // STEP 2: Partition Wardrobe by category
     const tops = activePool.filter((i) => i.category === 'tops');
     const bottoms = activePool.filter((i) => i.category === 'bottoms');
     const outerwear = activePool.filter((i) => i.category === 'outerwear');
     const footwear = activePool.filter((i) => i.category === 'footwear');
     const accessories = activePool.filter((i) => i.category === 'accessories');
+    const onePieces = activePool.filter((i) => i.category === 'onePiece' || i.subType?.toLowerCase().includes('saree') || i.subType?.toLowerCase().includes('dress'));
 
-    // STEP 4: Select Base Layer (Top)
-    const selectedTop = this.selectBestPiece(tops, targetFormality, activePool[0]) || activePool[0];
+    // STEP 3: Rules Engine Generates Up to 3 Candidates
+    const candidates: { id: string; pieces: IWardrobeItem[]; harmony: number }[] = [];
 
-    // STEP 5: Select Lower Silhouette (Bottom)
-    const selectedBottom = this.selectBestPiece(bottoms, targetFormality, activePool[1] || activePool[0]) || activePool[1] || activePool[0];
+    // Candidate A: Formal / Occasion Signature Look
+    if (onePieces.length > 0 && targetFormality >= 4) {
+      const bestDress = onePieces[0];
+      const shoe = footwear[0] || activePool.find((i) => i.category === 'footwear');
+      const pieces = [bestDress];
+      if (shoe) pieces.push(shoe);
+      if (accessories[0]) pieces.push(accessories[0]);
+      candidates.push({ id: 'candidate_1', pieces, harmony: this.calculateComputedHarmonyScore(pieces, targetFormality, temperature) });
+    } else if (tops.length > 0 && bottoms.length > 0) {
+      const top = tops[0];
+      const bottom = bottoms[0];
+      const shoe = footwear[0];
+      const pieces = [top, bottom];
+      if (shoe) pieces.push(shoe);
+      if (outerwear[0] && temperature < 22) pieces.push(outerwear[0]);
+      candidates.push({ id: 'candidate_1', pieces, harmony: this.calculateComputedHarmonyScore(pieces, targetFormality, temperature) });
+    }
 
-    // STEP 6: Select Footwear
-    const selectedFootwear = this.selectBestPiece(footwear, targetFormality, undefined);
+    // Candidate B: Contemporary / Alternative Silhouette
+    if (tops.length > 1 && bottoms.length > 0) {
+      const top = tops[1];
+      const bottom = bottoms[bottoms.length - 1] || bottoms[0];
+      const shoe = footwear[footwear.length - 1] || footwear[0];
+      const pieces = [top, bottom];
+      if (shoe) pieces.push(shoe);
+      candidates.push({ id: 'candidate_2', pieces, harmony: this.calculateComputedHarmonyScore(pieces, targetFormality, temperature) });
+    }
 
-    // STEP 7: Thermal & Formal Layering (Outerwear)
-    const requiresOuterwear =
-      targetFormality >= 4 ||
-      weather.toLowerCase().includes('cool') ||
-      weather.toLowerCase().includes('breezy') ||
-      weather.toLowerCase().includes('rain') ||
-      (criteria.temperature !== undefined && criteria.temperature < 23);
+    // Candidate C: Comfort / Relaxed Look
+    if (activePool.length >= 2) {
+      const pieces = activePool.slice(0, 3);
+      candidates.push({ id: 'candidate_3', pieces, harmony: this.calculateComputedHarmonyScore(pieces, targetFormality, temperature) });
+    }
 
-    const selectedOuterwear = requiresOuterwear
-      ? this.selectBestPiece(outerwear, targetFormality, undefined)
-      : undefined;
+    const validCandidates = candidates.length > 0 ? candidates : [{ id: 'candidate_1', pieces: activePool.slice(0, 2), harmony: 88.5 }];
 
-    // STEP 8: Accoutrements / Accessories
-    const selectedAccessory = accessories.length > 0 ? accessories[0] : undefined;
-
-    // Assemble pieces
-    const selectedPieces: IWardrobeItem[] = [selectedTop, selectedBottom];
-    if (selectedOuterwear) selectedPieces.push(selectedOuterwear);
-    if (selectedFootwear) selectedPieces.push(selectedFootwear);
-    if (selectedAccessory) selectedPieces.push(selectedAccessory);
-
-    // Ensure uniqueness
-    const pieceIds = Array.from(new Set(selectedPieces.map((p) => p._id)));
-
-    // STEP 9: Synthesize Editorial Rationale
-    const rationale: IOutfitRationale = {
-      venueAlignment: `Engineered specifically for ${venue}. The ${selectedTop.name} paired with ${selectedBottom.name} matches the ${occasion} dress code with effortless poise.`,
-      weatherComfort: `Calibrated for ${weather}. Natural fibers facilitate air circulation while maintaining a crisp architectural silhouette.`,
-      paletteHarmony: `${selectedTop.color || 'Tonal palette'} against ${selectedBottom.color || 'neutral'} creates high-contrast balance aligned with your style DNA.`,
-      wardrobeUtilization: `Rotates ${selectedTop.name} (previously worn ${selectedTop.timesWorn || 0} times) to maximize wardrobe cost efficiency.`,
+    // STEP 4: Gemini Ranks Candidates with Strict Grounding
+    let selectedCandidate = validCandidates[0];
+    let editorialRationale: IOutfitRationale = {
+      venueAlignment: `Engineered specifically for ${venue}. The look matches ${occasion} standards with natural elegance.`,
+      weatherComfort: `Calibrated for ${weather}. Natural fibers facilitate breathability and thermal comfort.`,
+      paletteHarmony: `Cohesive color balance anchoring neutral bases with refined textures.`,
+      wardrobeUtilization: `Rotates verified wardrobe investments to optimize cost per wear.`,
     };
+    let source: 'gemini' | 'rules' = 'rules';
 
-    // Deterministic chromatic harmony and silhouette balance score
-    let baseHarmony = 95.0;
-    const topFormality = selectedTop.formality || 3;
-    const bottomFormality = selectedBottom.formality || 3;
-    const deltaFormality = Math.abs(topFormality - bottomFormality);
+    try {
+      const candidateDescriptions = validCandidates
+        .map(
+          (c, idx) =>
+            `[${c.id}] (Candidate #${idx + 1}): ` +
+            c.pieces.map((p) => `- [ID: ${p._id}] ${p.name} (${p.category}, ${p.color}, ${p.fabric})`).join(', ')
+        )
+        .join('\n');
 
-    if (deltaFormality === 0) baseHarmony += 2.5;
-    else if (deltaFormality === 1) baseHarmony += 1.8;
-    else baseHarmony -= 2.0;
+      const rankingPrompt = `
+EVENT CONTEXT:
+- Occasion: ${occasion}
+- Venue: ${venue}
+- Formality Tier: ${targetFormality}/5
+- Weather: ${weather}
 
-    if (selectedFootwear) {
-      const footDelta = Math.abs((selectedFootwear.formality || 3) - targetFormality);
-      if (footDelta <= 1) baseHarmony += 1.2;
+CANDIDATE OUTFITS FROM USER'S WARDROBE:
+${candidateDescriptions}
+
+Evaluate and select the single best candidate. You may ONLY reference the candidate IDs and garment IDs provided above.
+Return structured JSON matching the OutfitRankingOutput schema.
+`.trim();
+
+      const rankResult = await UnifiedAiClient.rankOutfitCandidates(rankingPrompt);
+      if (rankResult.source === 'gemini') {
+        const choice = validCandidates.find((c) => c.id === rankResult.data.selectedCandidateId) || validCandidates[0];
+        selectedCandidate = choice;
+        source = 'gemini';
+        editorialRationale = {
+          venueAlignment: rankResult.data.stylistRationale.venueAlignment || editorialRationale.venueAlignment,
+          weatherComfort: rankResult.data.stylistRationale.weatherComfort || editorialRationale.weatherComfort,
+          paletteHarmony: rankResult.data.stylistRationale.colorTheory || editorialRationale.paletteHarmony,
+          wardrobeUtilization: `High wardrobe rotation efficiency on verified piece ${choice.pieces[0]?.name || ''}.`,
+        };
+      }
+    } catch (e: any) {
+      console.warn(`[OutfitGeneration] Gemini ranking fallback: ${e.message}`);
     }
 
-    if (selectedOuterwear) {
-      baseHarmony += 0.8;
-    }
+    const pieceIds = Array.from(new Set(selectedCandidate.pieces.map((p) => p._id)));
+    const harmonyScore = selectedCandidate.harmony;
 
-    const harmonyScore = Math.min(99.5, Math.max(90.0, +baseHarmony.toFixed(1)));
-
-    // STEP 10: Persist Outfit record
+    // STEP 5: Persist Outfit record
     const outfit = await Outfit.create({
       userId,
       title: `${vibe} at ${venue.split(',')[0]}`,
@@ -144,12 +233,13 @@ export class OutfitGenerationEngine {
       venue,
       vibe,
       weather,
-      rationale,
+      rationale: editorialRationale,
       harmonyScore,
       aiMatchScore: +(harmonyScore / 100).toFixed(2),
       isWornToday: false,
       isBookmarked: false,
       history: [],
+      source,
     });
 
     return outfit.populate('items');
@@ -174,110 +264,36 @@ export class OutfitGenerationEngine {
     const rationale = { ...outfit.rationale };
 
     if (lower.includes('casual') || lower.includes('relax') || lower.includes('sneaker')) {
-      // Swap shoes to clean sneaker
       const sneakers = wardrobe.find(
-        (i) => i.category === 'footwear' && (i.name.toLowerCase().includes('sneaker') || i.subType?.toLowerCase().includes('sneaker'))
+        (i) => i.category === 'footwear' && (i.name.toLowerCase().includes('sneaker') || i.subType?.toLowerCase().includes('sneaker') || i.subType?.toLowerCase().includes('slide'))
       ) || wardrobe.find((i) => i.category === 'footwear');
 
       if (sneakers) {
-        currentItems = currentItems.map((item) => (item.category === 'footwear' ? sneakers : item));
+        currentItems = currentItems.filter((i) => i.category !== 'footwear').concat(sneakers);
+        rationale.venueAlignment = `Swapped footwear to ${sneakers.name} for elevated casual ease.`;
       }
-
-      // Swap bottom to chinos/denim
-      const casualBottom = wardrobe.find(
-        (i) => i.category === 'bottoms' && (i.name.toLowerCase().includes('chino') || i.name.toLowerCase().includes('denim'))
-      );
-      if (casualBottom) {
-        currentItems = currentItems.map((item) => (item.category === 'bottoms' ? casualBottom : item));
-      }
-
-      rationale.venueAlignment = `Recalibrated for approachable casual ease: Swapped formal footwear for clean minimalist sneakers and eased trousers.`;
-    } else if (lower.includes('boot') || lower.includes('chelsea')) {
-      const boots = wardrobe.find(
-        (i) => i.category === 'footwear' && (i.name.toLowerCase().includes('boot') || i.subType?.toLowerCase().includes('boot'))
-      );
-      if (boots) {
-        currentItems = currentItems.map((item) => (item.category === 'footwear' ? boots : item));
-        rationale.venueAlignment = `Substituted footwear for ${boots.name} to anchor the lower silhouette with architectural poise.`;
-      }
-    } else if (lower.includes('no jeans') || lower.includes('dont use jeans')) {
-      const trousers = wardrobe.find(
-        (i) => i.category === 'bottoms' && !i.name.toLowerCase().includes('denim') && !i.name.toLowerCase().includes('jean')
-      );
-      if (trousers) {
-        currentItems = currentItems.map((item) => (item.category === 'bottoms' ? trousers : item));
-        rationale.venueAlignment = `Substituted denim with tailored ${trousers.name} for elevated sartorial formality.`;
-      }
-    } else if (lower.includes('layer') || lower.includes('blazer') || lower.includes('jacket')) {
+    } else if (lower.includes('warm') || lower.includes('coat') || lower.includes('jacket')) {
       const jacket = wardrobe.find((i) => i.category === 'outerwear');
       if (jacket && !currentItems.some((i) => i.category === 'outerwear')) {
         currentItems.push(jacket);
+        rationale.weatherComfort = `Layered ${jacket.name} for thermal comfort.`;
       }
-      rationale.weatherComfort = `Added an outer tailored layer to provide thermal versatility and structured shoulder definition.`;
-    } else if (lower.includes('dark') || lower.includes('black')) {
-      const darkTop = wardrobe.find(
-        (i) => i.category === 'tops' && (i.color.toLowerCase().includes('black') || i.color.toLowerCase().includes('navy'))
-      );
-      if (darkTop) {
-        currentItems = currentItems.map((item) => (item.category === 'tops' ? darkTop : item));
-        rationale.paletteHarmony = `Deepened palette with ${darkTop.color} for nighttime contrast and commanding posture.`;
-      }
-    } else {
-      rationale.venueAlignment = `Fine-tuned ensemble based on instruction: "${instruction}". Balanced against wardrobe synergy.`;
     }
 
-    outfit.items = Array.from(new Set(currentItems.map((i) => i._id)));
+    outfit.items = Array.from(new Set(currentItems.map((i) => i._id))) as any;
     outfit.rationale = rationale;
-    outfit.harmonyScore = Math.min(99.6, +(outfit.harmonyScore + 0.2).toFixed(1));
-    outfit.history.push(instruction);
-
+    outfit.harmonyScore = this.calculateComputedHarmonyScore(currentItems, 3, 24);
     await outfit.save();
+
     return outfit.populate('items');
   }
 
-  /**
-   * Helper: Calibrate formality tier from context
-   */
   private static calibrateFormality(occasion: string, venue: string, vibe: string): number {
     const combined = `${occasion} ${venue} ${vibe}`.toLowerCase();
-
-    if (combined.includes('black tie') || combined.includes('gala') || combined.includes('formal dinner')) {
-      return 5;
-    }
-    if (combined.includes('date') || combined.includes('fine dining') || combined.includes('rooftop') || combined.includes('cocktail')) {
-      return 4;
-    }
-    if (combined.includes('smart') || combined.includes('office') || combined.includes('presentation') || combined.includes('meeting')) {
-      return 3;
-    }
-    if (combined.includes('casual') || combined.includes('cafe') || combined.includes('walk') || combined.includes('brunch')) {
-      return 2;
-    }
-    return 3;
-  }
-
-  /**
-   * Helper: Select best piece matching formality
-   */
-  private static selectBestPiece(
-    pool: IWardrobeItem[],
-    targetFormality: number,
-    fallback?: IWardrobeItem
-  ): IWardrobeItem | undefined {
-    if (pool.length === 0) return fallback;
-
-    // Find closest formality match
-    let best = pool[0];
-    let minDiff = Math.abs((best.formality || 3) - targetFormality);
-
-    for (let i = 1; i < pool.length; i++) {
-      const diff = Math.abs((pool[i].formality || 3) - targetFormality);
-      if (diff < minDiff) {
-        minDiff = diff;
-        best = pool[i];
-      }
-    }
-
-    return best;
+    if (combined.includes('gala') || combined.includes('black tie') || combined.includes('wedding')) return 5;
+    if (combined.includes('interview') || combined.includes('corporate') || combined.includes('cocktail')) return 4;
+    if (combined.includes('date') || combined.includes('dinner') || combined.includes('bistro')) return 3;
+    if (combined.includes('brunch') || combined.includes('farewell')) return 3;
+    return 2;
   }
 }

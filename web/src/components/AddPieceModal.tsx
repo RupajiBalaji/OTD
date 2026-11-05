@@ -55,6 +55,9 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
   const [previewIcon, setPreviewIcon] = useState('🧥');
   const [fileError, setFileError] = useState<string | null>(null);
   const [aiDetectionSummary, setAiDetectionSummary] = useState<string | null>(null);
+  const [fieldConfidence, setFieldConfidence] = useState<Record<string, number>>({});
+  const [uncertainFields, setUncertainFields] = useState<string[]>([]);
+  const [detectionSource, setDetectionSource] = useState<'gemini' | 'rules'>('gemini');
 
   // Form fields
   const [name, setName] = useState('Double-Faced Camel Wool Overcoat');
@@ -84,17 +87,15 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
 
-    // Auto-detect a sensible default name from filename
-    const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-    setName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
-
     // Multimodal AI scanning transition
     setStage('analyzing');
     const token = localStorage.getItem('otd_access_token');
 
-    (async () => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target?.result as string;
       try {
-        // 1. Upload genuine image to server via multipart
+        // 1. Upload image to server via multipart
         if (token) {
           const uploadRes = await wardrobeApiService.uploadImage(file, token);
           if (uploadRes?.url) {
@@ -102,20 +103,23 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
           }
         }
 
-        // 2. Multimodal AI scanning
+        // 2. Multimodal AI scanning with base64 buffer
         const detected = await wardrobeApiService.analyzeImage(
-          { fileName: file.name, mimeType: file.type },
+          { fileName: file.name, mimeType: file.type, imageBase64: dataUrl },
           token || undefined
         );
 
         if (detected) {
-          setName(detected.name || cleanName);
+          setName(detected.name || 'Tailored Garment');
           setCategory(detected.category || 'tops');
           setSubType(detected.subType || 'Garment');
           setColor(detected.color || 'Neutral');
           setFit(detected.fit || 'Regular');
           setFormality(detected.formality || 3);
-          setAiDetectionSummary(detected.summary || `AI Identified: ${detected.subType} in ${detected.color}`);
+          setAiDetectionSummary(detected.summary || `${detected.subType} in ${detected.color}`);
+          setFieldConfidence(detected.fieldConfidence || {});
+          setUncertainFields(detected.uncertainFields || []);
+          setDetectionSource(detected.source || 'gemini');
 
           if (detected.category === 'footwear') setPreviewIcon('👞');
           else if (detected.category === 'bottoms') setPreviewIcon('👖');
@@ -125,10 +129,12 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
         }
       } catch (err) {
         console.warn('Vision detection fallback:', err);
+        setDetectionSource('rules');
       } finally {
         setTimeout(() => setStage('confirm'), 650);
       }
-    })();
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -374,20 +380,48 @@ export const AddPieceModal: React.FC<AddPieceModalProps> = ({ isOpen, onClose })
               </button>
             </div>
 
-            {/* AI Vision Detection Summary Badge */}
-            {aiDetectionSummary && (
-              <div className="p-2.5 rounded-xl border border-[var(--border-gold)] bg-[var(--pill-bg)] flex items-start gap-2.5">
-                <Sparkles className="w-3.5 h-3.5 text-[var(--gold-primary)] shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold text-[var(--gold-primary)] uppercase tracking-wider">
-                    AI Multimodal Vision Detected
-                  </p>
-                  <p className="text-[11px] text-[var(--text-heading)] mt-0.5">
-                    {aiDetectionSummary}
-                  </p>
-                </div>
+            {/* AI Vision Detection Summary Badge & Confidence / Uncertainty Notice */}
+            <div className="p-3 rounded-2xl border border-[var(--border-gold)] bg-[var(--pill-bg)] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-[var(--gold-primary)] uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{detectionSource === 'gemini' ? 'Gemini 3.5 Multimodal Vision' : 'Rules Heuristic Extraction'}</span>
+                </span>
+                <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                  {detectionSource === 'gemini' ? 'Live Multimodal AI' : 'Rules Fallback'}
+                </span>
               </div>
-            )}
+
+              {aiDetectionSummary && (
+                <p className="text-[11px] text-[var(--text-heading)]">
+                  {aiDetectionSummary}
+                </p>
+              )}
+
+              {/* Per-field confidence badges */}
+              {Object.keys(fieldConfidence).length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {Object.entries(fieldConfidence).map(([fKey, conf]) => (
+                    <span
+                      key={fKey}
+                      className="px-2 py-0.5 rounded-lg bg-[var(--bg-card-inner)] border border-[var(--border-card)] text-[9px] font-mono text-[var(--text-muted)]"
+                    >
+                      <strong className="capitalize text-[var(--text-heading)]">{fKey}</strong>: {Math.round(conf * 100)}%
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Uncertain Fields Warning */}
+              {uncertainFields.length > 0 && (
+                <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>
+                    Uncertain attributes: Please review <strong>{uncertainFields.join(', ')}</strong> below before saving.
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Form Fields */}
             <div className="grid grid-cols-2 gap-3">

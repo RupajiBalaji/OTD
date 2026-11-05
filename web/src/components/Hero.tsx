@@ -161,7 +161,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenProfile, onOpenOnboarding: _on
                     </span>
                   </div>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--pill-bg)] text-[var(--gold-primary)] border border-[var(--border-gold)] font-bold">
-                    99.4% Harmony
+                    Optimal Harmony
                   </span>
                 </div>
 

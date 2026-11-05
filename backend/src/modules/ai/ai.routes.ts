@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import { AiController } from './ai.controller';
-import { authenticate } from '../../middlewares/auth.middleware';
+import { authenticateOptional } from '../../middlewares/auth.middleware';
 import { validate } from '../../middlewares/validate.middleware';
 import { stylistChatSchema } from './ai.validator';
 
 const router = Router();
 
-router.use(authenticate);
-
-router.post('/chat', validate(stylistChatSchema), AiController.chatWithStylist);
-router.get('/conversations', AiController.listConversations);
-router.get('/conversations/:id/messages', AiController.getConversationHistory);
+router.get('/status', AiController.getAiStatus);
+router.post('/chat', authenticateOptional, validate(stylistChatSchema), AiController.chatWithStylist);
+router.post('/chat/stream', authenticateOptional, validate(stylistChatSchema), AiController.streamStylistChat);
+router.get('/conversations', authenticateOptional, AiController.listConversations);
+router.get('/conversations/:id/messages', authenticateOptional, AiController.getConversationHistory);
 
 export default router;

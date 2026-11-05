@@ -6,6 +6,8 @@ export interface IProfile extends Document {
   height?: string;
   bodyShape?: string;
   skinTone?: string;
+  stylingPath?: 'Women' | 'Men' | 'Personalize';
+  weight?: string;
   stylePersonas: string[];
   preferredFit?: string;
   palettePreferences: string[];
@@ -23,6 +25,8 @@ const ProfileSchema = new Schema<IProfile>(
     height: { type: String, default: `5'11" (180 cm)` },
     bodyShape: { type: String, default: 'Athletic / V-Taper' },
     skinTone: { type: String, default: 'Warm Undertone' },
+    stylingPath: { type: String, enum: ['Women', 'Men', 'Personalize'], default: 'Personalize' },
+    weight: { type: String },
     stylePersonas: {
       type: [String],
       default: ['Old Money Heritage', 'Clean Minimalist'],

@@ -33,3 +33,6 @@ key.properties
 *.keystore
 **/*.jks
 **/*.keystore
+
+# Legacy Monolith Archive
+legacy_archive/

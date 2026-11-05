@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { X, User, Check, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, User, Check, Sparkles, Activity } from 'lucide-react';
 import { useCloset } from '../context/ClosetContext';
+import { aiApiService, type AiGatewayStatus } from '../services/ai.service';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -17,6 +18,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
   const [avoidedColors, setAvoidedColors] = useState<string[]>(profile.avoidedColors || ['Neon Green', 'Hot Pink']);
   const [dislikedElements, setDislikedElements] = useState<string[]>(profile.dislikedElements || ['Skinny Fits', 'Polyester Blends']);
   const [saved, setSaved] = useState(false);
+  const [aiStatus, setAiStatus] = useState<AiGatewayStatus | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const status = await aiApiService.getAiStatus();
+        if (isMounted) setAiStatus(status);
+      } catch (err) {
+        console.warn('Failed to query AI Gateway status:', err);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -263,6 +280,49 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* AI Gateway & Model Status (Live Telemetry) */}
+          <div className="p-4 rounded-2xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] uppercase font-mono tracking-wider text-[var(--gold-primary)] font-bold flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" />
+                <span>AI Gateway & Model Engine Health</span>
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 font-bold">
+                {aiStatus ? `${aiStatus.keysConfigured} Key${aiStatus.keysConfigured !== 1 ? 's' : ''} Active` : 'Checking...'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+              <div className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]">
+                <span className="text-[var(--text-muted)] block text-[9px]">TEXT & VISION MODEL</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`w-2 h-2 rounded-full ${aiStatus?.textModel?.available ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span className="font-bold text-[var(--text-heading)] truncate">
+                    {aiStatus?.textModel?.model || 'gemini-3.5-flash'}
+                  </span>
+                </div>
+                {aiStatus?.textModel?.latencyMs && (
+                  <span className="text-[9px] text-[var(--text-muted)] block mt-0.5">
+                    Live latency: {aiStatus.textModel.latencyMs}ms
+                  </span>
+                )}
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]">
+                <span className="text-[var(--text-muted)] block text-[9px]">TRY-ON IMAGE MODEL</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`w-2 h-2 rounded-full ${aiStatus?.imageModel?.available ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span className="font-bold text-[var(--text-heading)] truncate">
+                    {aiStatus?.imageModel?.model || 'gemini-2.5-flash-image'}
+                  </span>
+                </div>
+                <span className="text-[9px] text-[var(--text-muted)] block mt-0.5 truncate">
+                  {aiStatus?.imageModel?.available ? 'Ready for rendering' : (aiStatus?.imageModel?.reason || 'Layered fallback active')}
+                </span>
+              </div>
             </div>
           </div>
 

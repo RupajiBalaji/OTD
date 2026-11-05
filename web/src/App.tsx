@@ -236,11 +236,11 @@ function AppContent() {
 export function App() {
   return (
     <ThemeProvider>
-      <ClosetProvider>
-        <ToastProvider>
+      <ToastProvider>
+        <ClosetProvider>
           <AppContent />
-        </ToastProvider>
-      </ClosetProvider>
+        </ClosetProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

@@ -10,6 +10,9 @@ export interface IAvatar extends Document {
     inseam: string;
   };
   skinTone: string;
+  hair: string;
+  baseImageUrl?: string;
+  avatarVersion: number;
   pose: 'frontal' | 'three_quarter' | 'profile' | 'dynamic_walking';
   meshModelUrl?: string;
   ambientLighting: 'Golden Hour' | 'Candlelight Dinner' | 'Editorial Studio' | 'Natural Daylight';
@@ -28,6 +31,9 @@ const AvatarSchema = new Schema<IAvatar>(
       inseam: { type: String, default: '84 cm' },
     },
     skinTone: { type: String, default: 'Warm Neutral' },
+    hair: { type: String, default: 'Classic Dark Espresso' },
+    baseImageUrl: { type: String },
+    avatarVersion: { type: Number, default: 1 },
     pose: {
       type: String,
       enum: ['frontal', 'three_quarter', 'profile', 'dynamic_walking'],
