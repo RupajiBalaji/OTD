@@ -18,6 +18,6 @@ export const updateProfileSchema = z.object({
   hairColor: z.string().optional(),
   hairColorHex: z.string().optional(),
   avatarVersion: z.number().optional(),
-  avatarCustomization: z.record(z.any()).optional(),
+  avatarCustomization: z.record(z.string(), z.any()).optional(),
 });
 

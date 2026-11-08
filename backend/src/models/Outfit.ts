@@ -22,6 +22,7 @@ export interface IOutfit extends Document {
   isWornToday: boolean;
   isBookmarked: boolean;
   history: string[];
+  source?: 'gemini' | 'rules';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +48,7 @@ const OutfitSchema = new Schema<IOutfit>(
     isWornToday: { type: Boolean, default: false },
     isBookmarked: { type: Boolean, default: false },
     history: [{ type: String }],
+    source: { type: String, enum: ['gemini', 'rules'], default: 'rules' },
   },
   { timestamps: true }
 );

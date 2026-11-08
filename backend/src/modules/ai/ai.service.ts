@@ -125,7 +125,7 @@ export class AiStylistService {
         if (activeOutfit && validatedSlotChanges.length > 0) {
           const validReplacementItemIds = validatedSlotChanges
             .map((c) => c.itemId)
-            .filter((id): id is string => Boolean(id) && mongoose.Types.ObjectId.isValid(id))
+            .filter((id): id is string => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
             .map((id) => new mongoose.Types.ObjectId(id));
 
           if (validReplacementItemIds.length > 0) {
