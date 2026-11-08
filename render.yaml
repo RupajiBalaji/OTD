@@ -66,12 +66,12 @@ services:
 
   # ---------------------------------------------------------------------------
   # 2. Frontend Web Application (React / Vite / Tailwind CSS / Motion)
+  # Note: Static sites on Render are serverless CDN sites, so 'plan' and 'region'
+  # are intentionally omitted as they are not supported/allowed on static sites.
   # ---------------------------------------------------------------------------
   - type: web
     name: otd-web
     runtime: static
-    plan: free
-    region: oregon
     rootDir: web
     buildCommand: npm install --include=dev && npm run build
     staticPublishPath: ./dist
