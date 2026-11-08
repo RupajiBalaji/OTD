@@ -6,7 +6,7 @@ import { env } from '../config/env';
  */
 export const apiRateLimiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
-  max: env.NODE_ENV === 'test' ? 10000 : env.RATE_LIMIT_MAX,
+  max: (env.NODE_ENV === 'test' || env.NODE_ENV === 'development') ? 10000 : env.RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -23,7 +23,7 @@ export const apiRateLimiter = rateLimit({
  */
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: env.NODE_ENV === 'test' ? 10000 : 20,
+  max: (env.NODE_ENV === 'test' || env.NODE_ENV === 'development') ? 10000 : 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -34,3 +34,4 @@ export const authRateLimiter = rateLimit({
     },
   },
 });
+
