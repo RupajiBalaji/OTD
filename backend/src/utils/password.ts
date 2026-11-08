@@ -1,43 +1,63 @@
 import crypto from 'node:crypto';
-
-let argon2Module: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  argon2Module = require('argon2');
-} catch (e) {
-  console.warn('[PasswordUtil] Native argon2 unavailable, using Node crypto fallback:', e);
-}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { argon2id } = require('@noble/hashes/argon2.js');
 
 export class PasswordUtil {
+  /**
+   * Hashes a password using pure JavaScript / WebAssembly Argon2id.
+   * Produces RFC 9106 PHC-formatted strings ($argon2id$v=19$m=...,t=...,p=...$salt$hash).
+   * 100% portable with zero native C++ binaries, completely immune to SIGSEGV.
+   */
   public static async hash(password: string): Promise<string> {
-    if (argon2Module) {
-      try {
-        return await argon2Module.hash(password, {
-          type: argon2Module.argon2id,
-          memoryCost: 2 ** 16,
-          timeCost: 3,
-        });
-      } catch (err) {
-        console.warn('[PasswordUtil] argon2.hash failed, falling back to scrypt:', err);
-      }
-    }
+    const salt = crypto.randomBytes(16);
+    const m = 4096; // 4096 KB (4MB), cloud container safe
+    const t = 2;    // 2 iterations
+    const p = 1;    // 1 parallelism thread
+    const dkLen = 32;
 
-    // High-security pure Node.js fallback (zero native compilation dependencies)
-    return new Promise((resolve, reject) => {
-      const salt = crypto.randomBytes(16).toString('hex');
-      crypto.scrypt(password, salt, 64, (err, derivedKey) => {
-        if (err) return reject(err);
-        resolve(`scrypt$${salt}$${derivedKey.toString('hex')}`);
-      });
-    });
+    const hashBytes = argon2id(password, salt, { t, m, p, dkLen });
+
+    const saltB64 = salt.toString('base64').replace(/=/g, '');
+    const hashB64 = Buffer.from(hashBytes).toString('base64').replace(/=/g, '');
+
+    return `$argon2id$v=19$m=${m},t=${t},p=${p}$${saltB64}$${hashB64}`;
   }
 
+  /**
+   * Verifies a candidate password against an Argon2id (or scrypt) hash.
+   */
   public static async compare(candidate: string, hash: string): Promise<boolean> {
     try {
-      if (hash.startsWith('$argon2id$') && argon2Module) {
-        return await argon2Module.verify(hash, candidate);
+      if (!candidate || !hash) return false;
+
+      // Handle Argon2id PHC format
+      if (hash.startsWith('$argon2id$')) {
+        const parts = hash.split('$');
+        // Format: ["", "argon2id", "v=19", "m=4096,t=2,p=1", saltB64, hashB64]
+        if (parts.length < 6) return false;
+
+        const paramString = parts[3];
+        const params: Record<string, number> = {};
+        for (const pair of paramString.split(',')) {
+          const [k, v] = pair.split('=');
+          if (k && v) params[k] = parseInt(v, 10);
+        }
+
+        const salt = Buffer.from(parts[4], 'base64');
+        const expectedHash = Buffer.from(parts[5], 'base64');
+
+        const computedHash = argon2id(candidate, salt, {
+          t: params.t || 2,
+          m: params.m || 4096,
+          p: params.p || 1,
+          dkLen: expectedHash.length,
+        });
+
+        if (expectedHash.length !== computedHash.length) return false;
+        return crypto.timingSafeEqual(expectedHash, Buffer.from(computedHash));
       }
 
+      // Handle scrypt fallback format
       if (hash.startsWith('scrypt$')) {
         const parts = hash.split('$');
         if (parts.length !== 3) return false;
@@ -50,10 +70,6 @@ export class PasswordUtil {
             resolve(crypto.timingSafeEqual(Buffer.from(originalHex, 'hex'), derivedKey));
           });
         });
-      }
-
-      if (argon2Module) {
-        return await argon2Module.verify(hash, candidate);
       }
 
       return false;
