@@ -75,14 +75,16 @@ app.use(errorHandler);
 // Server startup
 const startServer = async () => {
   try {
-    app.listen(env.PORT, () => {
-      console.log(`[Server] AI Fashion Companion REST API running on http://localhost:${env.PORT}`);
+    app.listen(env.PORT, '0.0.0.0', () => {
+      console.log(`[Server] AI Fashion Companion REST API running on http://0.0.0.0:${env.PORT}`);
       console.log(`[Server] Environment: ${env.NODE_ENV}`);
       console.log(`[Server] API Prefix: ${env.API_PREFIX}`);
     });
 
     if (env.NODE_ENV !== 'test') {
-      await connectDatabase();
+      await connectDatabase().catch((dbErr) => {
+        console.warn('[Database] Startup database connection warning:', dbErr);
+      });
     }
   } catch (err) {
     console.error('[Server] Failed to launch server:', err);
