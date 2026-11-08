@@ -1885,6 +1885,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
                     }}
                     isMinor={activePersona === 'boy' || activePersona === 'girl'}
                     generatedImageUrl={generatedTryOnUrl}
+                    studioModelPhotoUrl={resolvedDrape.modelPhotoUrl}
                     isGenerating={isGeneratingVTO}
                     progress={vtoProgress}
                     generationStatus={vtoStatus}

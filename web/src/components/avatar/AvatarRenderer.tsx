@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, AlertCircle, ShieldCheck, Eye, Layers } from 'lucide-react';
 import type { ClosetItem } from '../../context/ClosetContext';
 
@@ -26,6 +26,7 @@ export interface AvatarRendererProps {
   outfit: OutfitSlotSet;
   isMinor?: boolean;
   generatedImageUrl?: string | null;
+  studioModelPhotoUrl?: string | null;
   isGenerating?: boolean;
   progress?: number;
   generationStatus?: 'queued' | 'compositing' | 'rendering' | 'completed' | 'fallback_to_layered' | 'failed' | 'idle';
@@ -36,179 +37,148 @@ export interface AvatarRendererProps {
 
 /**
  * LayeredAvatarRenderer:
- * Instant 2D vector & garment composite mannequin that always works without latency.
- * Respects gender, skin tone, body shape, and layers garments accurately by slot.
+ * Haute Couture 2D Atelier Form that seamlessly composites garments using optical blend modes.
+ * Eliminates harsh rectangular white image backgrounds, preserving natural garment fabric & contours.
  */
 export const LayeredAvatarRenderer: React.FC<{
   avatar: AvatarProfile;
   outfit: OutfitSlotSet;
   lightingStyle?: React.CSSProperties;
 }> = ({ avatar, outfit, lightingStyle }) => {
-  const skinColor = avatar.skinToneHex || '#D4A373';
   const isMale = avatar.gender === 'man' || avatar.gender === 'boy';
   const isMinor = avatar.gender === 'boy' || avatar.gender === 'girl';
 
-  // Body silhouette scaling based on gender & shape
-  const shoulderWidth = isMale ? (isMinor ? 140 : 180) : 150;
-  const waistWidth = isMale ? (isMinor ? 95 : 120) : 100;
-  const hipWidth = isMale ? (isMinor ? 100 : 130) : 140;
+  // Proportions scaled to haute couture tailoring standard
+  const shoulderW = isMale ? (isMinor ? 140 : 176) : 152;
+  const waistW = isMale ? (isMinor ? 96 : 118) : 98;
+  const hipW = isMale ? (isMinor ? 104 : 128) : 138;
 
   return (
     <div
-      className="relative w-full h-[520px] sm:h-[560px] flex items-center justify-center bg-gradient-to-b from-neutral-900/40 via-neutral-900/20 to-neutral-900/60 rounded-3xl overflow-hidden border border-amber-300/30 shadow-2xl select-none"
+      className="relative w-full h-[520px] sm:h-[560px] flex items-center justify-center bg-gradient-to-b from-[#FAF7F2] via-[#F4EFE6] to-[#EAE3D6] dark:from-[#212025] dark:via-[#1A191D] dark:to-[#121114] rounded-3xl overflow-hidden border border-amber-400/30 shadow-2xl select-none"
       style={lightingStyle}
     >
-      {/* Studio Lighting Background Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+      {/* Studio Lighting Radial Ambient Vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-black/20 pointer-events-none" />
 
-      {/* Layer 1: Base Mannequin Silhouette SVG */}
+      {/* Layer 1: Sculpted Haute Couture Atelier Dress Form (Tailor's Dummy) */}
       <svg
         viewBox="0 0 400 650"
         className="w-full h-full max-h-[540px] drop-shadow-xl z-10 transition-all duration-300"
-        aria-label="Layered 2D Studio Avatar"
+        aria-label="Haute Couture Atelier Form"
       >
         <defs>
-          <linearGradient id="mannequinShade" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={skinColor} stopOpacity="1" />
-            <stop offset="100%" stopColor={skinColor} stopOpacity="0.82" />
+          {/* Sculpted linen dress form texture */}
+          <linearGradient id="atelierFormShade" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ECE6DC" />
+            <stop offset="50%" stopColor="#DFD8CC" />
+            <stop offset="100%" stopColor="#CEC5B6" />
           </linearGradient>
-          <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.3" />
-          </filter>
+
+          {/* Walnut / Brass Finial & Pedestal */}
+          <linearGradient id="finialBrass" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#C5A059" />
+            <stop offset="50%" stopColor="#8C6D33" />
+            <stop offset="100%" stopColor="#57421C" />
+          </linearGradient>
+          <linearGradient id="standWood" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#32261E" />
+            <stop offset="100%" stopColor="#1B140F" />
+          </linearGradient>
         </defs>
 
         {/* Floor Shadow */}
-        <ellipse cx="200" cy="625" rx="90" ry="14" fill="#000000" opacity="0.35" />
+        <ellipse cx="200" cy="625" rx="85" ry="12" fill="#000000" opacity="0.3" />
 
-        {/* Head & Neck */}
-        <path
-          d={`M 188 120 C 188 145, 185 155, 184 175 L 216 175 C 215 155, 212 145, 212 120 Z`}
-          fill="url(#mannequinShade)"
-        />
-        <ellipse cx="200" cy="95" rx="34" ry="42" fill="url(#mannequinShade)" />
+        {/* Tailor's Cast Iron Tripod Base */}
+        <path d="M 197 540 L 197 615 L 203 615 L 203 540 Z" fill="url(#standWood)" />
+        <path d="M 170 622 L 200 615 L 230 622 L 200 618 Z" fill="url(#standWood)" />
+        <ellipse cx="200" cy="616" rx="28" ry="5" fill="url(#finialBrass)" />
 
-        {/* Shoulders & Torso */}
+        {/* Neck Finial (Couture Wooden Cap) */}
+        <ellipse cx="200" cy="115" rx="14" ry="7" fill="url(#finialBrass)" />
+        <path d="M 193 115 L 193 140 L 207 140 L 207 115 Z" fill="url(#finialBrass)" />
+        <path d="M 186 140 C 186 158, 185 168, 183 182 L 217 182 C 215 168, 214 158, 214 140 Z" fill="url(#atelierFormShade)" />
+
+        {/* Sculpted Torso Form */}
         <path
           d={`
-            M ${200 - shoulderWidth / 2} 185
-            C ${200 - shoulderWidth / 2} 175, 180 170, 200 170
-            C 220 170, ${200 + shoulderWidth / 2} 175, ${200 + shoulderWidth / 2} 185
-            L ${200 + waistWidth / 2} 290
-            L ${200 + hipWidth / 2} 370
-            L ${200 - hipWidth / 2} 370
-            L ${200 - waistWidth / 2} 290
+            M ${200 - shoulderW / 2} 188
+            C ${200 - shoulderW / 2 + 10} 180, 182 176, 200 176
+            C 218 176, ${200 + shoulderW / 2 - 10} 180, ${200 + shoulderW / 2} 188
+            C ${200 + shoulderW / 2 - 4} 230, ${200 + waistW / 2 + 12} 265, ${200 + waistW / 2} 295
+            C ${200 + waistW / 2 - 10} 330, ${200 + hipW / 2} 370, ${200 + hipW / 2} 410
+            C ${200 + hipW / 2 - 10} 435, 215 442, 200 442
+            C 185 442, ${200 - hipW / 2 + 10} 435, ${200 - hipW / 2} 410
+            C ${200 - hipW / 2} 370, ${200 - waistW / 2 + 10} 330, ${200 - waistW / 2} 295
+            C ${200 - waistW / 2 - 12} 265, ${200 - shoulderW / 2 + 4} 230, ${200 - shoulderW / 2} 188
             Z
           `}
-          fill="url(#mannequinShade)"
+          fill="url(#atelierFormShade)"
+          stroke="#C5BEB1"
+          strokeWidth="1.5"
         />
 
-        {/* Arms */}
-        {/* Left Arm */}
-        <path
-          d={`
-            M ${200 - shoulderWidth / 2} 185
-            C ${200 - shoulderWidth / 2 - 15} 240, ${200 - shoulderWidth / 2 - 18} 320, ${200 - shoulderWidth / 2 - 20} 380
-            L ${200 - shoulderWidth / 2 - 6} 380
-            C ${200 - shoulderWidth / 2 - 4} 320, ${200 - shoulderWidth / 2 + 6} 240, ${200 - shoulderWidth / 2 + 15} 200
-            Z
-          `}
-          fill="url(#mannequinShade)"
-        />
-        {/* Right Arm */}
-        <path
-          d={`
-            M ${200 + shoulderWidth / 2} 185
-            C ${200 + shoulderWidth / 2 + 15} 240, ${200 + shoulderWidth / 2 + 18} 320, ${200 + shoulderWidth / 2 + 20} 380
-            L ${200 + shoulderWidth / 2 + 6} 380
-            C ${200 + shoulderWidth / 2 + 4} 320, ${200 + shoulderWidth / 2 - 6} 240, ${200 + shoulderWidth / 2 - 15} 200
-            Z
-          `}
-          fill="url(#mannequinShade)"
-        />
+        {/* Tailoring Seam Lines */}
+        <path d="M 200 182 L 200 442" stroke="#B8B0A2" strokeWidth="1" strokeDasharray="3,3" />
+        <path d={`M ${200 - waistW / 2 + 4} 295 Q 200 300 ${200 + waistW / 2 - 4} 295`} stroke="#B8B0A2" strokeWidth="1" strokeDasharray="3,3" />
 
-        {/* Legs */}
-        {/* Left Leg */}
-        <path
-          d={`
-            M ${200 - hipWidth / 2 + 8} 368
-            L ${200 - 45} 510
-            L ${200 - 38} 605
-            L ${200 - 15} 605
-            L ${200 - 8} 510
-            L ${198} 370
-            Z
-          `}
-          fill="url(#mannequinShade)"
-        />
-        {/* Right Leg */}
-        <path
-          d={`
-            M 202 370
-            L ${200 + 8} 510
-            L ${200 + 15} 605
-            L ${200 + 38} 605
-            L ${200 + 45} 510
-            L ${200 + hipWidth / 2 - 8} 368
-            Z
-          `}
-          fill="url(#mannequinShade)"
-        />
-
-        {/* Base Atelier Minimal Underlayer */}
-        <path
-          d={`M ${200 - waistWidth / 2 + 6} 265 Q 200 275 ${200 + waistWidth / 2 - 6} 265 L ${200 + hipWidth / 2 - 12} 370 L ${200 - hipWidth / 2 + 12} 370 Z`}
-          fill="#1f1f22"
-          opacity="0.9"
-        />
+        {/* Lower Leg Post Supports */}
+        <path d="M 180 440 L 180 540 L 188 540 L 188 440 Z" fill="url(#standWood)" opacity="0.85" />
+        <path d="M 212 440 L 212 540 L 220 540 L 220 440 Z" fill="url(#standWood)" opacity="0.85" />
       </svg>
 
-      {/* Layer 2: Lower Garment Slot (Bottoms / Trousers / Skirt) */}
+      {/* Layer 2: Lower Garment Slot (Bottoms / Trousers / Skirt) with optical multiply blending */}
       {outfit.bottom && outfit.bottom.imageUrl && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-          <div className="w-[190px] sm:w-[210px] h-[250px] translate-y-[95px] flex items-center justify-center overflow-hidden">
+          <div className="w-[195px] sm:w-[215px] h-[255px] translate-y-[90px] flex items-center justify-center">
             <img
               src={outfit.bottom.imageUrl}
               alt={outfit.bottom.name}
-              className="w-full h-full object-contain filter drop-shadow-lg transition-transform duration-300"
+              className="w-full h-full object-contain filter drop-shadow-md transition-transform duration-300"
+              style={{ mixBlendMode: 'multiply' }}
             />
           </div>
         </div>
       )}
 
-      {/* Layer 3: Upper Garment Slot (Tops / Shirts / Saree Bodice) */}
+      {/* Layer 3: Upper Garment Slot (Tops / Shirts / Saree Bodice) with optical multiply blending */}
       {outfit.top && outfit.top.imageUrl && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-25">
-          <div className="w-[200px] sm:w-[230px] h-[210px] -translate-y-[45px] flex items-center justify-center overflow-hidden">
+          <div className="w-[210px] sm:w-[235px] h-[225px] -translate-y-[45px] flex items-center justify-center">
             <img
               src={outfit.top.imageUrl}
               alt={outfit.top.name}
-              className="w-full h-full object-contain filter drop-shadow-xl transition-transform duration-300"
+              className="w-full h-full object-contain filter drop-shadow-lg transition-transform duration-300"
+              style={{ mixBlendMode: 'multiply' }}
             />
           </div>
         </div>
       )}
 
-      {/* Layer 4: Outerwear (Jacket / Coat) */}
+      {/* Layer 4: Outerwear (Jacket / Coat) with optical multiply blending */}
       {outfit.outerwear && outfit.outerwear.imageUrl && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-          <div className="w-[220px] sm:w-[250px] h-[230px] -translate-y-[40px] flex items-center justify-center overflow-hidden">
+          <div className="w-[225px] sm:w-[250px] h-[240px] -translate-y-[42px] flex items-center justify-center">
             <img
               src={outfit.outerwear.imageUrl}
               alt={outfit.outerwear.name}
-              className="w-full h-full object-contain filter drop-shadow-2xl transition-transform duration-300"
+              className="w-full h-full object-contain filter drop-shadow-xl transition-transform duration-300"
+              style={{ mixBlendMode: 'multiply' }}
             />
           </div>
         </div>
       )}
 
-      {/* Layer 5: Footwear Slot */}
+      {/* Layer 5: Footwear Slot with optical multiply blending */}
       {outfit.footwear && outfit.footwear.imageUrl && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-35">
-          <div className="w-[150px] h-[80px] translate-y-[230px] flex items-center justify-center">
+          <div className="w-[145px] h-[80px] translate-y-[228px] flex items-center justify-center">
             <img
               src={outfit.footwear.imageUrl}
               alt={outfit.footwear.name}
               className="w-full h-full object-contain filter drop-shadow-md"
+              style={{ mixBlendMode: 'multiply' }}
             />
           </div>
         </div>
@@ -217,10 +187,10 @@ export const LayeredAvatarRenderer: React.FC<{
       {/* Custom Digital Twin Face Overlay if uploaded */}
       {avatar.customPhotoUrl && (
         <div
-          className="absolute top-[3%] left-1/2 -translate-x-1/2 w-16 h-20 sm:w-20 sm:h-24 rounded-full overflow-hidden shadow-lg z-40 border-2 border-amber-300/40"
+          className="absolute top-[4%] left-1/2 -translate-x-1/2 w-16 h-20 sm:w-20 sm:h-24 rounded-full overflow-hidden shadow-lg z-40 border-2 border-amber-400/50"
           style={{
-            WebkitMaskImage: 'radial-gradient(ellipse at center, black 70%, transparent 100%)',
-            maskImage: 'radial-gradient(ellipse at center, black 70%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, black 75%, transparent 100%)',
+            maskImage: 'radial-gradient(ellipse at center, black 75%, transparent 100%)',
           }}
         >
           <img
@@ -235,7 +205,7 @@ export const LayeredAvatarRenderer: React.FC<{
       <div className="absolute top-3 left-3 z-40 flex items-center gap-2">
         <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/10 text-white text-[10px] font-mono font-bold flex items-center gap-1.5 shadow-md">
           <Layers className="w-3 h-3 text-[var(--gold-primary)]" />
-          <span>Layered Studio Avatar</span>
+          <span>Haute Atelier Form • {avatar.gender ? avatar.gender.toUpperCase() : 'MAN'}</span>
         </span>
       </div>
     </div>
@@ -245,13 +215,14 @@ export const LayeredAvatarRenderer: React.FC<{
 /**
  * GeminiTryOnRenderer:
  * Coordinates server-side try-on generation, displays progress, and renders photorealistic result.
- * Gracefully falls back to LayeredAvatarRenderer with transparent user notice on quota or error.
+ * Seamlessly provides both high-fashion Runway Studio Twin view and Layered Atelier view.
  */
 export const GeminiTryOnRenderer: React.FC<AvatarRendererProps> = ({
   avatar,
   outfit,
   isMinor = false,
   generatedImageUrl,
+  studioModelPhotoUrl,
   isGenerating = false,
   progress = 0,
   generationStatus = 'idle',
@@ -259,9 +230,17 @@ export const GeminiTryOnRenderer: React.FC<AvatarRendererProps> = ({
   lightingStyle,
   onRetryPhotoreal,
 }) => {
+  // Defaults to preview (Runway Studio Model or AI Generated try-on)
   const [activeTab, setActiveTab] = useState<'preview' | 'layered'>('preview');
 
-  // Minor Safety Restriction: Photoreal generation locked to Layered Avatar
+  // When a generated image arrives, ensure preview is active
+  useEffect(() => {
+    if (generatedImageUrl) {
+      setActiveTab('preview');
+    }
+  }, [generatedImageUrl]);
+
+  // Minor Safety Restriction: Photoreal generation locked to Layered Atelier Avatar
   if (isMinor) {
     return (
       <div className="space-y-3">
@@ -269,13 +248,15 @@ export const GeminiTryOnRenderer: React.FC<AvatarRendererProps> = ({
           <ShieldCheck className="w-4 h-4 shrink-0 text-amber-400" />
           <div>
             <span className="font-bold">Minor Safety Protection Active: </span>
-            <span>Photorealistic generation is restricted for youth profiles. Displaying high-precision Layered Studio Avatar.</span>
+            <span>Photorealistic generation is restricted for youth profiles. Displaying high-precision Haute Atelier Form.</span>
           </div>
         </div>
         <LayeredAvatarRenderer avatar={avatar} outfit={outfit} lightingStyle={lightingStyle} />
       </div>
     );
   }
+
+  const activePhoto = generatedImageUrl || avatar.customPhotoUrl || studioModelPhotoUrl;
 
   return (
     <div className="relative w-full">
@@ -299,8 +280,8 @@ export const GeminiTryOnRenderer: React.FC<AvatarRendererProps> = ({
 
       {/* Main Viewport Container */}
       <div className="relative rounded-3xl overflow-hidden">
-        {/* Toggle between Photoreal and Layered when image is available */}
-        {generatedImageUrl && !isGenerating && (
+        {/* Toggle between Runway Studio and Layered Atelier */}
+        {activePhoto && !isGenerating && (
           <div className="absolute top-3 right-3 z-40 flex items-center gap-1.5 p-1 rounded-full bg-black/80 backdrop-blur-md border border-white/10 shadow-lg">
             <button
               onClick={() => setActiveTab('preview')}
@@ -311,7 +292,7 @@ export const GeminiTryOnRenderer: React.FC<AvatarRendererProps> = ({
               }`}
             >
               <Eye className="w-3 h-3" />
-              <span>Photoreal</span>
+              <span>{generatedImageUrl ? 'Photoreal AI' : 'Runway Model'}</span>
             </button>
             <button
               onClick={() => setActiveTab('layered')}
@@ -322,32 +303,37 @@ export const GeminiTryOnRenderer: React.FC<AvatarRendererProps> = ({
               }`}
             >
               <Layers className="w-3 h-3" />
-              <span>Layered</span>
+              <span>Layered Atelier</span>
             </button>
           </div>
         )}
 
-        {/* View 1: Photoreal Generated Image */}
-        {generatedImageUrl && activeTab === 'preview' && !isGenerating ? (
+        {/* View 1: Photoreal Generated Image or Curated Runway Studio Model */}
+        {activeTab === 'preview' && activePhoto && !isGenerating ? (
           <div
-            className="relative w-full h-[520px] sm:h-[560px] flex items-center justify-center rounded-3xl overflow-hidden shadow-2xl border border-amber-300/40 bg-black"
+            className="relative w-full h-[520px] sm:h-[560px] flex items-center justify-center rounded-3xl overflow-hidden shadow-2xl border border-amber-300/40 bg-neutral-900"
             style={lightingStyle}
           >
             <img
-              src={generatedImageUrl}
-              alt="AI Photorealistic Virtual Try-On"
+              src={activePhoto}
+              alt="Haute Couture Runway Twin"
               className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
             />
 
-            {/* Bottom Honest Disclaimer Badge */}
+            {/* Bottom Honest Disclaimer / Title Badge */}
             <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
               <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-[10px] font-mono font-bold text-amber-300 border border-amber-400/30 shadow-md">
-                ✨ AI-generated preview, fit is approximate
+                {generatedImageUrl
+                  ? '✨ AI-generated preview, fit is approximate'
+                  : '✨ Haute Couture Runway Studio Twin'}
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[9px] font-mono uppercase text-neutral-300 border border-white/10">
+                {(avatar.gender || 'couture').toUpperCase()} FIT
               </span>
             </div>
           </div>
         ) : (
-          /* View 2: Layered Avatar (always instant and accurate) */
+          /* View 2: Layered Atelier Form (Clean optical multiply drape) */
           <LayeredAvatarRenderer avatar={avatar} outfit={outfit} lightingStyle={lightingStyle} />
         )}
 
