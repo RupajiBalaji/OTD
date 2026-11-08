@@ -89,32 +89,41 @@ export class ShoppingService {
     // Optional Gemini-written bespoke explanations
     const keys = getGeminiApiKeys();
     if (keys.length > 0 && recommendations.length > 0 && (env.AI_PROVIDER === 'auto' || env.AI_PROVIDER === 'gemini')) {
-      try {
-        const prompt = `
+      for (let attempt = 0; attempt < keys.length; attempt++) {
+        const key = keys[attempt];
+        try {
+          const prompt = `
 For each missing wardrobe piece, write an articulate, 1-sentence luxury stylist reason explaining why it elevates this user's wardrobe:
 ${recommendations.map((r, i) => `${i + 1}. ${r.name} (${r.category})`).join('\n')}
 
 Return a JSON array of strings: ["reason 1", "reason 2", ...]
 `.trim();
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL || 'gemini-3.5-flash'}:generateContent`;
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL || 'gemini-3.5-flash'}:generateContent`;
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
 
-        const res = await fetch(url, {
-          method: 'POST',
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': keys[0],
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } },
-          }),
-        }).finally(() => clearTimeout(timeout));
+          const res = await fetch(url, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': key,
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } },
+            }),
+          }).finally(() => clearTimeout(timeout));
 
-        if (res.ok) {
+          if (!res.ok) {
+            const status = res.status;
+            if (status === 429 || status === 401 || status === 403 || status === 503) {
+              continue;
+            }
+            break;
+          }
+
           const data: any = await res.json();
           const reasons = JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]');
           if (Array.isArray(reasons)) {
@@ -124,9 +133,10 @@ Return a JSON array of strings: ["reason 1", "reason 2", ...]
               }
             });
           }
+          break;
+        } catch {
+          // Try next key or keep rules reasons
         }
-      } catch (err: any) {
-        // Keep rules reasons
       }
     }
 

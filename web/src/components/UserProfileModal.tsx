@@ -21,6 +21,16 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
   const [aiStatus, setAiStatus] = useState<AiGatewayStatus | null>(null);
 
   useEffect(() => {
+    setName(profile.name);
+    setHeight(profile.height);
+    setBodyShape(profile.bodyShape);
+    setSelectedStyles(profile.stylePersonas || []);
+    setFit(profile.preferredFit || 'Tailored / Regular');
+    setAvoidedColors(profile.avoidedColors || ['Neon Green', 'Hot Pink']);
+    setDislikedElements(profile.dislikedElements || ['Skinny Fits', 'Polyester Blends']);
+  }, [profile]);
+
+  useEffect(() => {
     let isMounted = true;
     (async () => {
       try {

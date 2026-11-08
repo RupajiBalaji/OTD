@@ -375,6 +375,13 @@ export class UnifiedAiClient {
         slotChanges: [{ slot: 'tops', action: 'replace', rationale: 'Structured tailoring for formal presence' }],
       };
     }
+    if (lower.includes('date') || lower.includes('romantic') || lower.includes('dinner') || lower.includes('evening')) {
+      return {
+        reply: "Curated an intimate evening dinner date ensemble emphasizing rich textural contrast, understated drape, and refined poise.",
+        intent: 'modify_outfit',
+        slotChanges: [{ slot: 'tops', action: 'replace', rationale: 'Nuanced evening silhouette with textural contrast' }],
+      };
+    }
 
     return {
       reply: "I've evaluated your digital wardrobe against the destination context. Each piece has been curated to maintain chromatic balance, optimal thermal comfort, and effortless sartorial confidence.",

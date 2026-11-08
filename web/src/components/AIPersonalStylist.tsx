@@ -133,6 +133,7 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
 
   // Ranked Outfits State
   const [selectedRank, setSelectedRank] = useState<1 | 2 | 3>(1);
+  const [overriddenPieces, setOverriddenPieces] = useState<Record<number, ClosetItem[]>>({});
   const [conversationalTweak, setConversationalTweak] = useState<string>('');
   const [aiStylistReply, setAiStylistReply] = useState<string | null>(null);
   const [aiStylistSource, setAiStylistSource] = useState<'gemini' | 'rules' | null>(null);
@@ -525,8 +526,23 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
 
   // Active Selected Outfit based on current rank
   const activeOutfit = useMemo<RankedOutfitOption>(() => {
-    return rankedOutfits.find((o) => o.rank === selectedRank) || rankedOutfits[0];
-  }, [rankedOutfits, selectedRank]);
+    const base = rankedOutfits.find((o) => o.rank === selectedRank) || rankedOutfits[0];
+    if (overriddenPieces[selectedRank]) {
+      const customPieces = overriddenPieces[selectedRank];
+      const customScore = computeSartorialHarmony(
+        customPieces.find((p) => p.category === 'tops'),
+        customPieces.find((p) => p.category === 'bottoms'),
+        customPieces.find((p) => p.category === 'footwear'),
+        temperature
+      );
+      return {
+        ...base,
+        pieces: customPieces,
+        harmonyScore: customScore,
+      };
+    }
+    return base;
+  }, [rankedOutfits, selectedRank, overriddenPieces, temperature]);
 
   // Identify pieces for Try-On render
   const selectedTop = useMemo<ClosetItem | null>(() => {
@@ -653,23 +669,17 @@ export const AIPersonalStylist: React.FC<AIPersonalStylistProps> = ({ onNavigate
         }
 
         if (res.slotChanges && res.slotChanges.length > 0) {
+          let updated = [...(overriddenPieces[selectedRank] || activeOutfit.pieces || [])];
           for (const change of res.slotChanges) {
             if (change.itemId) {
               const item = closet.find((c) => c.id === change.itemId);
               if (item) {
-                const currentPieces = [...(activeOutfit.pieces || [])];
-                const filtered = currentPieces.filter((p) => p.category !== item.category);
-                filtered.push(item);
-                activeOutfit.pieces = filtered;
-                activeOutfit.harmonyScore = computeSartorialHarmony(
-                  filtered.find((p) => p.category === 'tops'),
-                  filtered.find((p) => p.category === 'bottoms'),
-                  filtered.find((p) => p.category === 'footwear'),
-                  temperature
-                );
+                updated = updated.filter((p) => p.category !== item.category);
+                updated.push(item);
               }
             }
           }
+          setOverriddenPieces((prev) => ({ ...prev, [selectedRank]: updated }));
         }
       }
     } catch {

@@ -190,7 +190,6 @@ export class VirtualTryOnService {
         return;
       }
 
-      const activeKey = keys[0];
       const imageModel = env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image';
       const prompt = `
 Full-body fashion photograph of a statuesque ${job.personaType === 'man' ? 'man' : 'woman'} (${job.skinTone} skin tone, ${job.bodyShape} silhouette, height ${job.height}).
@@ -199,55 +198,68 @@ Standing poised in a luxury minimalist atelier with polished marble floor and ${
 Full length portrait 3:4 aspect ratio, natural fabric physics drape, sharp garment seams, floor shadow grounding.
 `.trim();
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000);
+      let lastStatus = 500;
+      let lastErrText = '';
+      let generatedImageBase64: string | null = null;
+      let generatedMimeType = 'image/jpeg';
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${imageModel}:generateContent`;
-      const res = await fetch(url, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': activeKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      }).finally(() => clearTimeout(timeout));
+      for (let attempt = 0; attempt < keys.length; attempt++) {
+        const activeKey = keys[attempt];
+        const keyLabel = `key #${attempt + 1}`;
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 60000);
 
-      if (!res.ok) {
-        const status = res.status;
-        const errText = await res.text();
-        console.warn(`[VirtualTryOn] Image model returned HTTP ${status}: ${errText.slice(0, 150)}`);
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${imageModel}:generateContent`;
+          const res = await fetch(url, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': activeKey,
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+            }),
+          }).finally(() => clearTimeout(timeout));
 
-        // Graceful fallback to LayeredAvatar with honest explanation
-        job.status = 'fallback_to_layered';
-        job.progress = 100;
-        job.fallbackToLayered = true;
-        job.fallbackReason =
-          status === 429
-            ? 'AI image model quota reached for current tier. Displaying instant zero-latency Layered Avatar.'
-            : `AI Image model unavailable (${status}). Displaying instant Layered Avatar.`;
-        job.source = 'rules';
-        await job.save();
-        return;
+          if (!res.ok) {
+            lastStatus = res.status;
+            lastErrText = await res.text();
+            console.warn(`[VirtualTryOn] Image model on ${keyLabel} returned HTTP ${lastStatus}: ${lastErrText.slice(0, 100)}`);
+            if (lastStatus === 429 || lastStatus === 401 || lastStatus === 403 || lastStatus === 503) {
+              continue; // try next key
+            }
+            break;
+          }
+
+          const data: any = await res.json();
+          const candidatePart = data?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData || p.text);
+          if (candidatePart?.inlineData?.data) {
+            generatedImageBase64 = candidatePart.inlineData.data;
+            generatedMimeType = candidatePart.inlineData.mimeType || 'image/jpeg';
+            break;
+          }
+        } catch (err: any) {
+          console.warn(`[VirtualTryOn] Error calling ${keyLabel}: ${err.message}`);
+        }
       }
 
-      const data: any = await res.json();
-      const candidatePart = data?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData || p.text);
-
-      if (candidatePart?.inlineData?.data) {
-        job.renderResultUrl = `data:${candidatePart.inlineData.mimeType || 'image/jpeg'};base64,${candidatePart.inlineData.data}`;
+      if (generatedImageBase64) {
+        job.renderResultUrl = `data:${generatedMimeType};base64,${generatedImageBase64}`;
         job.status = 'completed';
         job.progress = 100;
         job.source = 'gemini';
         await job.save();
       } else {
-        // Model generated text or no image part
+        // Graceful fallback to LayeredAvatar with honest explanation
         job.status = 'fallback_to_layered';
         job.progress = 100;
         job.fallbackToLayered = true;
-        job.fallbackReason = 'Photorealistic image synthesis deferred; active Layered Avatar reflects exact selected pieces.';
+        job.fallbackReason =
+          lastStatus === 429
+            ? 'AI image model quota reached for current tier. Displaying instant zero-latency Layered Avatar.'
+            : 'Photorealistic image synthesis deferred. Active Layered Avatar reflects exact selected pieces.';
         job.source = 'rules';
         await job.save();
       }

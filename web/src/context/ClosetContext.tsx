@@ -5,6 +5,7 @@ import { outfitsApiService } from '../services/outfits.service';
 import { profileApiService } from '../services/profile.service';
 import { weatherApiService } from '../services/weather.service';
 import { authService } from '../services/auth.service';
+import { aiApiService } from '../services/ai.service';
 import { useToast } from '../components/ui/Toast';
 import { PERSONA_WARDROBES, DEMO_CLIENT_ACCOUNTS, type PersonaType } from '../data/personaWardrobes';
 
@@ -274,6 +275,34 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }))
         );
       }
+
+      // 4. Fetch Daily Recommendations & Hydrate Current Outfit
+      const apiDaily = await outfitsApiService.getDailyRecommendations(token);
+      if (Array.isArray(apiDaily) && apiDaily.length > 0) {
+        const topDaily = apiDaily[0];
+        const mappedDailyPieces = Array.isArray(topDaily.items) ? topDaily.items.map(mapApiItem) : [];
+        setCurrentOutfit((prev) => {
+          if (prev && !prev.id.startsWith('curated_') && !prev.id.startsWith('demo_')) return prev;
+          return {
+            id: topDaily._id,
+            title: topDaily.title,
+            occasion: topDaily.occasion,
+            venue: topDaily.venue || 'Curated Venue',
+            vibe: topDaily.vibe || 'Minimalist',
+            weather: topDaily.weather || 'Pleasant',
+            pieces: mappedDailyPieces,
+            rationale: {
+              venueAlignment: topDaily.rationale?.venueAlignment || 'Matches venue perfectly.',
+              weatherComfort: topDaily.rationale?.weatherComfort || 'Optimal thermal balance.',
+              paletteHarmony: topDaily.rationale?.paletteHarmony || 'Balanced tonal palette.',
+              wardrobeUtilization: topDaily.rationale?.wardrobeUtilization || 'High cost efficiency.',
+            },
+            harmonyScore: topDaily.harmonyScore || calculateDynamicHarmonyScore(mappedDailyPieces, 3, 24),
+            source: (topDaily as any).source || 'gemini',
+            createdAt: topDaily.createdAt || new Date().toISOString(),
+          };
+        });
+      }
     } catch (err: any) {
       toast.error('Sync error', `Could not synchronize data with backend: ${err.message || 'Network issue'}`);
     }
@@ -429,7 +458,7 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCloset((prev) => prev.filter((item) => item.id !== id));
 
     const token = localStorage.getItem('otd_access_token');
-    if (token && id.length === 24) {
+    if (token && id && !id.startsWith('item_')) {
       try {
         const ok = await wardrobeApiService.deleteItem(id, token);
         if (ok) {
@@ -611,7 +640,7 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     try {
       const token = localStorage.getItem('otd_access_token');
-      if (token && currentOutfit?.id && !currentOutfit.id.startsWith('curated_')) {
+      if (token && currentOutfit?.id && !currentOutfit.id.startsWith('curated_') && !currentOutfit.id.startsWith('demo_')) {
         const modified = await outfitsApiService.modifyOutfit(currentOutfit.id, instruction, token);
         if (modified && Array.isArray(modified.items)) {
           const pieces = modified.items.map(mapApiItem);
@@ -633,6 +662,49 @@ export const ClosetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           setIsGenerating(false);
           setGenerationStepMessage('');
           toast.success('Outfit Refined', `Adapted ensemble based on: "${instruction}"`);
+          return;
+        }
+      } else {
+        const aiRes = await aiApiService.chatWithStylist(
+          {
+            message: instruction,
+            occasion: currentOutfit?.occasion || 'Casual Outing',
+            venue: currentOutfit?.venue,
+            weather: `${weather.temp}°C ${weather.condition}`,
+          },
+          token || undefined
+        );
+
+        if (aiRes) {
+          let updatedPieces = [...(currentOutfit?.pieces || closet.slice(0, 3))];
+          if (aiRes.slotChanges && aiRes.slotChanges.length > 0) {
+            for (const change of aiRes.slotChanges) {
+              if (change.itemId) {
+                const piece = closet.find((c) => c.id === change.itemId);
+                if (piece) {
+                  updatedPieces = updatedPieces.filter((p) => p.category !== piece.category);
+                  updatedPieces.push(piece);
+                }
+              }
+            }
+          }
+          const computedScore = calculateDynamicHarmonyScore(updatedPieces, 3, weather.temp);
+          setCurrentOutfit((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  pieces: updatedPieces,
+                  rationale: {
+                    ...prev.rationale,
+                    venueAlignment: aiRes.reply,
+                  },
+                  harmonyScore: computedScore,
+                }
+              : null
+          );
+          setIsGenerating(false);
+          setGenerationStepMessage('');
+          toast.success('Outfit Refined', aiRes.reply.slice(0, 80) + '...');
           return;
         }
       }

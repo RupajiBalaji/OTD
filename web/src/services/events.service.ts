@@ -43,6 +43,20 @@ export const eventsApiService = {
     return result.data;
   },
 
+  async updateEvent(
+    id: string,
+    updates: Partial<ScheduledCalendarEvent>,
+    token?: string
+  ): Promise<ScheduledCalendarEvent | null> {
+    const result = await requestApi<ScheduledCalendarEvent>(`/events/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+      token,
+    });
+    return result.data;
+  },
+
   async deleteEvent(id: string, token?: string): Promise<boolean> {
     const result = await requestApi<null>(`/events/${id}`, {
       method: 'DELETE',

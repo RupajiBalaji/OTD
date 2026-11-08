@@ -43,7 +43,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { useCloset, type ClosetItem } from '../context/ClosetContext';
+import { useCloset, calculateDynamicHarmonyScore, type ClosetItem } from '../context/ClosetContext';
 import type { PersonaType } from '../data/personaWardrobes';
 import { NotificationPopover } from './ui/NotificationPopover';
 import { SettingsModal } from './ui/SettingsModal';
@@ -164,6 +164,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
     profile,
     deleteClosetItem,
     currentOutfit,
+    setCurrentOutfit,
     savedLooks,
     saveLook,
     removeSavedLook,
@@ -524,11 +525,19 @@ export const AppStudio: React.FC<AppStudioProps> = ({
     }
   };
 
-  const handleMarkEventWorn = (eventId: string) => {
+  const handleMarkEventWorn = async (eventId: string) => {
     setCalendarEvents((prev) =>
       prev.map((e) => (e._id === eventId ? { ...e, status: 'worn' as const } : e))
     );
-    toast.success('Look marked as worn! Updated wardrobe wear history.');
+    try {
+      const token = localStorage.getItem('otd_access_token');
+      if (token && eventId && !eventId.startsWith('evt_demo_')) {
+        await eventsApiService.updateEvent(eventId, { status: 'worn' }, token);
+      }
+      toast.success('Look marked as worn! Updated wardrobe wear history.');
+    } catch {
+      toast.info('Look marked as worn.');
+    }
   };
 
   // Toggle favorite
@@ -623,6 +632,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
     setDestinationSearch(`${venue.name}, ${venue.location}`);
     setSelectedVenueCategory(venue.category);
     setActiveTab('stylist');
+    setStylistSubView('venue_planner');
     setPlannerStep(1);
   };
 
@@ -845,6 +855,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                   if (e.key === 'Enter' && homeSearchQuery.trim()) {
                     handleSendChat(homeSearchQuery);
                     setActiveTab('stylist');
+                    setStylistSubView('venue_planner');
                     setPlannerStep(3);
                   }
                 }}
@@ -1064,6 +1075,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                               if (e.key === 'Enter' && homeSearchQuery.trim()) {
                                 handleSendChat(homeSearchQuery);
                                 setActiveTab('stylist');
+                                setStylistSubView('venue_planner');
                                 setPlannerStep(3);
                               }
                             }}
@@ -1074,6 +1086,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                               if (homeSearchQuery.trim()) {
                                 handleSendChat(homeSearchQuery);
                                 setActiveTab('stylist');
+                                setStylistSubView('venue_planner');
                                 setPlannerStep(3);
                               }
                             }}
@@ -1098,6 +1111,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                             onClick={() => {
                               handleSendChat(chip);
                               setActiveTab('stylist');
+                              setStylistSubView('venue_planner');
                               setPlannerStep(3);
                             }}
                             className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-[11px] font-medium transition-colors cursor-pointer border border-white/20"
@@ -1145,7 +1159,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                         <div className="px-3 py-1.5 rounded-xl bg-[var(--pill-bg)] border border-[var(--border-gold)] text-right">
                           <div className="text-[9px] font-mono uppercase text-[var(--gold-primary)]">Harmony</div>
                           <div className="text-xs font-bold text-[var(--gold-primary)] font-mono">
-                            {currentOutfit?.harmonyScore || 99.2}%
+                            {currentOutfit?.harmonyScore || calculateDynamicHarmonyScore(closet.slice(0, 4), 3, weather.temp)}%
                           </div>
                         </div>
                       </div>
@@ -1419,10 +1433,21 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                       ].map((look) => (
                         <div
                           key={look.id}
-                          onClick={() => {
+                          onClick={async () => {
                             setActiveTab('stylist');
+                            setStylistSubView('venue_planner');
                             setPlannerStep(3);
                             setCurrentOutfitTitle(look.title);
+                            try {
+                              await generateOutfit({
+                                venue: look.title,
+                                occasion: look.title,
+                                vibe: look.subtitle,
+                                weather: `${weather.condition}, ${weather.temp}°C`,
+                              });
+                            } catch {
+                              // Handled
+                            }
                           }}
                           className="group rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] overflow-hidden flex flex-col justify-between hover:border-[var(--gold-primary)] transition-all cursor-pointer shadow-xs hover:shadow-md"
                         >
@@ -1506,6 +1531,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                     <div
                       onClick={() => {
                         setActiveTab('stylist');
+                        setStylistSubView('venue_planner');
                         setPlannerStep(2);
                       }}
                       className="pt-2 border-t border-[var(--border-card)] flex items-center justify-between text-[11px] text-[var(--text-body)] hover:text-[var(--gold-primary)] cursor-pointer"
@@ -1644,35 +1670,94 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                       </button>
                     </div>
 
-                    <div className="rounded-xl overflow-hidden border border-[var(--border-card)] bg-[var(--pill-bg)]/50 p-2.5 flex gap-3 items-center">
-                      <img
-                        src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80"
-                        alt="Dinner at Olive Bistro"
-                        className="w-16 h-16 rounded-lg object-cover shrink-0"
-                      />
-                      <div className="flex-1 min-w-0 text-xs">
-                        <h5 className="font-bold text-[var(--text-heading)] truncate">
-                          Dinner at Olive Bistro
-                        </h5>
-                        <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                          Tomorrow • 8:00 PM
-                        </p>
-                        <p className="text-[10px] text-[var(--gold-primary)] flex items-center gap-1 mt-0.5 truncate">
-                          <MapPin className="w-3 h-3 shrink-0" />
-                          <span>Jubilee Hills, Hyderabad</span>
-                        </p>
+                    {calendarEvents.length > 0 ? (
+                      <div className="rounded-xl overflow-hidden border border-[var(--border-card)] bg-[var(--pill-bg)]/50 p-2.5 flex gap-3 items-center">
+                        <div className="w-16 h-16 rounded-lg bg-neutral-900 border border-[var(--border-card)] shrink-0 flex items-center justify-center overflow-hidden">
+                          {calendarEvents[0].outfitId?.pieces?.[0]?.imageUrl ? (
+                            <img
+                              src={calendarEvents[0].outfitId.pieces[0].imageUrl}
+                              alt={calendarEvents[0].title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Calendar className="w-7 h-7 text-[var(--gold-primary)]" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 text-xs">
+                          <h5 className="font-bold text-[var(--text-heading)] truncate">
+                            {calendarEvents[0].title}
+                          </h5>
+                          <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                            {new Date(calendarEvents[0].scheduledDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • {calendarEvents[0].time}
+                          </p>
+                          <p className="text-[10px] text-[var(--gold-primary)] flex items-center gap-1 mt-0.5 truncate">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span>{calendarEvents[0].venue}</span>
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="rounded-xl overflow-hidden border border-[var(--border-card)] bg-[var(--pill-bg)]/50 p-2.5 flex gap-3 items-center">
+                        <img
+                          src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80"
+                          alt="Dinner at Olive Bistro"
+                          className="w-16 h-16 rounded-lg object-cover shrink-0"
+                        />
+                        <div className="flex-1 min-w-0 text-xs">
+                          <h5 className="font-bold text-[var(--text-heading)] truncate">
+                            Dinner at Olive Bistro
+                          </h5>
+                          <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                            Tomorrow • 8:00 PM
+                          </p>
+                          <p className="text-[10px] text-[var(--gold-primary)] flex items-center gap-1 mt-0.5 truncate">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span>Jubilee Hills, Hyderabad</span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     <button
                       onClick={() => {
-                        const olive = CURATED_VENUES.find((v) => v.id === 'olive');
-                        if (olive) handleSelectVenueForStyling(olive);
+                        if (calendarEvents.length > 0) {
+                          const ev = calendarEvents[0];
+                          setSelectedOccasion(ev.occasion);
+                          setDestinationSearch(ev.venue);
+                          setActiveTab('stylist');
+                          setStylistSubView('venue_planner');
+                          setPlannerStep(3);
+                          if (ev.outfitId?.title) {
+                            setCurrentOutfitTitle(ev.outfitId.title);
+                            if (ev.outfitId.pieces) {
+                              setCurrentOutfit({
+                                id: ev.outfitId.id || `curated_${Date.now()}`,
+                                title: ev.outfitId.title,
+                                occasion: ev.occasion,
+                                venue: ev.venue,
+                                vibe: ev.vibe,
+                                weather: ev.weatherForecast || `${weather.temp}°C`,
+                                pieces: ev.outfitId.pieces,
+                                rationale: {
+                                  venueAlignment: `Formulated for ${ev.venue}.`,
+                                  weatherComfort: `Calibrated for ${ev.weatherForecast || 'ambient comfort'}.`,
+                                  paletteHarmony: 'Cohesive tonal harmony.',
+                                  wardrobeUtilization: 'Verified closet rotation.',
+                                },
+                                harmonyScore: calculateDynamicHarmonyScore(ev.outfitId.pieces, 3, weather.temp),
+                                source: 'rules',
+                              });
+                            }
+                          }
+                        } else {
+                          const olive = CURATED_VENUES.find((v) => v.id === 'olive');
+                          if (olive) handleSelectVenueForStyling(olive);
+                        }
                       }}
                       className="w-full py-2.5 rounded-xl border border-[var(--border-gold)] bg-[var(--pill-bg)] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
                     >
                       <Shirt className="w-3.5 h-3.5" />
-                      <span>Get Outfit for this Place</span>
+                      <span>{calendarEvents.length > 0 ? 'Prepare Look for this Event' : 'Get Outfit for this Place'}</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
@@ -2326,7 +2411,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="text-xs font-mono font-bold text-emerald-500 block">
-                            {currentOutfit?.harmonyScore ? `${currentOutfit.harmonyScore}%` : '98.4%'} Harmony Score
+                            {currentOutfit?.harmonyScore || calculateDynamicHarmonyScore(currentOutfit?.pieces || closet.slice(0, 4), 3, weather.temp)}% Harmony Score
                           </span>
                           <span className="text-[10px] text-[var(--text-muted)]">
                             Calibrated to your Style DNA
@@ -2645,7 +2730,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                     <div className="px-3 py-1.5 rounded-xl bg-[var(--pill-bg)] border border-[var(--border-gold)] text-right">
                       <div className="text-[9px] font-mono uppercase text-[var(--gold-primary)] font-bold">Harmony Target</div>
                       <div className="text-xs font-bold text-[var(--gold-primary)] font-mono">
-                        {currentOutfit?.harmonyScore || 99.4}%
+                        {currentOutfit?.harmonyScore || calculateDynamicHarmonyScore(closet.slice(0, 4), 3, weather.temp)}%
                       </div>
                     </div>
                   </div>
@@ -3102,6 +3187,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                   <button
                     onClick={() => {
                       setActiveTab('stylist');
+                      setStylistSubView('venue_planner');
                       setPlannerStep(1);
                     }}
                     className="px-5 py-2.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:scale-105 transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
@@ -3440,8 +3526,41 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                           <button
                             onClick={() => {
                               setActiveTab('stylist');
+                              setStylistSubView('venue_planner');
                               setPlannerStep(3);
                               if (outfit?.title) setCurrentOutfitTitle(outfit.title);
+                              if (outfit?.pieces && Array.isArray(outfit.pieces)) {
+                                const mappedPieces: ClosetItem[] = outfit.pieces.map((p: any) => ({
+                                  id: p.id || p._id || `p_${Date.now()}`,
+                                  category: p.category || 'tops',
+                                  subType: p.subType || p.name || 'Garment',
+                                  name: p.name,
+                                  brand: p.brand || 'Curated',
+                                  color: p.color || 'Neutral',
+                                  fit: p.fit || 'Regular',
+                                  formality: p.formality || 3,
+                                  icon: p.category === 'tops' ? '👕' : p.category === 'bottoms' ? '👖' : '👞',
+                                  imageUrl: p.imageUrl,
+                                }));
+                                setCurrentOutfit({
+                                  id: `community_${post._id}`,
+                                  title: outfit.title || post.caption,
+                                  occasion: post.occasion || 'Community Curation',
+                                  venue: post.venue || 'Curated Venue',
+                                  vibe: outfit.vibe || 'Quiet Luxury',
+                                  weather: `${weather.temp}°C`,
+                                  pieces: mappedPieces,
+                                  rationale: {
+                                    venueAlignment: `Recreated from ${post.userId?.name || 'Community Curator'}'s lookbook publication.`,
+                                    weatherComfort: `Calibrated for ${weather.temp}°C ambient temperature.`,
+                                    paletteHarmony: 'Harmonious palette from community styling.',
+                                    wardrobeUtilization: 'Curated inspiration matched to your silhouette.',
+                                  },
+                                  harmonyScore: calculateDynamicHarmonyScore(mappedPieces, 3, weather.temp),
+                                  source: 'rules',
+                                  createdAt: new Date().toISOString(),
+                                });
+                              }
                               toast.success("Ensemble loaded into Stylist canvas!");
                             }}
                             className="px-3.5 py-1.5 rounded-full border border-[var(--border-gold)] bg-[var(--pill-bg)] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
@@ -3510,11 +3629,22 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                           {idea.desc}
                         </p>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setActiveTab('stylist');
+                            setStylistSubView('venue_planner');
                             setPlannerStep(3);
                             setCurrentOutfitTitle(idea.title);
-                            toast.success("Loaded editorial template into canvas!");
+                            try {
+                              await generateOutfit({
+                                venue: 'Editorial Salon',
+                                occasion: idea.title,
+                                vibe: idea.tag,
+                                weather: `${weather.condition}, ${weather.temp}°C`,
+                              });
+                              toast.success("Recreated template with your verified wardrobe!");
+                            } catch {
+                              toast.info("Loaded into Stylist canvas.");
+                            }
                           }}
                           className="w-full py-2.5 rounded-xl border border-[var(--border-gold)] bg-[var(--pill-bg)] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                         >
@@ -3553,6 +3683,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                   actionLabel="Synthesize an Outfit"
                   onAction={() => {
                     setActiveTab('stylist');
+                    setStylistSubView('venue_planner');
                     setPlannerStep(1);
                   }}
                 />
@@ -3626,8 +3757,10 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                         <button
                           onClick={() => {
                             setActiveTab('stylist');
+                            setStylistSubView('venue_planner');
                             setPlannerStep(3);
                             setCurrentOutfitTitle(look.title);
+                            setCurrentOutfit(look);
                           }}
                           className="w-full py-2 rounded-xl border border-[var(--border-card)] bg-[var(--pill-bg)] text-[var(--text-heading)] text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer hover:bg-[var(--border-card)] transition-colors"
                         >

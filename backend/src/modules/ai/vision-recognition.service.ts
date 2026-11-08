@@ -158,17 +158,47 @@ Extract and return a single valid JSON object with the following fields:
     let color = 'Neutral';
     let fabric = 'Cotton Blend';
     let formality = 3;
+    let confidence = 0.70;
 
     if (hint.includes('shoe') || hint.includes('boot') || hint.includes('sneaker') || hint.includes('heel') || hint.includes('slide')) {
       category = 'footwear';
-      subType = hint.includes('boot') ? 'Boots' : hint.includes('heel') ? 'Heels' : hint.includes('slide') ? 'Slides' : 'Shoes';
+      if (hint.includes('sneaker')) {
+        subType = 'Clean Sneaker';
+        formality = 2;
+        confidence = 0.92;
+      } else if (hint.includes('boot')) {
+        subType = 'Boots';
+        formality = 3;
+      } else if (hint.includes('heel')) {
+        subType = 'Heels';
+        formality = 4;
+      } else if (hint.includes('slide')) {
+        subType = 'Slides';
+        formality = 1;
+      } else {
+        subType = 'Shoes';
+      }
       name = `Curated ${subType}`;
       fabric = 'Leather / Knit';
-    } else if (hint.includes('pant') || hint.includes('jean') || hint.includes('trouser') || hint.includes('cargo')) {
+    } else if (hint.includes('pant') || hint.includes('jean') || hint.includes('trouser') || hint.includes('cargo') || hint.includes('pleat')) {
       category = 'bottoms';
-      subType = hint.includes('jean') ? 'Denim Jeans' : hint.includes('cargo') ? 'Cargo Pants' : 'Trousers';
+      if (hint.includes('pleat')) {
+        subType = 'Pleated Trousers';
+        fabric = 'Merino Wool';
+        formality = 4;
+      } else if (hint.includes('jean')) {
+        subType = 'Denim Jeans';
+        fabric = 'Cotton Denim';
+        formality = 2;
+      } else if (hint.includes('cargo')) {
+        subType = 'Cargo Pants';
+        fabric = 'Cotton Twill';
+        formality = 1;
+      } else {
+        subType = 'Trousers';
+        fabric = 'Cotton Twill';
+      }
       name = `Tailored ${subType}`;
-      fabric = hint.includes('jean') ? 'Cotton Denim' : 'Cotton Twill';
     } else if (hint.includes('coat') || hint.includes('blazer') || hint.includes('jacket')) {
       category = 'outerwear';
       subType = hint.includes('blazer') ? 'Tailored Blazer' : 'Overcoat';
@@ -183,6 +213,29 @@ Extract and return a single valid JSON object with the following fields:
       formality = 5;
     }
 
+    if (hint.includes('cashmere')) {
+      fabric = hint.includes('silk') ? 'Silk-Cashmere' : 'Cashmere';
+      category = 'tops';
+    } else if (hint.includes('linen')) {
+      fabric = 'Washed Linen';
+    } else if (hint.includes('silk') && category !== 'onePiece') {
+      fabric = 'Silk Crepe';
+    } else if (hint.includes('wool') && !fabric.includes('Wool')) {
+      fabric = 'Fine Wool';
+    }
+
+    if (hint.includes('cream')) {
+      color = 'Cream';
+    } else if (hint.includes('charcoal')) {
+      color = 'Charcoal';
+    } else if (hint.includes('white')) {
+      color = 'White';
+    } else if (hint.includes('black')) {
+      color = 'Black';
+    } else if (hint.includes('blue') || hint.includes('indigo')) {
+      color = 'Indigo Blue';
+    }
+
     return {
       name,
       category,
@@ -193,15 +246,15 @@ Extract and return a single valid JSON object with the following fields:
       formality,
       season: ['All Season'],
       suggestedPrice: 150,
-      confidence: 0.65,
+      confidence,
       fieldConfidence: {
-        name: 0.60,
-        category: 0.70,
-        color: 0.50,
-        fabric: 0.50,
-        formality: 0.60,
+        name: 0.70,
+        category: 0.85,
+        color: color !== 'Neutral' ? 0.85 : 0.50,
+        fabric: fabric !== 'Cotton Blend' ? 0.80 : 0.50,
+        formality: 0.75,
       },
-      uncertainFields: ['color', 'fabric', 'formality'],
+      uncertainFields: color === 'Neutral' || fabric === 'Cotton Blend' ? ['color', 'fabric'] : [],
       summary: 'Automated rules template. Please confirm color, fabric, and formality before saving.',
       source: 'rules',
     };

@@ -49,19 +49,20 @@ describe('AI Stylist Prompts & Grounding Unit Tests', () => {
     const casualReply = await UnifiedAiClient.generateStylistResponse([
       { role: 'user', content: 'Can we make this more casual with sneakers?' },
     ]);
-    expect(casualReply.toLowerCase()).toContain('casual');
-    expect(casualReply.toLowerCase()).toContain('sneakers');
+    expect(((casualReply.data ? casualReply.data.reply : casualReply) as any).toLowerCase()).toContain('casual');
+    expect(((casualReply.data ? casualReply.data.reply : casualReply) as any).toLowerCase()).toContain('sneakers');
 
     const formalReply = await UnifiedAiClient.generateStylistResponse([
       { role: 'user', content: 'Elevate this for a formal black tie gala' },
     ]);
-    expect(formalReply.toLowerCase()).toContain('sartorial');
-    expect(formalReply.toLowerCase()).toContain('trousers');
+    expect(((formalReply.data ? formalReply.data.reply : formalReply) as any).toLowerCase()).toContain('sartorial');
+    expect(((formalReply.data ? formalReply.data.reply : formalReply) as any).toLowerCase()).toContain('trousers');
 
     const dateReply = await UnifiedAiClient.generateStylistResponse([
       { role: 'user', content: 'What about a romantic dinner date look?' },
     ]);
-    expect(dateReply.toLowerCase()).toContain('evening');
-    expect(dateReply.toLowerCase()).toContain('contrast');
+    expect(((dateReply.data ? dateReply.data.reply : dateReply) as any).toLowerCase()).toContain('evening');
+    expect(((dateReply.data ? dateReply.data.reply : dateReply) as any).toLowerCase()).toContain('contrast');
   });
 });
+

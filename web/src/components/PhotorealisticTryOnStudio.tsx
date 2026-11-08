@@ -543,37 +543,33 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
 
   // Derive Chosen Worn Items
   const wornTop = useMemo(() => {
-    if (selectedTop && closet.some((i) => i.id === selectedTop.id)) return selectedTop;
+    if (selectedTop) return selectedTop;
     if (currentOutfit && currentOutfit.pieces) {
       const outfitTop = currentOutfit.pieces.find(
-        (p) => (p.category === 'tops' || p.category === 'outerwear') && closet.some((c) => c.id === p.id)
+        (p) => p.category === 'tops' || p.category === 'outerwear'
       );
       if (outfitTop) return outfitTop;
     }
     return null;
-  }, [selectedTop, currentOutfit, closet]);
+  }, [selectedTop, currentOutfit]);
 
   const wornBottom = useMemo(() => {
-    if (selectedBottom && closet.some((i) => i.id === selectedBottom.id)) return selectedBottom;
+    if (selectedBottom) return selectedBottom;
     if (currentOutfit && currentOutfit.pieces) {
-      const outfitBottom = currentOutfit.pieces.find(
-        (p) => p.category === 'bottoms' && closet.some((c) => c.id === p.id)
-      );
+      const outfitBottom = currentOutfit.pieces.find((p) => p.category === 'bottoms');
       if (outfitBottom) return outfitBottom;
     }
     return null;
-  }, [selectedBottom, currentOutfit, closet]);
+  }, [selectedBottom, currentOutfit]);
 
   const wornFootwear = useMemo(() => {
-    if (selectedFootwear && closet.some((i) => i.id === selectedFootwear.id)) return selectedFootwear;
+    if (selectedFootwear) return selectedFootwear;
     if (currentOutfit && currentOutfit.pieces) {
-      const outfitFootwear = currentOutfit.pieces.find(
-        (p) => p.category === 'footwear' && closet.some((c) => c.id === p.id)
-      );
+      const outfitFootwear = currentOutfit.pieces.find((p) => p.category === 'footwear');
       if (outfitFootwear) return outfitFootwear;
     }
     return null;
-  }, [selectedFootwear, currentOutfit, closet]);
+  }, [selectedFootwear, currentOutfit]);
 
   // =========================================================================
   // GUARANTEED COUTURE COVERAGE ENGINE:
@@ -675,7 +671,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
     let complexionFit = '';
     let silhouetteFit = '';
     let stylingTips: string[] = [];
-    let harmonyScore = 99.4;
 
     if (activePersona === 'women') {
       if (topSub.includes('saree') || topName.includes('saree') || topSub.includes('silk')) {
@@ -689,7 +684,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
           'Pair with delicate silver or diamond chandelier jhumkas',
           'Minimalist footwear or barefoot on marble completes the pure couture aesthetic'
         ];
-        harmonyScore = 99.8;
       } else if (topSub.includes('corset') || topSub.includes('dress') || topName.includes('dress')) {
         modelPhotoUrl = 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1000&q=85';
         lookTitle = effectiveTop?.name || 'White Cherry Embroidered Corset Mini Dress';
@@ -700,7 +694,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
           'Pair with delicate platform block heels or minimalist slides',
           'Keep hair in a soft half-up romantic wave to frame the neckline'
         ];
-        harmonyScore = 98.9;
       } else {
         // Classic White Oxford Shirt + Pleated Trousers (The exact look in user's screenshot!)
         modelPhotoUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=85';
@@ -713,7 +706,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
           'Do a crisp front French tuck into the extended waistband',
           'Roll shirt cuffs twice to the forearm to highlight a sleek gold watch or bangle'
         ];
-        harmonyScore = 99.4;
       }
     } else if (activePersona === 'man') {
       if (topName.includes('botanical') || topName.includes('daisy') || topName.includes('resort') || bottomName.includes('cargo')) {
@@ -726,7 +718,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
           'Leave shirt fully untucked to maximize breathable airflow',
           'Pair with neutral leather slides or minimalist sneakers'
         ];
-        harmonyScore = 99.1;
       } else if (topName.includes('crane') || topName.includes('jacquard')) {
         modelPhotoUrl = 'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=1000&q=85';
         lookTitle = `${effectiveTop?.name || 'Japanese Crane Jacquard'} & ${effectiveBottom?.name || 'Tailored Trousers'}`;
@@ -736,7 +727,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
         stylingTips = [
           'Fasten collar cleanly and anchor with polished dress shoes'
         ];
-        harmonyScore = 99.6;
       } else {
         modelPhotoUrl = 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=1000&q=85';
         lookTitle = `${effectiveTop?.name || 'Classic White Oxford'} & ${effectiveBottom?.name || 'Pleated Gurkha Trousers'}`;
@@ -747,7 +737,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
           'Tuck shirt tightly into Gurkha waistband to showcase extended tab buckle',
           'Pair with brown suede loafers or minimalist cream slides'
         ];
-        harmonyScore = 99.3;
       }
     } else if (activePersona === 'boy') {
       modelPhotoUrl = 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1000&q=85';
@@ -758,7 +747,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
       stylingTips = [
         'Button up collar for formal occasions or open one button for casual gatherings'
       ];
-      harmonyScore = 99.0;
     } else {
       // Girl
       if (topSub.includes('saree') || topName.includes('saree')) {
@@ -768,7 +756,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
         complexionFit = `Rose pink and silver embroidery illuminate ${skinToneHex} complexion.`;
         silhouetteFit = 'Fluid pleating creates graceful, balanced movement.';
         stylingTips = ['Pair with silver jhumkas and comfortable embroidered juttis'];
-        harmonyScore = 99.7;
       } else {
         modelPhotoUrl = 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1000&q=85';
         lookTitle = `${effectiveTop?.name || 'Corset Dress / Casual Look'}`;
@@ -776,7 +763,6 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
         complexionFit = 'Natural pastel tones harmonize with delicate skin tones.';
         silhouetteFit = 'Flattering fitted waist with flowing skirt.';
         stylingTips = ['Pair with platform sandals or clean white slides'];
-        harmonyScore = 99.2;
       }
     }
 
@@ -787,7 +773,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
       complexionFit,
       silhouetteFit,
       stylingTips,
-      harmonyScore,
+      harmonyScore: computeSartorialHarmony(effectiveTop, effectiveBottom, effectiveFootwear, 24),
     };
   }, [activePersona, effectiveTop, effectiveBottom, skinToneHex]);
 
@@ -1168,7 +1154,8 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
       if (nextBottom) setWornBottom(nextBottom);
       if (nextFootwear) setWornFootwear(nextFootwear);
       setAiRationale(rationaleText);
-      setHarmonyScore(calculatedHarmony);
+      const dynamicComputedScore = computeSartorialHarmony(nextTop, nextBottom, nextFootwear, simulatedTemp);
+      setHarmonyScore(dynamicComputedScore);
       setJustDressedBadge(lookTitle || nextTop?.name || 'Curated Ensemble');
 
       // Sync with ClosetContext
@@ -1722,7 +1709,7 @@ export const PhotorealisticTryOnStudio: React.FC = () => {
             <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
               <div className="p-2.5 rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)]">
                 <span className="text-[var(--text-muted)] block text-[9px]">WARP ALIGNMENT</span>
-                <span className="font-bold text-emerald-500 text-sm">99.8%</span>
+                <span className="font-bold text-emerald-500 text-sm">{harmonyScore}%</span>
               </div>
               <div className="p-2.5 rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)]">
                 <span className="text-[var(--text-muted)] block text-[9px]">BODY COVERAGE</span>

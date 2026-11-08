@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Moon, Sun, Ruler, Bell, RotateCcw, LogOut, Check, Sliders } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Moon, Sun, Ruler, Bell, RotateCcw, LogOut, Check, Sliders, Sparkles, RefreshCw, Cpu, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { aiApiService, type AiGatewayStatus } from '../../services/ai.service';
 import { useTheme } from '../../context/ThemeContext';
 
 interface SettingsModalProps {
@@ -19,6 +20,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [notifyOccasions, setNotifyOccasions] = useState(true);
   const [notifySuggestions, setNotifySuggestions] = useState(true);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [aiStatus, setAiStatus] = useState<AiGatewayStatus | null>(null);
+  const [isLoadingAiStatus, setIsLoadingAiStatus] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadAiStatus();
+    }
+  }, [isOpen]);
+
+  const loadAiStatus = async () => {
+    setIsLoadingAiStatus(true);
+    try {
+      const status = await aiApiService.getAiStatus();
+      setAiStatus(status);
+    } catch {
+      // Handled
+    } finally {
+      setIsLoadingAiStatus(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -85,6 +106,74 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Settings options list */}
         <div className="py-4 space-y-5 text-xs">
+          {/* AI Gateway & Model Telemetry */}
+          <div className="p-3.5 rounded-2xl bg-[var(--pill-bg)] border border-[var(--border-gold)]/50 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-lg bg-[var(--gold-primary)]/20 text-[var(--gold-primary)] flex items-center justify-center">
+                  <Cpu className="w-3.5 h-3.5" />
+                </span>
+                <div>
+                  <h4 className="font-bold text-[var(--text-heading)] text-xs flex items-center gap-1.5">
+                    <span>Gemini AI Gateway Telemetry</span>
+                    <span className="px-1.5 py-0.2 rounded-full text-[8px] font-mono uppercase bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20">
+                      {aiStatus?.activeProvider === 'gemini' ? 'Live Gemini' : 'Rules Engine Fallback'}
+                    </span>
+                  </h4>
+                  <p className="text-[10px] text-[var(--text-muted)]">
+                    {aiStatus ? `${aiStatus.keysConfigured} key(s) active with failover` : 'Checking AI health...'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={loadAiStatus}
+                disabled={isLoadingAiStatus}
+                className="p-1.5 rounded-lg border border-[var(--border-card)] hover:border-[var(--gold-primary)] text-[var(--text-muted)] hover:text-[var(--text-heading)] transition-all cursor-pointer"
+                title="Refresh AI Gateway Status"
+              >
+                <RefreshCw className={`w-3 h-3 ${isLoadingAiStatus ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10px] pt-1 border-t border-[var(--border-card)]/60">
+              <div className="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]">
+                <div className="text-[9px] text-[var(--text-muted)] uppercase font-mono">Text & Reasoning</div>
+                <div className="font-bold text-[var(--text-heading)] truncate mt-0.5">
+                  {aiStatus?.textModel?.model || 'gemini-3.5-flash'}
+                </div>
+                <div className="flex items-center gap-1 mt-1 font-semibold">
+                  {aiStatus?.textModel?.available ? (
+                    <span className="text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Live (${aiStatus.textModel.latencyMs || 180}ms)
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> Rules Engine
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]">
+                <div className="text-[9px] text-[var(--text-muted)] uppercase font-mono">Vision & Try-On</div>
+                <div className="font-bold text-[var(--text-heading)] truncate mt-0.5">
+                  {aiStatus?.imageModel?.model || 'gemini-2.5-flash-image'}
+                </div>
+                <div className="flex items-center gap-1 mt-1 font-semibold">
+                  {aiStatus?.imageModel?.available ? (
+                    <span className="text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Ready
+                    </span>
+                  ) : (
+                    <span className="text-[var(--gold-primary)] flex items-center gap-1" title={aiStatus?.imageModel?.reason}>
+                      <Sparkles className="w-3 h-3" /> Layered Avatar Active
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Appearance / Theme */}
           <div className="flex items-center justify-between">
             <div>
