@@ -37,6 +37,18 @@ export interface UserProfile {
   avoidedColors: string[];
   dislikedElements: string[];
   skinTone?: string;
+  skinToneHex?: string;
+  hairStyle?: string;
+  hairColor?: string;
+  hairColorHex?: string;
+  avatarVersion?: number;
+  avatarCustomization?: {
+    skinToneId: string;
+    bodyFrame: string;
+    hairstyleId: string;
+    hairColorId: string;
+    avatarVersion: number;
+  };
   customModelPhotoUrl?: string;
   avatarUrl?: string;
   gender?: string;

@@ -13,4 +13,11 @@ export const updateProfileSchema = z.object({
   avoidedColors: z.array(z.string()).optional(),
   dislikedElements: z.array(z.string()).optional(),
   goals: z.array(z.string()).optional(),
+  skinToneHex: z.string().optional(),
+  hairStyle: z.string().optional(),
+  hairColor: z.string().optional(),
+  hairColorHex: z.string().optional(),
+  avatarVersion: z.number().optional(),
+  avatarCustomization: z.record(z.any()).optional(),
 });
+

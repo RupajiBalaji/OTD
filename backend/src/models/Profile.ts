@@ -14,6 +14,12 @@ export interface IProfile extends Document {
   avoidedColors: string[];
   dislikedElements: string[];
   goals: string[];
+  skinToneHex?: string;
+  hairStyle?: string;
+  hairColor?: string;
+  hairColorHex?: string;
+  avatarVersion?: number;
+  avatarCustomization?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +50,12 @@ const ProfileSchema = new Schema<IProfile>(
       type: [String],
       default: ['Skinny Fits', 'Polyester Blends', 'Heavy Branding'],
     },
+    skinToneHex: { type: String, default: '#C68B59' },
+    hairStyle: { type: String, default: 'short_fade' },
+    hairColor: { type: String, default: 'espresso_black' },
+    hairColorHex: { type: String, default: '#1A1615' },
+    avatarVersion: { type: Number, default: 1 },
+    avatarCustomization: { type: Schema.Types.Mixed, default: {} },
     goals: {
       type: [String],
       default: ['Daily Outfits', 'Using Existing Wardrobe'],
@@ -53,3 +65,4 @@ const ProfileSchema = new Schema<IProfile>(
 );
 
 export const Profile = mongoose.model<IProfile>('Profile', ProfileSchema);
+

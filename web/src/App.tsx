@@ -16,12 +16,21 @@ import { UserProfileModal } from './components/UserProfileModal';
 import { AddPieceModal } from './components/AddPieceModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { AuthModal } from './components/AuthModal';
+import { QualityGateShowcase } from './components/character/QualityGateShowcase';
 
 const AppStudio = lazy(() =>
   import('./components/AppStudio').then((m) => ({ default: m.AppStudio }))
 );
 
 function AppContent() {
+  const isQualityGate =
+    typeof window !== 'undefined' &&
+    (window.location.search.includes('quality-gate') || window.location.hash.includes('quality-gate'));
+
+  if (isQualityGate) {
+    return <QualityGateShowcase />;
+  }
+
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return !!localStorage.getItem('otd_access_token');
