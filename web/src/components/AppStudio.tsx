@@ -40,6 +40,7 @@ import {
   ExternalLink,
   ShoppingBag,
   MessageSquare,
+  BookOpen,
   LogOut
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -728,7 +729,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                 { id: 'home', label: 'Home', icon: Home },
                 { id: 'closet', label: 'My Closet', icon: Shirt, badge: closet.length },
                 { id: 'stylist', label: 'AI Stylist', icon: Sparkles },
-                { id: 'ideas', label: 'Create Look', icon: Shirt },
+                { id: 'ideas', label: 'Lookbook', icon: BookOpen },
                 { id: 'destinations', label: 'Destination Mode', icon: Compass },
                 { id: 'tryon', label: 'AI Virtual Try-On (VTON)', icon: Camera, badge: 'Neural Drape' },
                 { id: 'calendar', label: 'Calendar', icon: Calendar },
@@ -863,38 +864,6 @@ export const AppStudio: React.FC<AppStudioProps> = ({
               />
             </div>
 
-            {/* Client Presentation Account Switcher (Instant Demo Switcher) */}
-            <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)] shrink-0">
-              <span className="text-[10px] font-mono text-[var(--gold-primary)] font-bold px-2 uppercase">
-                Account:
-              </span>
-              {[
-                { id: 'women' as PersonaType, label: 'Women', icon: '👩' },
-                { id: 'man' as PersonaType, label: 'Man', icon: '👨' },
-                { id: 'boy' as PersonaType, label: 'Boy', icon: '👦' },
-                { id: 'girl' as PersonaType, label: 'Girl', icon: '👧' },
-              ].map((acc) => {
-                const isActive = activePersona === acc.id;
-                return (
-                  <button
-                    key={acc.id}
-                    onClick={() => {
-                      switchPersona(acc.id);
-                      toast('Account Switched', `Logged into ${acc.label}'s verified wardrobe`, 'success');
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                      isActive
-                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold'
-                        : 'text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--pill-bg)]'
-                    }`}
-                  >
-                    <span>{acc.icon}</span>
-                    <span>{acc.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
             {/* Right Header Actions: Theme Toggle, Notifications, User Profile (Screenshot 3) */}
             <div className="flex items-center gap-3">
               <button
@@ -980,7 +949,49 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                           <span>Studio Settings</span>
                         </button>
 
-                        {onBackToLanding && (
+                        {/* Wardrobe Profile Switcher */}
+                      <div className="py-2 border-t border-[var(--border-card)]">
+                        <div className="px-4 py-1 text-[10px] font-mono uppercase text-[var(--gold-primary)] font-bold">
+                          Switch Wardrobe Profile
+                        </div>
+                        {[
+                          { id: 'women' as PersonaType, label: 'Women', desc: 'Sarees & Dresses', icon: '👩' },
+                          { id: 'man' as PersonaType, label: 'Man', desc: 'Suits & Chinos', icon: '👨' },
+                          { id: 'boy' as PersonaType, label: 'Boy', desc: 'Youth Prep', icon: '👦' },
+                          { id: 'girl' as PersonaType, label: 'Girl', desc: 'Dresses & Kurtis', icon: '👧' },
+                        ].map((acc) => {
+                          const isCur = activePersona === acc.id;
+                          return (
+                            <button
+                              key={acc.id}
+                              type="button"
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                switchPersona(acc.id);
+                                toast('Profile Switched', `Active wardrobe: ${acc.label}`, 'success');
+                              }}
+                              className={`w-full px-4 py-1.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                                isCur
+                                  ? 'bg-[var(--pill-bg)] text-[var(--gold-primary)] font-bold'
+                                  : 'text-[var(--text-body)] hover:bg-[var(--pill-bg)]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>{acc.icon}</span>
+                                <div>
+                                  <div className="leading-tight">{acc.label}</div>
+                                  <div className="text-[9px] text-[var(--text-muted)] font-normal">{acc.desc}</div>
+                                </div>
+                              </div>
+                              {isCur && (
+                                <span className="text-[9px] font-mono font-bold text-[var(--gold-primary)]">ACTIVE</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {onBackToLanding && (
                           <button
                             type="button"
                             onClick={() => {
@@ -1021,13 +1032,7 @@ export const AppStudio: React.FC<AppStudioProps> = ({
           {/* TAB 1: HOME DASHBOARD (Exact Match to Screenshot 3) */}
           {/* ========================================================================= */}
           {activeTab === 'home' && (
-            <div className="p-5 lg:p-7 max-w-[1600px] mx-auto w-full space-y-6">
-              
-              {/* Desktop 3-Column Layout: Center Content (8 cols) + Right Information (4 cols) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                
-                {/* CENTER COLUMN (8 cols): Hero Banner + Quick Actions + Suggestions */}
-                <div className="lg:col-span-8 space-y-5">
+            <div className="p-5 lg:p-8 max-w-6xl mx-auto w-full space-y-6">
                   
                   {/* MAIN HERO BANNER (Matching Screenshot 3) */}
                   <div className="relative rounded-3xl overflow-hidden bg-neutral-900 border border-[var(--border-card)] shadow-lg min-h-[220px] sm:min-h-[240px] flex flex-col justify-between p-6 sm:p-7 text-white">
@@ -1149,8 +1154,21 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                       {/* Live Weather Badge & Harmony Score */}
                       <div className="flex items-center gap-3 self-start sm:self-center">
                         <div className="px-3 py-1.5 rounded-xl bg-[var(--bg-card-inner)] border border-[var(--border-card)] text-right">
-                          <div className="text-[9px] font-mono uppercase text-[var(--text-muted)]">Live Climate</div>
-                          <div className="text-xs font-semibold text-[var(--text-heading)] flex items-center gap-1">
+                          <div className="text-[9px] font-mono uppercase text-[var(--text-muted)] flex items-center justify-between gap-2">
+                            <span>Live Climate</span>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await refreshWeather();
+                                toast('Weather Synced', `Live telemetry: ${weather.temp}°C ${weather.condition}`, 'success');
+                              }}
+                              className="text-[9px] text-[var(--gold-primary)] hover:underline flex items-center gap-0.5 cursor-pointer font-medium"
+                              title="Sync Live Climate"
+                            >
+                              <RefreshCw className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                          <div className="text-xs font-semibold text-[var(--text-heading)] flex items-center gap-1 mt-0.5">
                             <Sun className="w-3.5 h-3.5 text-amber-500" />
                             <span>{weather.city}: {weather.temp}°C {weather.condition}</span>
                           </div>
@@ -1488,285 +1506,6 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                   </div>
 
                 </div>
-
-                {/* RIGHT COLUMN (4 cols): Weather + Style Profile + Closet + Upcoming Occasions (Screenshot 3) */}
-                <div className="lg:col-span-4 space-y-4">
-                  
-                  {/* 1. WEATHER & LOCATION CARD (Screenshot 3) */}
-                  <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4 space-y-2 shadow-xs">
-                    <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[var(--gold-primary)]" />
-                        <span className="font-medium">{weather.city || 'Live Location'}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          await refreshWeather();
-                          toast('Weather Updated', `Live telemetry synced: ${weather.temp}°C ${weather.condition}`, 'success');
-                        }}
-                        className="text-[10px] text-[var(--gold-primary)] hover:underline flex items-center gap-1 cursor-pointer font-medium"
-                      >
-                        <RefreshCw className="w-3 h-3" /> Auto Sync
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="flex items-center gap-3">
-                        <Sun className="w-8 h-8 text-amber-500 shrink-0" />
-                        <div>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-playfair text-2xl font-bold text-[var(--text-heading)]">
-                              {weather.temp}°C
-                            </span>
-                            <span className="text-xs text-[var(--text-muted)]">{weather.condition}</span>
-                          </div>
-                          <span className="text-[11px] text-[var(--text-muted)]">
-                            Humidity {weather.humidity}% · Live Telemetry
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => {
-                        setActiveTab('stylist');
-                        setStylistSubView('venue_planner');
-                        setPlannerStep(2);
-                      }}
-                      className="pt-2 border-t border-[var(--border-card)] flex items-center justify-between text-[11px] text-[var(--text-body)] hover:text-[var(--gold-primary)] cursor-pointer"
-                    >
-                      <span>Calibrated for today's {weather.condition.toLowerCase()} atmosphere.</span>
-                      <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-                    </div>
-                  </div>
-
-                  {/* 2. YOUR STYLE PROFILE CARD (Screenshot 3) */}
-                  <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4 space-y-3 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-playfair text-sm font-bold text-[var(--text-heading)]">
-                        Your Style Profile
-                      </h4>
-                      <button
-                        onClick={onOpenProfile}
-                        className="text-[11px] font-semibold text-[var(--gold-primary)] hover:underline cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                    </div>
-
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--text-muted)] text-[11px]">Style:</span>
-                        <span className="font-semibold text-[var(--text-heading)] text-[11px]">
-                          {profile.stylePersonas.join(', ') || 'Minimal, Classy, Smart Casual'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--text-muted)] text-[11px]">Preferred Fit:</span>
-                        <span className="font-semibold text-[var(--text-heading)] text-[11px]">
-                          {profile.preferredFit || 'Slim Fit'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--text-muted)] text-[11px]">Preferred Colours:</span>
-                        <div className="flex items-center gap-1.5">
-                          {['#1C1612', '#FFFFFF', '#D7C4A5', '#708090', '#1E293B'].map((hex, i) => (
-                            <span
-                              key={i}
-                              className="w-3.5 h-3.5 rounded-full border border-black/20"
-                              style={{ backgroundColor: hex }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[var(--text-muted)] text-[11px]">Style Mood:</span>
-                        <span className="font-semibold text-[var(--text-heading)] text-[11px]">
-                          Modern • Versatile • Comfortable
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 3. YOUR CLOSET SUMMARY (Screenshot 3) */}
-                  <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4 space-y-3 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-playfair text-sm font-bold text-[var(--text-heading)]">
-                        Your Closet
-                      </h4>
-                      <button
-                        onClick={() => setActiveTab('closet')}
-                        className="text-[11px] font-semibold text-[var(--gold-primary)] hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>See All</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                      {[
-                        {
-                          category: 'Tops',
-                          count: closet.filter((i) => i.category === 'tops').length,
-                          img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=200&q=80',
-                        },
-                        {
-                          category: 'Bottoms',
-                          count: closet.filter((i) => i.category === 'bottoms').length,
-                          img: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=200&q=80',
-                        },
-                        {
-                          category: 'Outerwear',
-                          count: closet.filter((i) => i.category === 'outerwear').length,
-                          img: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=200&q=80',
-                        },
-                        {
-                          category: 'Shoes',
-                          count: closet.filter((i) => i.category === 'footwear').length,
-                          img: 'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=200&q=80',
-                        },
-                      ].map((cat, i) => (
-                        <div
-                          key={i}
-                          onClick={() => {
-                            setActiveTab('closet');
-                            setClosetCategoryFilter(
-                              cat.category === 'Shoes' ? 'footwear' : (cat.category.toLowerCase() as any)
-                            );
-                          }}
-                          className="p-1.5 rounded-xl border border-[var(--border-card)] bg-[var(--pill-bg)]/40 hover:border-[var(--gold-primary)] transition-all cursor-pointer group"
-                        >
-                          <div className="h-12 w-full rounded-lg overflow-hidden bg-neutral-900 mb-1">
-                            <img
-                              src={cat.img}
-                              alt={cat.category}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          </div>
-                          <span className="font-bold text-[11px] text-[var(--text-heading)] block leading-tight">
-                            {cat.category}
-                          </span>
-                          <span className="text-[10px] text-[var(--text-muted)]">
-                            {cat.count} items
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 4. UPCOMING OCCASIONS CARD (Screenshot 3) */}
-                  <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4 space-y-3 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-playfair text-sm font-bold text-[var(--text-heading)]">
-                        Upcoming Occasions
-                      </h4>
-                      <button
-                        onClick={() => setActiveTab('calendar')}
-                        className="text-[11px] font-semibold text-[var(--gold-primary)] hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>See All</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </button>
-                    </div>
-
-                    {calendarEvents.length > 0 ? (
-                      <div className="rounded-xl overflow-hidden border border-[var(--border-card)] bg-[var(--pill-bg)]/50 p-2.5 flex gap-3 items-center">
-                        <div className="w-16 h-16 rounded-lg bg-neutral-900 border border-[var(--border-card)] shrink-0 flex items-center justify-center overflow-hidden">
-                          {calendarEvents[0].outfitId?.pieces?.[0]?.imageUrl ? (
-                            <img
-                              src={calendarEvents[0].outfitId.pieces[0].imageUrl}
-                              alt={calendarEvents[0].title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Calendar className="w-7 h-7 text-[var(--gold-primary)]" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0 text-xs">
-                          <h5 className="font-bold text-[var(--text-heading)] truncate">
-                            {calendarEvents[0].title}
-                          </h5>
-                          <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                            {new Date(calendarEvents[0].scheduledDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • {calendarEvents[0].time}
-                          </p>
-                          <p className="text-[10px] text-[var(--gold-primary)] flex items-center gap-1 mt-0.5 truncate">
-                            <MapPin className="w-3 h-3 shrink-0" />
-                            <span>{calendarEvents[0].venue}</span>
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="rounded-xl overflow-hidden border border-[var(--border-card)] bg-[var(--pill-bg)]/50 p-2.5 flex gap-3 items-center">
-                        <img
-                          src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80"
-                          alt="Dinner at Olive Bistro"
-                          className="w-16 h-16 rounded-lg object-cover shrink-0"
-                        />
-                        <div className="flex-1 min-w-0 text-xs">
-                          <h5 className="font-bold text-[var(--text-heading)] truncate">
-                            Dinner at Olive Bistro
-                          </h5>
-                          <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                            Tomorrow • 8:00 PM
-                          </p>
-                          <p className="text-[10px] text-[var(--gold-primary)] flex items-center gap-1 mt-0.5 truncate">
-                            <MapPin className="w-3 h-3 shrink-0" />
-                            <span>Jubilee Hills, Hyderabad</span>
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        if (calendarEvents.length > 0) {
-                          const ev = calendarEvents[0];
-                          setSelectedOccasion(ev.occasion);
-                          setDestinationSearch(ev.venue);
-                          setActiveTab('stylist');
-                          setStylistSubView('venue_planner');
-                          setPlannerStep(3);
-                          if (ev.outfitId?.title) {
-                            setCurrentOutfitTitle(ev.outfitId.title);
-                            if (ev.outfitId.pieces) {
-                              setCurrentOutfit({
-                                id: ev.outfitId.id || `curated_${Date.now()}`,
-                                title: ev.outfitId.title,
-                                occasion: ev.occasion,
-                                venue: ev.venue,
-                                vibe: ev.vibe,
-                                weather: ev.weatherForecast || `${weather.temp}°C`,
-                                pieces: ev.outfitId.pieces,
-                                rationale: {
-                                  venueAlignment: `Formulated for ${ev.venue}.`,
-                                  weatherComfort: `Calibrated for ${ev.weatherForecast || 'ambient comfort'}.`,
-                                  paletteHarmony: 'Cohesive tonal harmony.',
-                                  wardrobeUtilization: 'Verified closet rotation.',
-                                },
-                                harmonyScore: calculateDynamicHarmonyScore(ev.outfitId.pieces, 3, weather.temp),
-                                source: 'rules',
-                              });
-                            }
-                          }
-                        } else {
-                          const olive = CURATED_VENUES.find((v) => v.id === 'olive');
-                          if (olive) handleSelectVenueForStyling(olive);
-                        }
-                      }}
-                      className="w-full py-2.5 rounded-xl border border-[var(--border-gold)] bg-[var(--pill-bg)] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
-                    >
-                      <Shirt className="w-3.5 h-3.5" />
-                      <span>{calendarEvents.length > 0 ? 'Prepare Look for this Event' : 'Get Outfit for this Place'}</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
           )}
 
           {/* ========================================================================= */}
@@ -2655,39 +2394,30 @@ export const AppStudio: React.FC<AppStudioProps> = ({
                 </button>
               </div>
 
-              {/* Persona Selector Tabs with Detailed Garments description */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-2 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]">
+              {/* Wardrobe Profile Filter Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <span className="text-[10px] font-mono uppercase text-[var(--gold-primary)] font-bold shrink-0">
+                  Wardrobe:
+                </span>
                 {[
-                  { id: 'women' as PersonaType, label: 'Women', desc: 'Sarees, Blouses, Slip Dresses, Tuxedos & Pants', icon: '👩' },
-                  { id: 'man' as PersonaType, label: 'Man', desc: 'Savile Row Suits, Shirts, Chinos & Tees', icon: '👨' },
-                  { id: 'boy' as PersonaType, label: 'Boy', desc: 'Pants, Shirts, Jackets & T-Shirts', icon: '👦' },
-                  { id: 'girl' as PersonaType, label: 'Girl', desc: 'Pinterest Dresses, Chudidars, Kurtis, Sarees & Pants', icon: '👧' },
+                  { id: 'women' as PersonaType, label: 'Women', icon: '👩' },
+                  { id: 'man' as PersonaType, label: 'Man', icon: '👨' },
+                  { id: 'boy' as PersonaType, label: 'Boy', icon: '👦' },
+                  { id: 'girl' as PersonaType, label: 'Girl', icon: '👧' },
                 ].map((p) => {
                   const isSelected = activePersona === p.id;
                   return (
                     <button
                       key={p.id}
                       onClick={() => switchPersona(p.id)}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSelected
-                          ? 'bg-[var(--pill-bg)] border-[var(--gold-primary)] shadow-sm ring-1 ring-[var(--gold-primary)]/30'
-                          : 'border-[var(--border-card)] bg-[var(--bg-card-inner)] hover:border-[var(--gold-primary)]/60'
+                          ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold'
+                          : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] border border-[var(--border-card)] hover:border-[var(--gold-primary)]'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-[var(--text-heading)] flex items-center gap-1.5">
-                          <span>{p.icon}</span>
-                          <span>{p.label}'s Closet</span>
-                        </span>
-                        {isSelected && (
-                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-[var(--gold-primary)] text-black font-bold uppercase">
-                            Active
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-[var(--text-muted)] line-clamp-1">
-                        {p.desc}
-                      </p>
+                      <span>{p.icon}</span>
+                      <span>{p.label}'s Wardrobe</span>
                     </button>
                   );
                 })}
